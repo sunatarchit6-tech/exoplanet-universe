@@ -3,8 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exoplanet Universe</title>
-<meta name="description" content="Interactive 3D visualization of 6,150 confirmed exoplanets from NASA's Exoplanet Archive. Real coordinates, physical properties, and a 30-year discovery timeline from 1992 to 2026.">
+<title>Exoplanet Universe — Explore 6,150 Worlds in 3D</title>
+<meta name="description" content="Navigate an interactive 3D map of every confirmed exoplanet. Search by name, filter by detection method or planet class, and watch 30 years of discovery unfold.">
+<meta property="og:title" content="Exoplanet Universe — Explore 6,150 Worlds in 3D">
+<meta property="og:description" content="Interactive 3D visualization of every confirmed exoplanet from NASA's Exoplanet Archive. Real coordinates, 30-year discovery timeline.">
+<meta property="og:image" content="https://[DOMAIN]/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://[DOMAIN]/app.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Exoplanet Universe">
+<meta name="twitter:description" content="6,150 confirmed exoplanets in interactive 3D. Real NASA data.">
+<meta name="twitter:image" content="https://[DOMAIN]/og-image.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -75,6 +86,11 @@ canvas{position:absolute;top:0;left:0;display:block}
 /* Reset view button */
 #reset-btn{position:absolute;bottom:80px;left:24px;pointer-events:all;background:rgba(10,14,28,.45);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:10px;color:#8a9db8;font-family:inherit;font-size:10px;padding:7px 14px;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:all .25s;box-shadow:0 4px 16px rgba(0,0,0,.15)}
 #reset-btn:hover{color:#c0d0e4;border-color:rgba(130,155,190,.25);background:rgba(10,14,28,.6)}
+#toolbar-right{position:absolute;bottom:90px;right:24px;display:flex;gap:8px;pointer-events:all}
+#toolbar-right button{background:rgba(10,14,28,.45);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:10px;color:#8a9db8;font-size:16px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:0}
+#toolbar-right button:hover{color:#c0d0e4;border-color:rgba(130,155,190,.25);background:rgba(10,14,28,.6)}
+#about-link{color:#556680;text-decoration:none;transition:color .2s}
+#about-link:hover{color:#8a9db8}
 
 /* Legend */
 #legend{position:absolute;bottom:90px;right:24px;text-align:right;background:rgba(10,14,28,.45);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:12px;padding:12px 16px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
@@ -253,6 +269,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
   #data-date{display:none}
   #credits-link{display:none}
   #credits-overlay{display:none!important}
+  #toolbar-right{bottom:auto;top:58px;right:60px}
 
   /* Distance indicator — hide on mobile */
   #dist-indicator{display:none}
@@ -289,7 +306,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 <div id="ui">
   <header id="title-block">
     <h1 id="main-title">Exoplanet Universe</h1>
-    <div id="sub">Drag to orbit · Scroll to zoom · Space+drag or right-drag to pan · Click a world</div>
+    <div id="sub">Drag to orbit · Scroll to zoom · Space+drag or right-drag to pan · Click a world · <a href="index.html" id="about-link">About this project</a></div>
     <div id="search-wrap">
       <div id="search-box">
         <span id="search-icon" aria-hidden="true">&#x2315;</span>
@@ -432,6 +449,11 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 
   <button id="reset-btn" aria-label="Reset camera to default view"><span aria-hidden="true">&#8962; </span>Reset view</button>
 
+  <div id="toolbar-right">
+    <button id="screenshot-btn" aria-label="Save screenshot" title="Save screenshot"><span aria-hidden="true">&#128247;</span></button>
+    <button id="fullscreen-btn" aria-label="Toggle fullscreen" title="Fullscreen"><span id="fs-icon" aria-hidden="true">&#9974;</span></button>
+  </div>
+
   <!-- Space Radio -->
   <h2 class="sr-only">Space Radio</h2>
   <div id="yt-player-host"></div>
@@ -471,12 +493,37 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
   </div>
 </nav>
 
-<!-- Three.js CDN (must load before post-processing and main script) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous" onerror="document.getElementById('loading').innerHTML='<div style=\'text-align:center;padding:40px;max-width:500px;margin:0 auto;\'><div style=\'font-size:18px;color:#dce4f0;margin-bottom:12px;\'>Unable to Load</div><div style=\'font-size:13px;color:#8a9db8;line-height:1.6;\'>The 3D engine could not be loaded. Please check your internet connection and reload the page.<br><br>If the problem persists, try a different browser (Chrome, Firefox, Safari, or Edge).</div></div>'"></script>
-<script>if(!window.THREE){document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>')}</script>
+<!-- Three.js: loaded dynamically so the loading screen paints immediately (FCP optimization) -->
+<script>
+(function(){
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  s.integrity='sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu';
+  s.crossOrigin='anonymous';
+  s.onload=function(){
+    // Three.js loaded — execute all deferred script blocks in order
+    document.querySelectorAll('script[type="text/deferred"]').forEach(function(ds){
+      var ns=document.createElement('script');
+      ns.textContent=ds.textContent;
+      ds.parentNode.replaceChild(ns,ds);
+    });
+  };
+  s.onerror=function(){
+    // Try fallback CDN
+    var fb=document.createElement('script');
+    fb.src='https://unpkg.com/three@0.128.0/build/three.min.js';
+    fb.onload=s.onload;
+    fb.onerror=function(){
+      document.getElementById('loading').innerHTML='<div style="text-align:center;padding:40px;max-width:500px;margin:0 auto;"><div style="font-size:18px;color:#dce4f0;margin-bottom:12px;">Unable to Load</div><div style="font-size:13px;color:#8a9db8;line-height:1.6;">The 3D engine could not be loaded. Please check your internet connection and reload the page.</div></div>';
+    };
+    document.head.appendChild(fb);
+  };
+  document.head.appendChild(s);
+})();
+</script>
 
 <!-- Post-processing scripts (inlined to eliminate 6 network round trips) -->
-<script>
+<script type="text/deferred">
 // ── EffectComposer.js (Three.js r128) ──
 ( function () {
 
@@ -763,7 +810,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 
 } )();
 </script>
-<script>
+<script type="text/deferred">
 // ── RenderPass.js (Three.js r128) ──
 ( function () {
 
@@ -840,7 +887,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 
 } )();
 </script>
-<script>
+<script type="text/deferred">
 // ── CopyShader.js (Three.js r128) ──
 ( function () {
 
@@ -890,7 +937,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 
 } )();
 </script>
-<script>
+<script type="text/deferred">
 // ── LuminosityHighPassShader.js (Three.js r128) ──
 ( function () {
 
@@ -964,7 +1011,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 
 } )();
 </script>
-<script>
+<script type="text/deferred">
 // ── ShaderPass.js (Three.js r128) ──
 ( function () {
 
@@ -1030,7 +1077,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 
 } )();
 </script>
-<script>
+<script type="text/deferred">
 // ── UnrealBloomPass.js (Three.js r128) ──
 ( function () {
 
@@ -1400,7 +1447,7 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 } )();
 </script>
 
-<script>
+<script type="text/deferred">
 // ── WEBGL AVAILABILITY CHECK ─────────────────────────────────────────────────
 (function checkWebGL(){
   try{
@@ -1414,9 +1461,11 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
       '<div style="font-size:13px;color:#8a9db8;line-height:1.6;">This visualization requires WebGL, which your browser does not support.<br><br>Please try Chrome, Firefox, Safari, or Edge.</div>'+
       '</div>';
     document.getElementById('loading').classList.remove('done');
-    throw new Error('WebGL not available — stopping initialization');
+    window._noWebGL=true;
+    return;
   }
 })();
+if(window._noWebGL){/*halt — rest of script depends on WebGL*/}else{
 
 // ── MOBILE DETECTION & FILTER TOGGLE ─────────────────────────────────────────
 let isMobile = window.innerWidth <= 600;
@@ -2654,6 +2703,7 @@ window.addEventListener('keydown', e => {
     document.getElementById('info').style.display = 'none';
     document.getElementById('info').setAttribute('aria-hidden','true');
     disposePromoted();
+    history.replaceState(null,'',location.pathname);
     document.getElementById('c').focus();
     // Clear keyboard planet focus
     if(typeof kbFocusIdx!=='undefined'&&kbFocusIdx>=0){
@@ -3858,6 +3908,9 @@ function showInfo(d){
   const srDist=d.dist?Math.round(d.dist)+' light-years from Earth':'distance unknown';
   document.getElementById('sr-announce').textContent='Selected '+d.name+', '+srLabel+', '+srDist;
 
+  // Update URL hash for deep-linking
+  history.replaceState(null,'','#planet='+encodeURIComponent(d.name));
+
   // F7: Move focus to close button so keyboard/screen reader users can interact
   document.getElementById('info-close').focus();
 }
@@ -3865,12 +3918,14 @@ document.getElementById('info-close').addEventListener('click',()=>{
   document.getElementById('info').style.display='none';
   document.getElementById('info').setAttribute('aria-hidden','true');
   disposePromoted();
+  history.replaceState(null,'',location.pathname);
   document.getElementById('c').focus();
 });
 document.getElementById('info-btn').addEventListener('click',()=>{
   document.getElementById('info').style.display='none';
   document.getElementById('info').setAttribute('aria-hidden','true');
   disposePromoted();
+  history.replaceState(null,'',location.pathname);
   document.getElementById('c').focus();
   camFlyTo(new THREE.Vector3(0,0,0), 320, 1500);
 });
@@ -4461,6 +4516,34 @@ fetch('nasa_data.json').then(r=>r.json()).then(data=>{
     });
     startPh();
   })();
+
+  // ── E.2: URL Deep-Linking — parse hash after data loads ─────────────────────
+  (function(){
+    var hash=location.hash;
+    if(!hash||hash.length<2) return;
+    var params=new URLSearchParams(hash.substring(1));
+    var yearParam=params.get('year');
+    if(yearParam){
+      var yr=parseFloat(yearParam);
+      if(yr>=1992&&yr<=2026){curYr=yr;yrSl.value=yr;document.getElementById('yr-disp').textContent=Math.floor(yr);applyFilters();}
+    }
+    var planetParam=params.get('planet');
+    if(planetParam){
+      var pName=decodeURIComponent(planetParam.replace(/\+/g,' '));
+      // Find in searchIndex
+      var foundIdx=-1;
+      for(var si=0;si<searchIndex.length;si++){
+        if(searchIndex[si].name===pName){foundIdx=si;break;}
+      }
+      if(foundIdx>=0){
+        // Short delay to let scene settle
+        setTimeout(function(){searchResults=[searchIndex[foundIdx]];selectSearchResult(0);},500);
+      }
+    }
+    if(params.has('fullscreen')){
+      setTimeout(function(){try{document.documentElement.requestFullscreen();}catch(e){}},1000);
+    }
+  })();
 }).catch(e=>console.warn('NASA data not loaded:',e));
 
 // If intro hasn't been seen, set camera to wide starting position from the very first frame
@@ -4472,6 +4555,44 @@ if (!sessionStorage.getItem('exo-intro-seen')) {
 }
 
 animate(0);
+
+// ── E.1: FULLSCREEN TOGGLE ────────────────────────────────────────────────
+(function(){
+  const fsBtn=document.getElementById('fullscreen-btn');
+  const fsIcon=document.getElementById('fs-icon');
+  function updateFsBtn(){
+    const isFs=!!document.fullscreenElement;
+    fsBtn.setAttribute('aria-label',isFs?'Exit fullscreen':'Enter fullscreen');
+    fsBtn.title=isFs?'Exit Fullscreen':'Fullscreen';
+    fsIcon.textContent=isFs?'\u2716':'\u26F6';
+  }
+  fsBtn.addEventListener('click',()=>{
+    if(document.fullscreenElement){document.exitFullscreen();}
+    else{document.documentElement.requestFullscreen().catch(()=>{});}
+  });
+  document.addEventListener('fullscreenchange',updateFsBtn);
+})();
+
+// ── E.3: SCREENSHOT ───────────────────────────────────────────────────────
+document.getElementById('screenshot-btn').addEventListener('click',()=>{
+  try{
+    const dataUrl=renderer.domElement.toDataURL('image/png');
+    const a=document.createElement('a');
+    const sel=document.getElementById('info-name').textContent;
+    a.download='exoplanet-universe-'+(sel||'overview').replace(/[^a-zA-Z0-9\-_ ]/g,'').replace(/\s+/g,'-').toLowerCase()+'.png';
+    a.href=dataUrl;
+    a.click();
+  }catch(e){console.warn('Screenshot failed:',e);}
+});
+
+// ── E.1/E.3: F key for fullscreen ────────────────────────────────────────
+document.addEventListener('keydown',(e)=>{
+  if(e.target.matches('input,textarea,select')) return;
+  if(e.key==='f'||e.key==='F'){
+    if(document.fullscreenElement){document.exitFullscreen();}
+    else{document.documentElement.requestFullscreen().catch(()=>{});}
+  }
+});
 
 // ── SPACE RADIO — YouTube Music Player ─────────────────────────────────────
 (function(){
@@ -4839,6 +4960,7 @@ updateTrackDisplay=function(){
   }
 };
 })();
+} // end WebGL gate
 </script>
 </body>
 </html>

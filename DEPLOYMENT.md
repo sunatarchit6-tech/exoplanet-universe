@@ -101,7 +101,7 @@ The Navigator's standard: "Would a product manager at NASA greenlight this?" Spe
 
 ## Phase A.5 — Critical Security & Integrity Fixes
 
-**Status: TODO**
+**Status: DONE (2026-03-22)**
 
 *Identified during final review. Must be completed before deployment.*
 
@@ -287,7 +287,7 @@ Replace `[DOMAIN]` with the actual domain at deploy time.
 
 ## Phase D — SEO & LLM Optimization
 
-**Status: TODO**
+**Status: DONE (2026-03-22)** — D.1, D.2, D.3 complete. D.4 was already done in Phase 8 accessibility work.
 
 ### D.1 Meta Tags (both pages)
 
@@ -366,7 +366,7 @@ This enables both search engine understanding and LLM text extraction.
 
 ## Phase E — Interactive Enhancements
 
-**Status: TODO**
+**Status: DONE (2026-03-22)**
 
 ### E.1 Fullscreen Toggle
 
@@ -543,8 +543,8 @@ Phase A   ✅ DONE (2026-03-22)
 Phase A.5 ✅ DONE (2026-03-22) — SRI hashes, credits, data timestamp, CDN fallback
 Phase B   — SKIPPED (user directive: no texture downscaling)
 Phase C   ✅ DONE (2026-03-22)
-Phase D   — TODO (requires: Phase C)
-Phase E   — TODO (requires: Phase C)
+Phase D   ✅ DONE (2026-03-22)
+Phase E   ✅ DONE (2026-03-22)
 Phase F   — TODO (requires: Phases A.5, C, D, E all complete)
 Phase G   — BACKLOG (post-launch, no dependencies)
 ```

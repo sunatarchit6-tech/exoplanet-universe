@@ -1,0 +1,19 @@
+{
+  "headers": [
+    {
+      "source": "/textures/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/(sun_texture|moon_texture|earth_texture|starfield)\\.(jpg|png)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/nasa_data.json",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    }
+  ],
+  "redirects": [
+    { "source": "/exoplanet_3d.html", "destination": "/app.html", "permanent": true }
+  ]
+}
