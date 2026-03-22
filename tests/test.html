@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exoplanet Universe — Automated Test Runner</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0a0e17;
+  color: #c0cce0;
+  min-height: 100vh;
+}
+
+/* Header */
+#header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(130,155,190,.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#header h1 {
+  font-size: 18px;
+  font-weight: 500;
+  color: #dce4f0;
+  letter-spacing: .03em;
+}
+#header h1 span { color: #556680; font-weight: 300; }
+
+/* Summary bar */
+#summary {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+.summary-badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.summary-badge.pass { background: rgba(60,180,100,.15); color: #5cd880; }
+.summary-badge.fail { background: rgba(220,60,60,.15); color: #f06060; }
+.summary-badge.skip { background: rgba(200,180,60,.15); color: #d0c050; }
+.summary-badge.pending { background: rgba(100,140,200,.1); color: #7090c0; }
+
+#status-text {
+  font-size: 12px;
+  color: #6a7d95;
+  letter-spacing: .04em;
+}
+
+/* Controls */
+#controls {
+  padding: 12px 24px;
+  border-bottom: 1px solid rgba(130,155,190,.1);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+#controls button {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(130,155,190,.25);
+  background: transparent;
+  color: #8a9db8;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: all .15s;
+}
+#controls button:hover {
+  border-color: rgba(130,155,190,.5);
+  color: #c0d0e4;
+  background: rgba(130,155,190,.08);
+}
+#controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+#filter-bar {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.filter-btn {
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(130,155,190,.15);
+  background: transparent;
+  color: #6a7d95;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.filter-btn:hover { border-color: rgba(130,155,190,.4); color: #a0b4cc; }
+.filter-btn.active { border-color: rgba(130,155,190,.5); color: #c0d0e4; background: rgba(130,155,190,.1); }
+
+/* Results */
+#results {
+  padding: 12px 24px 40px;
+}
+
+.category {
+  margin-bottom: 20px;
+}
+.category-header {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6a7d95;
+  padding: 8px 0 6px;
+  border-bottom: 1px solid rgba(130,155,190,.08);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.category-count {
+  font-weight: 400;
+  font-size: 11px;
+  color: #4a6080;
+}
+
+.test-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 6px 0 6px 12px;
+  border-bottom: 1px solid rgba(130,155,190,.04);
+  font-size: 13px;
+  gap: 10px;
+  transition: background .1s;
+}
+.test-row:hover { background: rgba(130,155,190,.03); }
+
+.test-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+.test-icon.pass { background: rgba(60,180,100,.15); color: #5cd880; }
+.test-icon.fail { background: rgba(220,60,60,.15); color: #f06060; }
+.test-icon.skip { background: rgba(200,180,60,.15); color: #d0c050; }
+.test-icon.pending { background: rgba(100,140,200,.08); color: #506888; }
+
+.test-name {
+  flex: 1;
+  color: #a0b4cc;
+  line-height: 1.4;
+}
+.test-name .test-id {
+  color: #4a6080;
+  font-size: 11px;
+  margin-right: 6px;
+}
+
+.test-duration {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #3a5070;
+  min-width: 50px;
+  text-align: right;
+}
+
+.test-detail {
+  padding: 6px 12px 10px 42px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a6060;
+  background: rgba(220,60,60,.03);
+  border-left: 2px solid rgba(220,60,60,.2);
+  margin-bottom: 2px;
+}
+.test-detail code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  background: rgba(0,0,0,.3);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.test-detail .expected { color: #60a080; }
+.test-detail .actual { color: #c07070; }
+
+/* Progress bar */
+#progress-bar {
+  height: 3px;
+  background: rgba(130,155,190,.1);
+  position: relative;
+}
+#progress-fill {
+  height: 100%;
+  background: #5588cc;
+  width: 0%;
+  transition: width .15s;
+}
+
+/* Timing */
+#timing {
+  padding: 8px 24px;
+  font-size: 11px;
+  color: #4a6080;
+  letter-spacing: .03em;
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Exoplanet Universe <span>Test Runner</span></h1>
+  <div id="summary">
+    <span class="summary-badge pending" id="sum-pass">0 passed</span>
+    <span class="summary-badge pending" id="sum-fail">0 failed</span>
+    <span class="summary-badge pending" id="sum-skip">0 skipped</span>
+    <span id="status-text">Waiting for app to load...</span>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="btn-run" disabled>Run All Tests</button>
+  <button id="btn-rerun-failed" disabled>Re-run Failed</button>
+  <div id="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pass">Passed</button>
+    <button class="filter-btn" data-filter="fail">Failed</button>
+    <button class="filter-btn" data-filter="skip">Skipped</button>
+  </div>
+</div>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="timing"></div>
+<div id="results"></div>
+
+<!-- Hidden iframe for the app under test -->
+<iframe id="app-frame" src="../app.html" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;top:-9999px;"></iframe>
+
+<script>
+// ============================================================================
+// MINIMAL TEST FRAMEWORK — zero dependencies
+// ============================================================================
+
+const TestRunner = {
+  tests: [],
+  results: [],
+  categories: {},
+  startTime: 0,
+
+  // Register a test
+  test(category, id, name, fn) {
+    if (!this.categories[category]) this.categories[category] = [];
+    const entry = { category, id, name, fn, status: 'pending', error: null, duration: 0 };
+    this.tests.push(entry);
+    this.categories[category].push(entry);
+  },
+
+  // Run all tests (or a subset)
+  async run(filter) {
+    const toRun = filter ? this.tests.filter(filter) : this.tests;
+    this.startTime = performance.now();
+
+    // Reset all targeted tests
+    for (const t of toRun) {
+      t.status = 'pending';
+      t.error = null;
+      t.duration = 0;
+    }
+
+    updateUI();
+    let completed = 0;
+
+    for (const t of toRun) {
+      const t0 = performance.now();
+      try {
+        await t.fn();
+        t.status = 'pass';
+      } catch (e) {
+        if (e && e.__skip) {
+          t.status = 'skip';
+          t.error = e.message;
+        } else {
+          t.status = 'fail';
+          t.error = e;
+        }
+      }
+      t.duration = performance.now() - t0;
+      completed++;
+      updateProgress(completed, toRun.length);
+      updateUI();
+    }
+
+    const elapsed = performance.now() - this.startTime;
+    document.getElementById('timing').textContent =
+      `Completed in ${elapsed.toFixed(0)}ms (${toRun.length} tests)`;
+  },
+
+  // Get counts
+  counts() {
+    let pass = 0, fail = 0, skip = 0, pending = 0;
+    for (const t of this.tests) {
+      if (t.status === 'pass') pass++;
+      else if (t.status === 'fail') fail++;
+      else if (t.status === 'skip') skip++;
+      else pending++;
+    }
+    return { pass, fail, skip, pending, total: this.tests.length };
+  }
+};
+
+// ============================================================================
+// ASSERTIONS
+// ============================================================================
+
+function assert(condition, msg) {
+  if (!condition) throw new AssertionError(msg || 'Assertion failed');
+}
+
+function assertEqual(actual, expected, msg) {
+  if (actual !== expected) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected <code class="expected">${JSON.stringify(expected)}</code>, ` +
+      `got <code class="actual">${JSON.stringify(actual)}</code>`
+    );
+  }
+}
+
+function assertNotEqual(actual, unexpected, msg) {
+  if (actual === unexpected) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected value to NOT be <code class="actual">${JSON.stringify(unexpected)}</code>`
+    );
+  }
+}
+
+function assertTrue(val, msg) {
+  if (val !== true) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected <code class="expected">true</code>, got <code class="actual">${JSON.stringify(val)}</code>`
+    );
+  }
+}
+
+function assertFalse(val, msg) {
+  if (val !== false) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected <code class="expected">false</code>, got <code class="actual">${JSON.stringify(val)}</code>`
+    );
+  }
+}
+
+function assertGreaterThan(val, threshold, msg) {
+  if (!(val > threshold)) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected value > <code class="expected">${threshold}</code>, got <code class="actual">${val}</code>`
+    );
+  }
+}
+
+function assertLessThan(val, threshold, msg) {
+  if (!(val < threshold)) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected value < <code class="expected">${threshold}</code>, got <code class="actual">${val}</code>`
+    );
+  }
+}
+
+function assertInstanceOf(val, constructor, msg) {
+  if (!(val instanceof constructor)) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected instance of <code class="expected">${constructor.name}</code>, ` +
+      `got <code class="actual">${val && val.constructor ? val.constructor.name : typeof val}</code>`
+    );
+  }
+}
+
+function assertExists(val, msg) {
+  if (val == null) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected value to exist, got <code class="actual">${JSON.stringify(val)}</code>`
+    );
+  }
+}
+
+function assertType(val, type, msg) {
+  if (typeof val !== type) {
+    throw new AssertionError(
+      (msg ? msg + ': ' : '') +
+      `expected type <code class="expected">${type}</code>, got <code class="actual">${typeof val}</code>`
+    );
+  }
+}
+
+function skip(reason) {
+  const e = new Error(reason || 'Skipped');
+  e.__skip = true;
+  throw e;
+}
+
+class AssertionError extends Error {
+  constructor(msg) {
+    super(msg);
+    this.name = 'AssertionError';
+  }
+}
+
+// ============================================================================
+// UI RENDERING
+// ============================================================================
+
+function updateProgress(done, total) {
+  const pct = total > 0 ? (done / total * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function updateUI() {
+  const c = TestRunner.counts();
+
+  const sumPass = document.getElementById('sum-pass');
+  const sumFail = document.getElementById('sum-fail');
+  const sumSkip = document.getElementById('sum-skip');
+
+  sumPass.textContent = c.pass + ' passed';
+  sumPass.className = 'summary-badge ' + (c.pass > 0 ? 'pass' : 'pending');
+
+  sumFail.textContent = c.fail + ' failed';
+  sumFail.className = 'summary-badge ' + (c.fail > 0 ? 'fail' : 'pending');
+
+  sumSkip.textContent = c.skip + ' skipped';
+  sumSkip.className = 'summary-badge ' + (c.skip > 0 ? 'skip' : 'pending');
+
+  const statusEl = document.getElementById('status-text');
+  if (c.pending === c.total) {
+    statusEl.textContent = 'Ready to run';
+  } else if (c.pending > 0) {
+    statusEl.textContent = `Running... (${c.total - c.pending}/${c.total})`;
+  } else if (c.fail === 0) {
+    statusEl.textContent = 'All tests passed';
+    statusEl.style.color = '#5cd880';
+  } else {
+    statusEl.textContent = `${c.fail} test${c.fail > 1 ? 's' : ''} failed`;
+    statusEl.style.color = '#f06060';
+  }
+
+  renderResults();
+}
+
+function renderResults() {
+  const container = document.getElementById('results');
+  const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+
+  let html = '';
+  const categoryOrder = Object.keys(TestRunner.categories);
+
+  for (const cat of categoryOrder) {
+    const tests = TestRunner.categories[cat];
+    const filtered = activeFilter === 'all' ? tests : tests.filter(t => t.status === activeFilter);
+    if (filtered.length === 0 && activeFilter !== 'all') continue;
+
+    const catCounts = { pass: 0, fail: 0, skip: 0, pending: 0 };
+    for (const t of tests) catCounts[t.status]++;
+    const countStr = [];
+    if (catCounts.pass) countStr.push(catCounts.pass + ' passed');
+    if (catCounts.fail) countStr.push(catCounts.fail + ' failed');
+    if (catCounts.skip) countStr.push(catCounts.skip + ' skipped');
+    if (catCounts.pending) countStr.push(catCounts.pending + ' pending');
+
+    html += `<div class="category">`;
+    html += `<div class="category-header">${escHtml(cat)} <span class="category-count">${countStr.join(' / ')}</span></div>`;
+
+    const displayTests = activeFilter === 'all' ? tests : filtered;
+    for (const t of displayTests) {
+      const icon = t.status === 'pass' ? '&#10003;' :
+                   t.status === 'fail' ? '&#10007;' :
+                   t.status === 'skip' ? '&#8212;' : '&#8226;';
+
+      html += `<div class="test-row">`;
+      html += `<div class="test-icon ${t.status}">${icon}</div>`;
+      html += `<div class="test-name"><span class="test-id">${escHtml(t.id)}</span>${escHtml(t.name)}</div>`;
+      html += `<div class="test-duration">${t.duration > 0 ? t.duration.toFixed(1) + 'ms' : ''}</div>`;
+      html += `</div>`;
+
+      if (t.status === 'fail' && t.error) {
+        const errMsg = t.error instanceof AssertionError
+          ? t.error.message
+          : escHtml(t.error.message || String(t.error));
+        html += `<div class="test-detail">${errMsg}</div>`;
+      }
+      if (t.status === 'skip' && t.error) {
+        html += `<div class="test-detail" style="color:#a09050;background:rgba(200,180,60,.03);border-left-color:rgba(200,180,60,.2)">${escHtml(t.error)}</div>`;
+      }
+    }
+
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ============================================================================
+// APP ACCESS LAYER
+//
+// CRITICAL: The app uses `let`/`const` at the top level of an inline <script>,
+// which means those variables are NOT properties of `window`. Only `function`
+// declarations are hoisted to the window object.
+//
+// To access `let`/`const` variables (NASA_DATA, scene, namedPlanets, CAM,
+// filters, BN, PLANET_TEX, NASA_BY_NAME, searchIndex, renderer, raycaster,
+// FEATURED_NAMES), we use eval() in the iframe's context.
+//
+// Functions (planetClass, toXYZ, nasaToUserData, etc.) are accessible via
+// W.functionName directly.
+// ============================================================================
+
+let W = null;   // iframe window reference (for function calls + document)
+
+// Evaluate an expression in the app's scope to access let/const variables
+function $(expr) {
+  return W.eval(expr);
+}
+
+// ============================================================================
+// APP LOADING — wait for iframe + NASA data
+// ============================================================================
+
+function waitForApp() {
+  return new Promise((resolve, reject) => {
+    const iframe = document.getElementById('app-frame');
+    const TIMEOUT = 15000;
+    const POLL = 200;
+    const start = Date.now();
+
+    function check() {
+      try {
+        const iw = iframe.contentWindow;
+        if (!iw) {
+          if (Date.now() - start > TIMEOUT) return reject(new Error('Iframe did not load'));
+          return setTimeout(check, POLL);
+        }
+
+        // Check Three.js loaded (THREE is on window via the CDN script)
+        if (!iw.THREE) {
+          if (Date.now() - start > TIMEOUT) return reject(new Error('Three.js did not load'));
+          return setTimeout(check, POLL);
+        }
+
+        // Check NASA_DATA populated (let-scoped, must use eval)
+        let nasaLen = 0;
+        try { nasaLen = iw.eval('NASA_DATA.length'); } catch (e) { /* not ready */ }
+        if (!nasaLen || nasaLen === 0) {
+          if (Date.now() - start > TIMEOUT) return reject(new Error('NASA data did not load within timeout'));
+          return setTimeout(check, POLL);
+        }
+
+        // Check scene exists
+        let hasScene = false;
+        try { hasScene = iw.eval('typeof scene !== "undefined" && scene !== null'); } catch (e) {}
+        if (!hasScene) {
+          if (Date.now() - start > TIMEOUT) return reject(new Error('Scene not initialized'));
+          return setTimeout(check, POLL);
+        }
+
+        // Check namedPlanets populated
+        let npLen = 0;
+        try { npLen = iw.eval('namedPlanets.length'); } catch (e) {}
+        if (!npLen || npLen === 0) {
+          if (Date.now() - start > TIMEOUT) return reject(new Error('Named planets not populated'));
+          return setTimeout(check, POLL);
+        }
+
+        // Check searchIndex populated
+        let siLen = 0;
+        try { siLen = iw.eval('searchIndex.length'); } catch (e) {}
+        if (!siLen || siLen === 0) {
+          if (Date.now() - start > TIMEOUT) return reject(new Error('Search index not built'));
+          return setTimeout(check, POLL);
+        }
+
+        W = iw;
+        resolve();
+      } catch (e) {
+        if (Date.now() - start > TIMEOUT) return reject(new Error('Cannot access iframe: ' + e.message));
+        setTimeout(check, POLL);
+      }
+    }
+
+    iframe.addEventListener('load', () => setTimeout(check, 300));
+    setTimeout(check, 500);
+  });
+}
+
+// ============================================================================
+// TEST DEFINITIONS
+// ============================================================================
+
+function defineTests() {
+
+  // ─── A. PURE FUNCTION TESTS ───────────────────────────────────────────────
+  //
+  // Functions declared with `function` keyword are on the window object,
+  // so W.functionName() works directly.
+
+  // A1: planetClass
+  TestRunner.test('A. Pure Functions', 'A1a', 'planetClass(0.5) = rocky', () => {
+    assertEqual(W.planetClass(0.5), 'rocky');
+  });
+  TestRunner.test('A. Pure Functions', 'A1b', 'planetClass(1.59) = rocky (boundary)', () => {
+    assertEqual(W.planetClass(1.59), 'rocky');
+  });
+  TestRunner.test('A. Pure Functions', 'A1c', 'planetClass(1.6) = super (boundary)', () => {
+    assertEqual(W.planetClass(1.6), 'super');
+  });
+  TestRunner.test('A. Pure Functions', 'A1d', 'planetClass(1.61) = super', () => {
+    assertEqual(W.planetClass(1.61), 'super');
+  });
+  TestRunner.test('A. Pure Functions', 'A1e', 'planetClass(2.99) = super', () => {
+    assertEqual(W.planetClass(2.99), 'super');
+  });
+  TestRunner.test('A. Pure Functions', 'A1f', 'planetClass(3.0) = neptune (boundary)', () => {
+    assertEqual(W.planetClass(3.0), 'neptune');
+  });
+  TestRunner.test('A. Pure Functions', 'A1g', 'planetClass(3.01) = neptune', () => {
+    assertEqual(W.planetClass(3.01), 'neptune');
+  });
+  TestRunner.test('A. Pure Functions', 'A1h', 'planetClass(7.99) = neptune', () => {
+    assertEqual(W.planetClass(7.99), 'neptune');
+  });
+  TestRunner.test('A. Pure Functions', 'A1i', 'planetClass(8.0) = gas (boundary)', () => {
+    assertEqual(W.planetClass(8.0), 'gas');
+  });
+  TestRunner.test('A. Pure Functions', 'A1j', 'planetClass(8.01) = gas', () => {
+    assertEqual(W.planetClass(8.01), 'gas');
+  });
+
+  // A2: toXYZ
+  TestRunner.test('A. Pure Functions', 'A2a', 'toXYZ returns THREE.Vector3', () => {
+    const v = W.toXYZ(0, 0, 100);
+    assertInstanceOf(v, W.THREE.Vector3, 'toXYZ should return Vector3');
+  });
+  TestRunner.test('A. Pure Functions', 'A2b', 'toXYZ(0,0,0) near origin', () => {
+    const v = W.toXYZ(0, 0, 0);
+    const mag = v.length();
+    assertLessThan(mag, 1, 'dist=0 should map near origin');
+  });
+  TestRunner.test('A. Pure Functions', 'A2c', 'toXYZ(0,0,100) positive X', () => {
+    const v = W.toXYZ(0, 0, 100);
+    assertGreaterThan(v.x, 0, 'RA=0,Dec=0 should have positive X');
+    assertLessThan(Math.abs(v.y), 0.01, 'Dec=0 should have near-zero Y');
+  });
+  TestRunner.test('A. Pure Functions', 'A2d', 'toXYZ log-scaling: dist=10 vs dist=100 not 10x apart', () => {
+    const v10 = W.toXYZ(0, 0, 10);
+    const v100 = W.toXYZ(0, 0, 100);
+    const ratio = v100.length() / v10.length();
+    assertLessThan(ratio, 5, 'Log scaling should compress distances (ratio should be < 5)');
+    assertGreaterThan(ratio, 1, 'Farther should still be farther');
+  });
+  TestRunner.test('A. Pure Functions', 'A2e', 'toXYZ(90,0,100) positive Z', () => {
+    const v = W.toXYZ(90, 0, 100);
+    assertGreaterThan(v.z, 0, 'RA=90 should have positive Z component');
+  });
+  TestRunner.test('A. Pure Functions', 'A2f', 'toXYZ(0,90,100) positive Y (north pole)', () => {
+    const v = W.toXYZ(0, 90, 100);
+    assertGreaterThan(v.y, 0, 'Dec=90 should have positive Y');
+    assertLessThan(Math.abs(v.x), 1, 'Dec=90 should have near-zero X');
+  });
+
+  // A3: nasaToUserData
+  TestRunner.test('A. Pure Functions', 'A3a', 'nasaToUserData with full data', () => {
+    const p = { n: 'Test Planet b', y: 2020, m: 'Transit', R: 2.5, T: 800, hz: 1, d: 100 };
+    const ud = W.nasaToUserData(p);
+    assertEqual(ud.name, 'Test Planet b');
+    assertEqual(ud.year, 2020);
+    assertEqual(ud.method, 'Transit');
+    assertEqual(ud.radius, 2.5);
+    assertEqual(ud.temp, 800);
+    assertEqual(ud.hz, 1);
+    assertEqual(ud.dist, 100);
+    assertEqual(ud.cls, 'super', 'radius 2.5 should be super-earth');
+  });
+  TestRunner.test('A. Pure Functions', 'A3b', 'nasaToUserData with minimal data (name only)', () => {
+    const p = { n: 'Minimal Planet' };
+    const ud = W.nasaToUserData(p);
+    assertEqual(ud.name, 'Minimal Planet');
+    assertExists(ud.year, 'year should have default');
+    assertExists(ud.method, 'method should have default');
+    assertExists(ud.radius, 'radius should have default');
+    assertExists(ud.cls, 'cls should be computed');
+  });
+  TestRunner.test('A. Pure Functions', 'A3c', 'nasaToUserData estimates temperature when missing', () => {
+    const p = { n: 'No Temp Planet', m: 'RV' };
+    const ud = W.nasaToUserData(p);
+    assertEqual(ud.temp, 500, 'RV method heuristic should estimate 500K');
+    // Also verify truly empty planet gets a reasonable estimate (not 0)
+    const p2 = { n: 'Bare Planet' };
+    const ud2 = W.nasaToUserData(p2);
+    assertTrue(ud2.temp > 0, 'Temperature should never be 0 — estimateProperties provides fallback');
+    assertTrue(ud2.temp >= 100 && ud2.temp <= 2000, 'Estimated temp should be in plausible range');
+  });
+  TestRunner.test('A. Pure Functions', 'A3d', 'nasaToUserData has all required fields', () => {
+    const p = { n: 'Field Check' };
+    const ud = W.nasaToUserData(p);
+    const requiredFields = ['name', 'year', 'method', 'radius', 'temp', 'hz', 'dist', 'cls', 'method_grp', 'R'];
+    for (const f of requiredFields) {
+      assert(f in ud, `Missing field: ${f}`);
+    }
+  });
+  TestRunner.test('A. Pure Functions', 'A3e', 'nasaToUserData method_grp mapping', () => {
+    assertEqual(W.nasaToUserData({ n: 'A', m: 'Transit' }).method_grp, 'Transit');
+    assertEqual(W.nasaToUserData({ n: 'B', m: 'RV' }).method_grp, 'RV');
+    assertEqual(W.nasaToUserData({ n: 'C', m: 'Imaging' }).method_grp, 'Imaging');
+    assertEqual(W.nasaToUserData({ n: 'D', m: 'Microlensing' }).method_grp, 'Other');
+  });
+
+  // A4: nasaToExtInfo
+  TestRunner.test('A. Pure Functions', 'A4a', 'nasaToExtInfo with full data', () => {
+    const p = { n: 'X', M: 5.0, P: 365, a: 1.0, e: 0.02, h: 'Sun', sp: 'G2V', sT: 5778, sR: 1.0, sM: 1.0, f: 'Kepler' };
+    const ei = W.nasaToExtInfo(p);
+    assertEqual(ei.mass, 5.0);
+    assertEqual(ei.orbper, 365);
+    assertEqual(ei.sma, 1.0);
+    assertEqual(ei.ecc, 0.02);
+    assertEqual(ei.host, 'Sun');
+    assertEqual(ei.sptype, 'G2V');
+    assertEqual(ei.stTeff, 5778);
+    assertEqual(ei.stRad, 1.0);
+    assertEqual(ei.stMass, 1.0);
+    assertEqual(ei.facility, 'Kepler');
+  });
+  TestRunner.test('A. Pure Functions', 'A4b', 'nasaToExtInfo eccentricity=0 preserved (not null)', () => {
+    const p = { n: 'Circ', e: 0 };
+    const ei = W.nasaToExtInfo(p);
+    assertTrue(ei.ecc === 0, 'Eccentricity 0 should be preserved, not nullified');
+  });
+  TestRunner.test('A. Pure Functions', 'A4c', 'nasaToExtInfo missing fields become null', () => {
+    const p = { n: 'Sparse' };
+    const ei = W.nasaToExtInfo(p);
+    assertEqual(ei.mass, null, 'Missing mass should be null');
+    assertEqual(ei.orbper, null, 'Missing orbper should be null');
+    assertEqual(ei.sma, null, 'Missing sma should be null');
+    assertEqual(ei.ecc, null, 'Missing ecc should be null');
+    assertEqual(ei.host, null, 'Missing host should be null');
+    assertEqual(ei.facility, null, 'Missing facility should be null');
+  });
+
+  // A5: tempColor
+  TestRunner.test('A. Pure Functions', 'A5a', 'tempColor returns THREE.Color', () => {
+    const c = W.tempColor(1000);
+    assertInstanceOf(c, W.THREE.Color, 'Should return THREE.Color');
+  });
+  TestRunner.test('A. Pure Functions', 'A5b', 'tempColor(100) is blue-ish (cold)', () => {
+    const c = W.tempColor(100);
+    assertGreaterThan(c.b, c.r, 'Cold temperature (100K) should have more blue than red');
+  });
+  TestRunner.test('A. Pure Functions', 'A5c', 'tempColor(2000) is red-ish (hot)', () => {
+    const c = W.tempColor(2000);
+    assertGreaterThan(c.r, c.b, 'Hot temperature (2000K) should have more red than blue');
+  });
+  TestRunner.test('A. Pure Functions', 'A5d', 'tempColor(null) returns a color (fallback)', () => {
+    const c = W.tempColor(null);
+    assertInstanceOf(c, W.THREE.Color, 'Null temp should still return a Color');
+  });
+  TestRunner.test('A. Pure Functions', 'A5e', 'tempColor(50) is blue-ish (very cold)', () => {
+    const c = W.tempColor(50);
+    assertGreaterThan(c.b, c.r, 'Very cold (50K) should be blue');
+  });
+
+  // A6: methodGroup
+  TestRunner.test('A. Pure Functions', 'A6a', 'methodGroup("RV") = RV', () => {
+    assertEqual(W.methodGroup('RV'), 'RV');
+  });
+  TestRunner.test('A. Pure Functions', 'A6b', 'methodGroup("Transit") = Transit', () => {
+    assertEqual(W.methodGroup('Transit'), 'Transit');
+  });
+  TestRunner.test('A. Pure Functions', 'A6c', 'methodGroup("Imaging") = Imaging', () => {
+    assertEqual(W.methodGroup('Imaging'), 'Imaging');
+  });
+  TestRunner.test('A. Pure Functions', 'A6d', 'methodGroup("Microlensing") = Other', () => {
+    assertEqual(W.methodGroup('Microlensing'), 'Other');
+  });
+  TestRunner.test('A. Pure Functions', 'A6e', 'methodGroup("Timing") = Other', () => {
+    assertEqual(W.methodGroup('Timing'), 'Other');
+  });
+  TestRunner.test('A. Pure Functions', 'A6f', 'methodGroup(undefined) = Other', () => {
+    assertEqual(W.methodGroup(undefined), 'Other');
+  });
+
+  // ─── B. DATA INTEGRITY TESTS ─────────────────────────────────────────────
+  //
+  // These access let/const variables via $('expression')
+
+  TestRunner.test('B. Data Integrity', 'B7a', 'NASA_DATA loaded with > 6000 entries', () => {
+    const len = $('NASA_DATA.length');
+    assertGreaterThan(len, 6000, 'Should have > 6000 confirmed exoplanets');
+  });
+  TestRunner.test('B. Data Integrity', 'B7b', 'NASA_DATA first entry has required fields', () => {
+    const name = $('NASA_DATA[0].n');
+    assertExists(name, 'First entry should have name (n)');
+    const hasCoords = $('("ra" in NASA_DATA[0]) || ("dc" in NASA_DATA[0]) || ("d" in NASA_DATA[0])');
+    assertTrue(hasCoords, 'First entry should have coordinate data');
+  });
+  TestRunner.test('B. Data Integrity', 'B7c', 'NASA_BY_NAME count matches NASA_DATA', () => {
+    const byNameCount = $('Object.keys(NASA_BY_NAME).length');
+    assertGreaterThan(byNameCount, 5000, 'NASA_BY_NAME should have > 5000 entries');
+  });
+  TestRunner.test('B. Data Integrity', 'B7d', 'NASA_BY_NAME lookup works', () => {
+    const firstName = $('NASA_DATA[0].n');
+    const idx = $('NASA_BY_NAME[NASA_DATA[0].n]');
+    assertType(idx, 'number', 'NASA_BY_NAME should return an index');
+    const roundTrip = $('NASA_DATA[NASA_BY_NAME[NASA_DATA[0].n]].n');
+    assertEqual(roundTrip, firstName, 'Index should point back to same planet');
+  });
+
+  TestRunner.test('B. Data Integrity', 'B8a', 'namedPlanets has > 100 entries', () => {
+    const len = $('namedPlanets.length');
+    assertGreaterThan(len, 100, 'Should have ~137 featured planets');
+  });
+  TestRunner.test('B. Data Integrity', 'B8b', 'Each namedPlanet has mesh, ud, year', () => {
+    // Spot-check first 20
+    const results = $(`
+      (function() {
+        var issues = [];
+        for (var i = 0; i < Math.min(20, namedPlanets.length); i++) {
+          var np = namedPlanets[i];
+          if (!np.mesh) issues.push('Planet ' + i + ' missing mesh');
+          if (!np.ud) issues.push('Planet ' + i + ' missing ud');
+          if (!('year' in np)) issues.push('Planet ' + i + ' missing year');
+        }
+        return issues;
+      })()
+    `);
+    assertEqual(results.length, 0, results.length > 0 ? results[0] : 'All planets have required fields');
+  });
+  TestRunner.test('B. Data Integrity', 'B8c', 'Non-Earth namedPlanets have non-origin position', () => {
+    const nonOriginCount = $(`
+      (function() {
+        var count = 0;
+        for (var i = 0; i < namedPlanets.length; i++) {
+          var np = namedPlanets[i];
+          if (np.ud.name === 'Earth') continue;
+          var p = np.mesh.position;
+          if (Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z) > 0.1) count++;
+        }
+        return count;
+      })()
+    `);
+    assertGreaterThan(nonOriginCount, 50, 'Most non-Earth planets should have non-origin positions');
+  });
+
+  TestRunner.test('B. Data Integrity', 'B9a', 'PLANET_TEX has entries for featured planets', () => {
+    const texCount = $('Object.keys(PLANET_TEX).length');
+    assertGreaterThan(texCount, 30, 'PLANET_TEX should have 30+ texture mappings');
+  });
+  TestRunner.test('B. Data Integrity', 'B9b', 'PLANET_TEX values are non-empty strings', () => {
+    const emptyCount = $(`
+      (function() {
+        var count = 0;
+        var keys = Object.keys(PLANET_TEX);
+        for (var i = 0; i < keys.length; i++) {
+          var v = PLANET_TEX[keys[i]];
+          if (!v || typeof v !== 'string' || v.trim() === '') count++;
+        }
+        return count;
+      })()
+    `);
+    assertEqual(emptyCount, 0, 'No PLANET_TEX entries should have empty values');
+  });
+
+  // ─── C. SEARCH TESTS ─────────────────────────────────────────────────────
+  //
+  // searchPlanets is a function declaration, accessible via W.searchPlanets.
+  // But it reads `searchIndex` (let-scoped) internally, which works because
+  // the function itself runs in the app's scope.
+
+  TestRunner.test('C. Search', 'C10a', 'searchPlanets("TRAPPIST") returns TRAPPIST results', () => {
+    if (!W.searchPlanets) skip('searchPlanets not in global scope');
+    const results = W.searchPlanets('TRAPPIST');
+    assertGreaterThan(results.length, 0, 'Should find TRAPPIST planets');
+    const hasTrappist = results.some(r => r.name.includes('TRAPPIST'));
+    assertTrue(hasTrappist, 'Results should include TRAPPIST-named planets');
+  });
+  TestRunner.test('C. Search', 'C10b', 'searchPlanets("51 Peg") returns 51 Peg b', () => {
+    if (!W.searchPlanets) skip('searchPlanets not in global scope');
+    const results = W.searchPlanets('51 Peg');
+    assertGreaterThan(results.length, 0, 'Should find 51 Peg');
+    const has51Peg = results.some(r => r.name.includes('51 Peg'));
+    assertTrue(has51Peg, 'Results should include 51 Peg b');
+  });
+  TestRunner.test('C. Search', 'C10c', 'searchPlanets("") returns empty', () => {
+    if (!W.searchPlanets) skip('searchPlanets not in global scope');
+    const results = W.searchPlanets('');
+    assertEqual(results.length, 0, 'Empty query should return no results');
+  });
+  TestRunner.test('C. Search', 'C10d', 'searchPlanets case insensitive: "kepler" matches Kepler', () => {
+    if (!W.searchPlanets) skip('searchPlanets not in global scope');
+    const results = W.searchPlanets('kepler');
+    assertGreaterThan(results.length, 0, 'Lowercase "kepler" should find results');
+    const hasKepler = results.some(r => r.name.toLowerCase().includes('kepler'));
+    assertTrue(hasKepler, 'Results should include Kepler planets');
+  });
+  TestRunner.test('C. Search', 'C10e', 'searchPlanets returns max 8 results', () => {
+    if (!W.searchPlanets) skip('searchPlanets not in global scope');
+    const results = W.searchPlanets('kepler');
+    assertLessThan(results.length, 9, 'Should return at most 8 results');
+  });
+  TestRunner.test('C. Search', 'C10f', 'searchPlanets exact match prioritized', () => {
+    if (!W.searchPlanets) skip('searchPlanets not in global scope');
+    const knownName = $('NASA_DATA[0].n').toLowerCase();
+    const results = W.searchPlanets(knownName);
+    if (results.length > 0) {
+      assertEqual(results[0].name.toLowerCase(), knownName, 'Exact match should be first result');
+    }
+  });
+  TestRunner.test('C. Search', 'C10g', 'searchPlanets host name matching', () => {
+    if (!W.searchPlanets) skip('searchPlanets not in global scope');
+    const results = W.searchPlanets('Kepler-22');
+    assertGreaterThan(results.length, 0, 'Should find planets by host/system name');
+  });
+
+  // ─── D. FILTER TESTS ─────────────────────────────────────────────────────
+  //
+  // planetVisible is a function declaration (accessible via W).
+  // But it reads `filters` (const-scoped) internally, which works because
+  // the function runs in the app's scope.
+  //
+  // To test filter combinations, we modify `filters` via eval, run the
+  // function, then restore.
+
+  TestRunner.test('D. Filters', 'D11a', 'planetVisible: Transit planet visible when Transit filter on', () => {
+    if (!W.planetVisible) skip('planetVisible not in global scope');
+    const result = $(`
+      (function() {
+        var saved = { method: new Set(filters.method), cls: new Set(filters.cls), maxDist: filters.maxDist, hzOnly: filters.hzOnly };
+        filters.method = new Set(['Transit','RV','Imaging','Other']);
+        filters.cls = new Set(['rocky','super','neptune','gas']);
+        filters.maxDist = 10000;
+        filters.hzOnly = false;
+        var ud = { method: 'Transit', cls: 'rocky', dist: 100, hz: 0 };
+        var result = planetVisible(ud);
+        filters.method = saved.method;
+        filters.cls = saved.cls;
+        filters.maxDist = saved.maxDist;
+        filters.hzOnly = saved.hzOnly;
+        return result;
+      })()
+    `);
+    assertTrue(result, 'Transit planet should be visible with Transit filter on');
+  });
+  TestRunner.test('D. Filters', 'D11b', 'planetVisible: Transit planet hidden when Transit filter off', () => {
+    if (!W.planetVisible) skip('planetVisible not in global scope');
+    const result = $(`
+      (function() {
+        var saved = { method: new Set(filters.method), cls: new Set(filters.cls), maxDist: filters.maxDist, hzOnly: filters.hzOnly };
+        filters.method = new Set(['RV','Imaging','Other']);
+        filters.cls = new Set(['rocky','super','neptune','gas']);
+        filters.maxDist = 10000;
+        filters.hzOnly = false;
+        var ud = { method: 'Transit', cls: 'rocky', dist: 100, hz: 0 };
+        var result = planetVisible(ud);
+        filters.method = saved.method;
+        filters.cls = saved.cls;
+        filters.maxDist = saved.maxDist;
+        filters.hzOnly = saved.hzOnly;
+        return result;
+      })()
+    `);
+    assertFalse(result, 'Transit planet should be hidden when Transit filter is off');
+  });
+  TestRunner.test('D. Filters', 'D11c', 'planetVisible: HZ planet visible when hzOnly=true', () => {
+    if (!W.planetVisible) skip('planetVisible not in global scope');
+    const result = $(`
+      (function() {
+        var saved = { method: new Set(filters.method), cls: new Set(filters.cls), maxDist: filters.maxDist, hzOnly: filters.hzOnly };
+        filters.method = new Set(['Transit','RV','Imaging','Other']);
+        filters.cls = new Set(['rocky','super','neptune','gas']);
+        filters.maxDist = 10000;
+        filters.hzOnly = true;
+        var ud = { method: 'Transit', cls: 'rocky', dist: 100, hz: 1 };
+        var result = planetVisible(ud);
+        filters.method = saved.method;
+        filters.cls = saved.cls;
+        filters.maxDist = saved.maxDist;
+        filters.hzOnly = saved.hzOnly;
+        return result;
+      })()
+    `);
+    assertTrue(result, 'HZ planet should be visible with hzOnly=true');
+  });
+  TestRunner.test('D. Filters', 'D11d', 'planetVisible: non-HZ planet hidden when hzOnly=true', () => {
+    if (!W.planetVisible) skip('planetVisible not in global scope');
+    const result = $(`
+      (function() {
+        var saved = { method: new Set(filters.method), cls: new Set(filters.cls), maxDist: filters.maxDist, hzOnly: filters.hzOnly };
+        filters.method = new Set(['Transit','RV','Imaging','Other']);
+        filters.cls = new Set(['rocky','super','neptune','gas']);
+        filters.maxDist = 10000;
+        filters.hzOnly = true;
+        var ud = { method: 'Transit', cls: 'rocky', dist: 100, hz: 0 };
+        var result = planetVisible(ud);
+        filters.method = saved.method;
+        filters.cls = saved.cls;
+        filters.maxDist = saved.maxDist;
+        filters.hzOnly = saved.hzOnly;
+        return result;
+      })()
+    `);
+    assertFalse(result, 'Non-HZ planet should be hidden with hzOnly=true');
+  });
+  TestRunner.test('D. Filters', 'D11e', 'planetVisible: distance filter respected', () => {
+    if (!W.planetVisible) skip('planetVisible not in global scope');
+    const result = $(`
+      (function() {
+        var saved = { method: new Set(filters.method), cls: new Set(filters.cls), maxDist: filters.maxDist, hzOnly: filters.hzOnly };
+        filters.method = new Set(['Transit','RV','Imaging','Other']);
+        filters.cls = new Set(['rocky','super','neptune','gas']);
+        filters.maxDist = 100;
+        filters.hzOnly = false;
+        var ud = { method: 'Transit', cls: 'rocky', dist: 500, hz: 0 };
+        var result = planetVisible(ud);
+        filters.method = saved.method;
+        filters.cls = saved.cls;
+        filters.maxDist = saved.maxDist;
+        filters.hzOnly = saved.hzOnly;
+        return result;
+      })()
+    `);
+    assertFalse(result, 'Planet at 500 ly should be hidden when maxDist=100');
+  });
+  TestRunner.test('D. Filters', 'D11f', 'planetVisible: class filter respected', () => {
+    if (!W.planetVisible) skip('planetVisible not in global scope');
+    const result = $(`
+      (function() {
+        var saved = { method: new Set(filters.method), cls: new Set(filters.cls), maxDist: filters.maxDist, hzOnly: filters.hzOnly };
+        filters.method = new Set(['Transit','RV','Imaging','Other']);
+        filters.cls = new Set(['rocky','super','neptune']);
+        filters.maxDist = 10000;
+        filters.hzOnly = false;
+        var ud = { method: 'Transit', cls: 'gas', dist: 100, hz: 0 };
+        var result = planetVisible(ud);
+        filters.method = saved.method;
+        filters.cls = saved.cls;
+        filters.maxDist = saved.maxDist;
+        filters.hzOnly = saved.hzOnly;
+        return result;
+      })()
+    `);
+    assertFalse(result, 'Gas giant should be hidden when gas class filter is off');
+  });
+
+  // ─── E. CAMERA TESTS ─────────────────────────────────────────────────────
+
+  TestRunner.test('E. Camera', 'E12a', 'CAM object exists with expected properties', () => {
+    const hasCAM = $('typeof CAM !== "undefined"');
+    assertTrue(hasCAM, 'CAM should exist');
+    assertTrue($("'theta' in CAM"), 'CAM should have theta');
+    assertTrue($("'phi' in CAM"), 'CAM should have phi');
+    assertTrue($("'_radius' in CAM || 'radius' in CAM"), 'CAM should have radius');
+    assertTrue($("'_center' in CAM || 'center' in CAM"), 'CAM should have center');
+    assertTrue($("'mode' in CAM"), 'CAM should have mode');
+  });
+  TestRunner.test('E. Camera', 'E12b', 'CAM.mode is a valid mode', () => {
+    const mode = $('CAM.mode');
+    const validModes = ['idle', 'momentum', 'orbit', 'pan', 'flyto'];
+    assert(validModes.includes(mode), `CAM.mode should be a valid mode, got "${mode}"`);
+  });
+  TestRunner.test('E. Camera', 'E12c', 'CAM has safety bounds defined', () => {
+    const minR = $('CAM.MIN_R');
+    const maxR = $('CAM.MAX_R');
+    const phiBounds = $('CAM.PHI_BOUNDS');
+    assertExists(minR, 'CAM should have MIN_R');
+    assertExists(maxR, 'CAM should have MAX_R');
+    assertExists(phiBounds, 'CAM should have PHI_BOUNDS');
+    assertGreaterThan(maxR, minR, 'MAX_R should be > MIN_R');
+  });
+  TestRunner.test('E. Camera', 'E12d', 'CAM.fly object exists for flyTo state', () => {
+    assertTrue($("'fly' in CAM"), 'CAM should have fly object');
+    assertTrue($("'active' in CAM.fly"), 'CAM.fly should have active flag');
+    assertTrue($("'dur' in CAM.fly"), 'CAM.fly should have duration');
+  });
+  TestRunner.test('E. Camera', 'E12e', 'camFlyTo function exists', () => {
+    assertType(W.camFlyTo, 'function', 'camFlyTo should be a function');
+  });
+
+  // ─── F. DOM TESTS ────────────────────────────────────────────────────────
+
+  const D = () => W.document;
+
+  TestRunner.test('F. DOM', 'F13a', '#search-input exists and is an input', () => {
+    const el = D().getElementById('search-input');
+    assertExists(el, '#search-input should exist');
+    assertEqual(el.tagName.toLowerCase(), 'input', 'Should be an input element');
+  });
+  TestRunner.test('F. DOM', 'F13b', '#info panel exists', () => {
+    const el = D().getElementById('info');
+    assertExists(el, '#info should exist');
+  });
+  TestRunner.test('F. DOM', 'F13c', '#filters exists', () => {
+    const el = D().getElementById('filters');
+    assertExists(el, '#filters should exist');
+  });
+  TestRunner.test('F. DOM', 'F13d', '#yr-sl exists with min=1992, max=2026', () => {
+    const el = D().getElementById('yr-sl');
+    assertExists(el, '#yr-sl should exist');
+    assertEqual(el.min, '1992', 'Timeline min should be 1992');
+    assertEqual(el.max, '2026', 'Timeline max should be 2026');
+  });
+  TestRunner.test('F. DOM', 'F13e', '#search-results exists', () => {
+    const el = D().getElementById('search-results');
+    assertExists(el, '#search-results should exist');
+  });
+  TestRunner.test('F. DOM', 'F13f', '#filter-toggle exists', () => {
+    const el = D().getElementById('filter-toggle');
+    assertExists(el, '#filter-toggle should exist');
+  });
+  TestRunner.test('F. DOM', 'F13g', '#reset-btn exists', () => {
+    const el = D().getElementById('reset-btn');
+    assertExists(el, '#reset-btn should exist');
+  });
+  TestRunner.test('F. DOM', 'F13h', '#play-btn exists', () => {
+    const el = D().getElementById('play-btn');
+    assertExists(el, '#play-btn should exist');
+  });
+  TestRunner.test('F. DOM', 'F13i', '#fly-hud exists', () => {
+    const el = D().getElementById('fly-hud');
+    assertExists(el, '#fly-hud should exist');
+  });
+
+  TestRunner.test('F. DOM', 'F14a', 'Info panel initially hidden', () => {
+    const el = D().getElementById('info');
+    const display = W.getComputedStyle(el).display;
+    assertEqual(display, 'none', 'Info panel should be display:none initially');
+  });
+  TestRunner.test('F. DOM', 'F14b', 'Search results initially hidden', () => {
+    const el = D().getElementById('search-results');
+    const display = W.getComputedStyle(el).display;
+    assertEqual(display, 'none', 'Search results should be hidden initially');
+  });
+
+  TestRunner.test('F. DOM', 'F15a', '#filter-toggle has aria-expanded attribute', () => {
+    const el = D().getElementById('filter-toggle');
+    assert(el.hasAttribute('aria-expanded'), '#filter-toggle should have aria-expanded');
+  });
+  TestRunner.test('F. DOM', 'F15b', '#info-close has aria-label', () => {
+    const el = D().getElementById('info-close');
+    assertExists(el, '#info-close should exist');
+    assert(el.hasAttribute('aria-label'), '#info-close should have aria-label');
+  });
+  TestRunner.test('F. DOM', 'F15c', '#search-input has placeholder text', () => {
+    const el = D().getElementById('search-input');
+    const ph = el.getAttribute('placeholder');
+    assert(ph && ph.length > 0, '#search-input should have non-empty placeholder');
+  });
+  TestRunner.test('F. DOM', 'F15d', '#filter-toggle has aria-label', () => {
+    const el = D().getElementById('filter-toggle');
+    assert(el.hasAttribute('aria-label'), '#filter-toggle should have aria-label');
+  });
+
+  // ─── G. SCENE & PERFORMANCE TESTS ────────────────────────────────────────
+
+  TestRunner.test('G. Scene & Performance', 'G16a', 'Scene has children', () => {
+    const count = $('scene.children.length');
+    assertGreaterThan(count, 0, 'Scene should have children');
+  });
+  TestRunner.test('G. Scene & Performance', 'G16b', 'namedPlanets count matches expected (~137)', () => {
+    const len = $('namedPlanets.length');
+    assertGreaterThan(len, 100, 'Should have > 100 featured planets');
+    assertLessThan(len, 300, 'Should have < 300 featured planets');
+  });
+  TestRunner.test('G. Scene & Performance', 'G16c', 'Background points count (BN) > 5000', () => {
+    const bn = $('BN');
+    assertGreaterThan(bn, 5000, 'BN (background planet count) should be > 5000');
+  });
+  TestRunner.test('G. Scene & Performance', 'G16d', 'Camera exists and is PerspectiveCamera', () => {
+    assertTrue($('typeof camera !== "undefined" && camera !== null'), 'camera should exist');
+    assertTrue($('camera.isPerspectiveCamera'), 'Camera should be a PerspectiveCamera');
+  });
+  TestRunner.test('G. Scene & Performance', 'G16e', 'Renderer exists', () => {
+    assertTrue($('typeof renderer !== "undefined" && renderer !== null'), 'renderer should exist');
+  });
+  TestRunner.test('G. Scene & Performance', 'G16f', 'Raycaster exists and is THREE.Raycaster', () => {
+    assertTrue($('typeof raycaster !== "undefined" && raycaster !== null'), 'raycaster should exist');
+    assertTrue($('raycaster instanceof THREE.Raycaster'), 'Should be a THREE.Raycaster');
+  });
+  TestRunner.test('G. Scene & Performance', 'G16g', 'Filters object has correct structure', () => {
+    assertTrue($('typeof filters !== "undefined"'), 'filters should exist');
+    assertTrue($('filters.method instanceof Set'), 'filters.method should be a Set');
+    assertTrue($('filters.cls instanceof Set'), 'filters.cls should be a Set');
+    assertEqual($('typeof filters.maxDist'), 'number', 'filters.maxDist should be a number');
+    assertEqual($('typeof filters.hzOnly'), 'boolean', 'filters.hzOnly should be a boolean');
+  });
+  TestRunner.test('G. Scene & Performance', 'G16h', 'Search index built with expected count', () => {
+    const len = $('searchIndex.length');
+    assertGreaterThan(len, 5000, 'searchIndex should have > 5000 entries');
+  });
+}
+
+// ============================================================================
+// FILTER BUTTONS
+// ============================================================================
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderResults();
+  });
+});
+
+// ============================================================================
+// MAIN — load app, define tests, run
+// ============================================================================
+
+async function main() {
+  const statusEl = document.getElementById('status-text');
+  const runBtn = document.getElementById('btn-run');
+  const rerunBtn = document.getElementById('btn-rerun-failed');
+
+  statusEl.textContent = 'Loading app in iframe...';
+
+  try {
+    await waitForApp();
+  } catch (e) {
+    const isCORS = e.message.includes('cross-origin') || e.message.includes('Cannot access iframe');
+    if (isCORS || window.location.protocol === 'file:') {
+      statusEl.style.color = '#f06060';
+      statusEl.innerHTML = '';
+      const errBox = document.createElement('div');
+      errBox.style.cssText = 'padding:24px;max-width:700px;margin:20px auto;background:rgba(220,60,60,.08);border:1px solid rgba(220,60,60,.25);border-radius:8px;font-size:13px;line-height:1.7;color:#c0cce0;';
+      errBox.innerHTML = `
+        <div style="color:#f06060;font-size:15px;font-weight:600;margin-bottom:12px;">⚠ Cannot run tests from file:// protocol</div>
+        <div>Browsers block iframe cross-origin access on <code style="background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px;">file://</code> URLs. Start a local HTTP server from the project root:</div>
+        <pre style="background:rgba(0,0,0,.3);padding:12px 16px;border-radius:6px;margin:12px 0;color:#5cd880;font-size:13px;overflow-x:auto;"><code>cd "${window.location.pathname.replace('/tests/test.html','').replace(/^\/([A-Z]:)/,'$1')}"
+python3 -m http.server 8000</code></pre>
+        <div>Then open: <a href="http://localhost:8000/tests/test.html" style="color:#7090c0;">http://localhost:8000/tests/test.html</a></div>
+        <div style="margin-top:8px;color:#6a7d95;font-size:11px;">Alternatively: <code style="background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px;">npx serve .</code> or <code style="background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px;">php -S localhost:8000</code></div>
+      `;
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('results').appendChild(errBox);
+      statusEl.textContent = 'CORS error — needs HTTP server (see below)';
+    } else {
+      statusEl.textContent = 'Failed to load app: ' + e.message;
+      statusEl.style.color = '#f06060';
+    }
+    return;
+  }
+
+  statusEl.textContent = 'App loaded. Defining tests...';
+  defineTests();
+  updateUI();
+
+  statusEl.textContent = 'Ready to run (' + TestRunner.tests.length + ' tests)';
+  runBtn.disabled = false;
+
+  // Auto-run on load
+  runBtn.disabled = true;
+  rerunBtn.disabled = true;
+  await TestRunner.run();
+  runBtn.disabled = false;
+  rerunBtn.disabled = false;
+
+  // Manual run buttons
+  runBtn.addEventListener('click', async () => {
+    runBtn.disabled = true;
+    rerunBtn.disabled = true;
+    statusEl.style.color = '';
+    await TestRunner.run();
+    runBtn.disabled = false;
+    rerunBtn.disabled = false;
+  });
+
+  rerunBtn.addEventListener('click', async () => {
+    runBtn.disabled = true;
+    rerunBtn.disabled = true;
+    statusEl.style.color = '';
+    await TestRunner.run(t => t.status === 'fail');
+    runBtn.disabled = false;
+    rerunBtn.disabled = false;
+  });
+}
+
+main();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Development artifacts
+test_screenshots/
+.claude/
+*.py
+*.mjs
+exoplanet_3d_backup.html
+AUDIT_REPORT.md
+FULL_PLANET_AUDIT.md
+lighthouse-*
+
+# Source textures (not deployed — only planets/ subfolder is runtime)
+textures/nasa/
+textures/generated/
+textures/*.jpg
+textures/*.webp
+
+# OS files
+.DS_Store
+Thumbs.db

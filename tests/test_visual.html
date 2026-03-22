@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exoplanet Universe — Visual Smoke Test</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0a0e17;
+  color: #c0cce0;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* App iframe panel */
+#app-panel {
+  flex: 1;
+  position: relative;
+  border-right: 1px solid rgba(130,155,190,.15);
+}
+#app-panel iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+#app-panel-label {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: #4a6080;
+  background: rgba(10,14,23,.9);
+  padding: 4px 12px;
+  border-radius: 3px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Checklist panel */
+#checklist-panel {
+  width: 360px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#checklist-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(130,155,190,.12);
+}
+#checklist-header h1 {
+  font-size: 15px;
+  font-weight: 500;
+  color: #dce4f0;
+  letter-spacing: .03em;
+  margin-bottom: 6px;
+}
+#checklist-summary {
+  font-size: 12px;
+  color: #6a7d95;
+  display: flex;
+  gap: 12px;
+}
+.cs-badge {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 11px;
+}
+.cs-badge.pass { background: rgba(60,180,100,.12); color: #5cd880; }
+.cs-badge.fail { background: rgba(220,60,60,.12); color: #f06060; }
+.cs-badge.pending { background: rgba(100,140,200,.08); color: #6080a0; }
+
+/* Controls */
+#checklist-controls {
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(130,155,190,.08);
+  display: flex;
+  gap: 8px;
+}
+#checklist-controls button {
+  padding: 5px 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(130,155,190,.2);
+  background: transparent;
+  color: #8a9db8;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: all .15s;
+}
+#checklist-controls button:hover {
+  border-color: rgba(130,155,190,.45);
+  color: #c0d0e4;
+  background: rgba(130,155,190,.06);
+}
+.width-btns {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+.width-btn {
+  padding: 4px 8px !important;
+  font-size: 10px !important;
+}
+.width-btn.active {
+  border-color: rgba(130,155,190,.5) !important;
+  color: #c0d0e4 !important;
+  background: rgba(130,155,190,.1) !important;
+}
+
+/* Items list */
+#checklist-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.check-item {
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(130,155,190,.04);
+  transition: background .1s;
+}
+.check-item:hover {
+  background: rgba(130,155,190,.03);
+}
+.check-item-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.check-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 1px;
+}
+.check-num.pending { background: rgba(100,140,200,.1); color: #6080a0; }
+.check-num.pass { background: rgba(60,180,100,.15); color: #5cd880; }
+.check-num.fail { background: rgba(220,60,60,.15); color: #f06060; }
+
+.check-text {
+  flex: 1;
+  font-size: 13px;
+  color: #a0b4cc;
+  line-height: 1.4;
+}
+.check-text.done { color: #5a7090; text-decoration: line-through; }
+.check-text.failed { color: #c08080; }
+
+.check-category {
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #4a6080;
+  margin-bottom: 2px;
+}
+
+.check-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  padding-left: 32px;
+}
+.check-btn {
+  padding: 4px 12px;
+  border-radius: 3px;
+  border: 1px solid;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: all .15s;
+}
+.check-btn.pass-btn {
+  border-color: rgba(60,180,100,.3);
+  background: transparent;
+  color: #5cad70;
+}
+.check-btn.pass-btn:hover {
+  background: rgba(60,180,100,.1);
+  border-color: rgba(60,180,100,.5);
+  color: #70d888;
+}
+.check-btn.fail-btn {
+  border-color: rgba(220,60,60,.3);
+  background: transparent;
+  color: #c07070;
+}
+.check-btn.fail-btn:hover {
+  background: rgba(220,60,60,.1);
+  border-color: rgba(220,60,60,.5);
+  color: #f08080;
+}
+.check-btn.reset-btn {
+  border-color: rgba(130,155,190,.15);
+  background: transparent;
+  color: #6a7d95;
+}
+.check-btn.reset-btn:hover {
+  border-color: rgba(130,155,190,.3);
+  color: #a0b4cc;
+}
+.check-btn.active {
+  font-weight: 700;
+}
+.check-btn.pass-btn.active {
+  background: rgba(60,180,100,.15);
+  border-color: rgba(60,180,100,.5);
+}
+.check-btn.fail-btn.active {
+  background: rgba(220,60,60,.15);
+  border-color: rgba(220,60,60,.5);
+}
+
+/* Notes */
+.check-note {
+  padding: 4px 0 0 32px;
+}
+.check-note textarea {
+  width: 100%;
+  background: rgba(0,0,0,.3);
+  border: 1px solid rgba(130,155,190,.1);
+  border-radius: 3px;
+  color: #8a9db8;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 6px 8px;
+  resize: vertical;
+  min-height: 28px;
+  max-height: 80px;
+  outline: none;
+  transition: border-color .2s;
+}
+.check-note textarea:focus {
+  border-color: rgba(130,155,190,.35);
+}
+.check-note textarea::placeholder {
+  color: #3a5070;
+}
+
+/* Footer */
+#checklist-footer {
+  padding: 12px 18px;
+  border-top: 1px solid rgba(130,155,190,.1);
+  font-size: 10px;
+  color: #3a5070;
+  text-align: center;
+  letter-spacing: .03em;
+}
+#save-indicator {
+  display: inline-block;
+  opacity: 0;
+  transition: opacity .3s;
+  color: #5cad70;
+  margin-left: 6px;
+}
+#save-indicator.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="app-panel">
+  <div id="app-panel-label">Live App Preview</div>
+  <iframe id="app-frame" src="../app.html"></iframe>
+</div>
+
+<div id="checklist-panel">
+  <div id="checklist-header">
+    <h1>Visual Smoke Test</h1>
+    <div id="checklist-summary">
+      <span class="cs-badge pending" id="vsum-pass">0 passed</span>
+      <span class="cs-badge pending" id="vsum-fail">0 failed</span>
+      <span class="cs-badge pending" id="vsum-pending">15 remaining</span>
+    </div>
+  </div>
+
+  <div id="checklist-controls">
+    <button id="btn-reset-all">Reset All</button>
+    <button id="btn-export">Export Results</button>
+    <div class="width-btns">
+      <button class="width-btn active" data-width="desktop" title="Desktop (default)">Desktop</button>
+      <button class="width-btn" data-width="tablet" title="Tablet (768px)">Tablet</button>
+      <button class="width-btn" data-width="mobile" title="Mobile (375px)">Mobile</button>
+    </div>
+  </div>
+
+  <div id="checklist-items"></div>
+
+  <div id="checklist-footer">
+    Results saved to localStorage <span id="save-indicator">Saved</span>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// CHECKLIST DATA
+// ============================================================================
+
+const CHECKS = [
+  { id: 'V01', category: 'Rendering',  text: 'Scene renders (not a black screen)' },
+  { id: 'V02', category: 'Rendering',  text: 'Earth visible at center of the scene' },
+  { id: 'V03', category: 'Rendering',  text: 'Sun visible with glow/bloom effect' },
+  { id: 'V04', category: 'Labels',     text: 'Planet labels visible when zoomed in toward a cluster' },
+  { id: 'V05', category: 'Search',     text: 'Search box visible and functional (type a planet name, see results)' },
+  { id: 'V06', category: 'Timeline',   text: 'Timeline plays when clicking the play button (planets appear over time)' },
+  { id: 'V07', category: 'Interaction', text: 'Clicking a planet shows the info panel with planet data' },
+  { id: 'V08', category: 'Interaction', text: 'Info panel has real planet data (not "unknown" or "null" everywhere)' },
+  { id: 'V09', category: 'Filters',    text: 'Filters hide/show planets correctly (toggle Transit off, some planets disappear)' },
+  { id: 'V10', category: 'Mobile',     text: 'Mobile view (resize to 375px): layout adapts, no overflow' },
+  { id: 'V11', category: 'Mobile',     text: 'Mobile view: filter toggle button works to show/hide filters' },
+  { id: 'V12', category: 'Mobile',     text: 'Mobile view: info panel shows as a bottom sheet' },
+  { id: 'V13', category: 'Navigation', text: 'Scroll zoom works smoothly (zoom in and out)' },
+  { id: 'V14', category: 'Navigation', text: 'Reset view button returns camera to the origin/default view' },
+  { id: 'V15', category: 'Navigation', text: 'Escape key closes the info panel (open a panel first)' },
+];
+
+const STORAGE_KEY = 'exoplanet_visual_test_results';
+
+// ============================================================================
+// STATE
+// ============================================================================
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) { /* ignore */ }
+  return createFreshState();
+}
+
+function createFreshState() {
+  const s = { timestamp: null, results: {} };
+  for (const c of CHECKS) {
+    s.results[c.id] = { status: 'pending', note: '' };
+  }
+  return s;
+}
+
+function saveState() {
+  state.timestamp = new Date().toISOString();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    flashSaveIndicator();
+  } catch (e) { /* ignore */ }
+}
+
+function flashSaveIndicator() {
+  const el = document.getElementById('save-indicator');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1200);
+}
+
+// ============================================================================
+// RENDER CHECKLIST
+// ============================================================================
+
+function renderChecklist() {
+  const container = document.getElementById('checklist-items');
+  let html = '';
+  let currentCategory = '';
+
+  for (const c of CHECKS) {
+    const r = state.results[c.id];
+
+    if (c.category !== currentCategory) {
+      currentCategory = c.category;
+      html += `<div style="padding:8px 18px 2px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#4a6080;margin-top:6px">${esc(currentCategory)}</div>`;
+    }
+
+    const numClass = r.status;
+    const textClass = r.status === 'pass' ? 'done' : r.status === 'fail' ? 'failed' : '';
+
+    html += `<div class="check-item" data-id="${c.id}">`;
+    html += `<div class="check-item-top">`;
+    html += `<div class="check-num ${numClass}">${c.id.replace('V','')}</div>`;
+    html += `<div class="check-text ${textClass}">${esc(c.text)}</div>`;
+    html += `</div>`;
+
+    html += `<div class="check-actions">`;
+    html += `<button class="check-btn pass-btn ${r.status === 'pass' ? 'active' : ''}" data-id="${c.id}" data-action="pass">Pass</button>`;
+    html += `<button class="check-btn fail-btn ${r.status === 'fail' ? 'active' : ''}" data-id="${c.id}" data-action="fail">Fail</button>`;
+    html += `<button class="check-btn reset-btn" data-id="${c.id}" data-action="reset">Reset</button>`;
+    html += `</div>`;
+
+    html += `<div class="check-note">`;
+    html += `<textarea placeholder="Notes (optional)..." data-id="${c.id}">${esc(r.note || '')}</textarea>`;
+    html += `</div>`;
+
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Bind button events
+  container.querySelectorAll('.check-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'reset') {
+        state.results[id].status = 'pending';
+      } else {
+        state.results[id].status = action;
+      }
+      saveState();
+      renderChecklist();
+      updateSummary();
+    });
+  });
+
+  // Bind note events
+  container.querySelectorAll('textarea').forEach(ta => {
+    ta.addEventListener('input', () => {
+      const id = ta.dataset.id;
+      state.results[id].note = ta.value;
+      saveState();
+    });
+  });
+}
+
+function updateSummary() {
+  let pass = 0, fail = 0, pending = 0;
+  for (const c of CHECKS) {
+    const s = state.results[c.id].status;
+    if (s === 'pass') pass++;
+    else if (s === 'fail') fail++;
+    else pending++;
+  }
+
+  const sp = document.getElementById('vsum-pass');
+  const sf = document.getElementById('vsum-fail');
+  const sr = document.getElementById('vsum-pending');
+
+  sp.textContent = pass + ' passed';
+  sp.className = 'cs-badge ' + (pass > 0 ? 'pass' : 'pending');
+
+  sf.textContent = fail + ' failed';
+  sf.className = 'cs-badge ' + (fail > 0 ? 'fail' : 'pending');
+
+  sr.textContent = pending + ' remaining';
+  sr.className = 'cs-badge pending';
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ============================================================================
+// VIEWPORT CONTROLS
+// ============================================================================
+
+document.querySelectorAll('.width-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.width-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const iframe = document.getElementById('app-frame');
+    const panel = document.getElementById('app-panel');
+
+    switch (btn.dataset.width) {
+      case 'desktop':
+        iframe.style.width = '100%';
+        iframe.style.maxWidth = '';
+        iframe.style.margin = '';
+        iframe.style.border = '';
+        panel.style.background = '';
+        break;
+      case 'tablet':
+        iframe.style.width = '768px';
+        iframe.style.maxWidth = '100%';
+        iframe.style.margin = '0 auto';
+        iframe.style.border = '1px solid rgba(130,155,190,.2)';
+        panel.style.background = '#060a12';
+        break;
+      case 'mobile':
+        iframe.style.width = '375px';
+        iframe.style.maxWidth = '100%';
+        iframe.style.margin = '0 auto';
+        iframe.style.border = '1px solid rgba(130,155,190,.2)';
+        panel.style.background = '#060a12';
+        break;
+    }
+  });
+});
+
+// ============================================================================
+// RESET ALL
+// ============================================================================
+
+document.getElementById('btn-reset-all').addEventListener('click', () => {
+  if (!confirm('Reset all test results? This cannot be undone.')) return;
+  state = createFreshState();
+  saveState();
+  renderChecklist();
+  updateSummary();
+});
+
+// ============================================================================
+// EXPORT RESULTS
+// ============================================================================
+
+document.getElementById('btn-export').addEventListener('click', () => {
+  const lines = [];
+  lines.push('# Exoplanet Universe — Visual Smoke Test Results');
+  lines.push(`Date: ${new Date().toISOString().slice(0, 19).replace('T', ' ')}`);
+  lines.push('');
+
+  let pass = 0, fail = 0, pending = 0;
+  for (const c of CHECKS) {
+    const s = state.results[c.id].status;
+    if (s === 'pass') pass++;
+    else if (s === 'fail') fail++;
+    else pending++;
+  }
+  lines.push(`Summary: ${pass} passed, ${fail} failed, ${pending} remaining`);
+  lines.push('');
+
+  let currentCategory = '';
+  for (const c of CHECKS) {
+    if (c.category !== currentCategory) {
+      currentCategory = c.category;
+      lines.push(`## ${currentCategory}`);
+    }
+    const r = state.results[c.id];
+    const icon = r.status === 'pass' ? '[PASS]' : r.status === 'fail' ? '[FAIL]' : '[    ]';
+    lines.push(`${icon} ${c.id}: ${c.text}`);
+    if (r.note) lines.push(`       Note: ${r.note}`);
+  }
+
+  const text = lines.join('\n');
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Results copied to clipboard');
+  }).catch(() => {
+    // Fallback: open in a new window
+    const w = window.open('', '_blank');
+    w.document.write('<pre>' + text.replace(/</g, '&lt;') + '</pre>');
+  });
+});
+
+// ============================================================================
+// INIT
+// ============================================================================
+
+renderChecklist();
+updateSummary();
+</script>
+</body>
+</html>
