@@ -3040,6 +3040,17 @@ canvas.addEventListener('touchend',e=>{
   }
 });
 
+// ── Safari/iOS gesture event interception ────────────────────────────────
+// Safari fires gesturestart/gesturechange/gestureend for pinch gestures
+// INDEPENDENTLY of touchstart/touchmove. The browser's native page zoom
+// is driven by gesture events, not touch events. preventDefault() on
+// touch events alone does NOT prevent Safari from zooming the page.
+canvas.addEventListener('gesturestart',e=>{e.preventDefault()},{passive:false});
+canvas.addEventListener('gesturechange',e=>{e.preventDefault()},{passive:false});
+canvas.addEventListener('gestureend',e=>{e.preventDefault()},{passive:false});
+// Catch any pinch zoom escaping canvas (e.g. starting on UI overlay)
+document.addEventListener('gesturestart',e=>{e.preventDefault()},{passive:false});
+
 // ── PROMOTED MESH (dynamic mesh for clicked background points) ────────────
 let promotedMesh=null;
 function disposePromoted(){
