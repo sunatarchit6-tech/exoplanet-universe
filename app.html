@@ -1986,7 +1986,7 @@ function planetTypeLabel(temp,rad,hz){
 // ── THREE.JS ──────────────────────────────────────────────────────────────────
 const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
 renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.setClearColor(0x000000,1);
 const scene=new THREE.Scene();
@@ -1996,7 +1996,7 @@ const camera=new THREE.PerspectiveCamera(52,window.innerWidth/window.innerHeight
 const composer=new THREE.EffectComposer(renderer);
 composer.addPass(new THREE.RenderPass(scene,camera));
 const bloomPass=new THREE.UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth,window.innerHeight),
+  new THREE.Vector2(Math.floor(window.innerWidth/2),Math.floor(window.innerHeight/2)),
   0.25,  // strength — kept low to avoid blown-out look
   0.5,   // radius
   0.88   // threshold — high so only bright things bloom (Sun, hot stars)
@@ -4459,8 +4459,8 @@ function animate(ts){
     }
   }
 
-  // Update planet label visibility/opacity every 4th frame (RC-1: distance-based, not frame-rate)
-  if(frame%4===0){
+  // Update planet label visibility/opacity every 8th frame (RC-1: distance-based, not frame-rate)
+  if(frame%8===0){
     const camPos=camera.position;
     for(const p of namedPlanets){
       if(!p.label) continue;
@@ -4535,7 +4535,7 @@ function animate(ts){
 
   // ── Background point hover highlight (FIX 2) ──────────────────────────────
   // Every 6th frame, if mouse moved, check screen-space proximity to bg points
-  if(frame%6===0 && BN>0 && _hoverMX>=0 && (_hoverMX!==_hoverLastMX||_hoverMY!==_hoverLastMY) && !CAM.dragging){
+  if(frame%12===0 && BN>0 && _hoverMX>=0 && (_hoverMX!==_hoverLastMX||_hoverMY!==_hoverLastMY) && !CAM.dragging){
     _hoverLastMX=_hoverMX; _hoverLastMY=_hoverMY;
     const halfW=window.innerWidth*0.5, halfH=window.innerHeight*0.5;
     let bestIdx=-1, bestDist=Infinity;
