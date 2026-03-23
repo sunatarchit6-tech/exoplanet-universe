@@ -55,14 +55,15 @@
   --border:rgba(130,155,190,.1);
   --border-hover:rgba(130,155,190,.25);
   --text-primary:#dce4f0;
-  --text-secondary:#6a7d95;
-  --text-dim:#3d4f66;
+  --text-secondary:#8a9db8;
+  --text-dim:#4a5f78;
   --accent-blue:#4477cc;
   --accent-gold:#b0a060;
   --glass-blur:blur(20px) saturate(1.2);
   --radius:14px;
   --font-heading:'Cormorant Garamond',Georgia,serif;
   --font-body:'JetBrains Mono','Courier New',monospace;
+  --font-prose:'Cormorant Garamond',Georgia,serif;
 }
 html{scroll-behavior:smooth}
 body{
@@ -70,7 +71,7 @@ body{
   color:var(--text-primary);
   font-family:var(--font-body);
   font-weight:300;
-  font-size:13px;
+  font-size:14px;
   line-height:1.7;
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
@@ -168,8 +169,8 @@ section{padding:100px 0}
   letter-spacing:.02em;color:var(--text-primary);margin-bottom:28px;
 }
 .hero-subtitle{
-  font-size:14px;line-height:1.8;color:var(--text-secondary);
-  max-width:560px;margin:0 auto 48px;
+  font-family:var(--font-prose);font-size:18px;line-height:1.7;color:var(--text-secondary);
+  max-width:560px;margin:0 auto 48px;font-weight:300;
 }
 .hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
 .btn{
@@ -216,8 +217,8 @@ section{padding:100px 0}
   color:var(--text-primary);margin-bottom:16px;
 }
 .section-desc{
-  font-size:13px;color:var(--text-secondary);
-  max-width:560px;line-height:1.8;margin-bottom:48px;
+  font-family:var(--font-prose);font-size:17px;color:var(--text-secondary);
+  max-width:560px;line-height:1.7;margin-bottom:48px;font-weight:300;
 }
 
 /* ── Overview cards ────────────────────────────────────── */
@@ -258,13 +259,16 @@ section{padding:100px 0}
 }
 .method-nav a:hover,.method-nav a.active{color:var(--text-secondary)}
 .method-content{padding-left:48px}
-.method-section{margin-bottom:56px}
+.method-section{margin-bottom:72px;padding-bottom:72px;border-bottom:1px solid rgba(130,155,190,.06)}
+.method-section:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
 .method-section h3{
   font-family:var(--font-heading);font-weight:400;
-  font-size:20px;color:var(--text-primary);margin-bottom:16px;
+  font-size:22px;color:var(--text-primary);margin-bottom:20px;
+  padding-left:16px;border-left:2px solid var(--accent-gold);
 }
 .method-section p{
-  font-size:12.5px;color:var(--text-secondary);line-height:1.85;margin-bottom:16px;
+  font-family:var(--font-prose);font-size:16px;font-weight:300;
+  color:var(--text-secondary);line-height:1.8;margin-bottom:16px;max-width:640px;
 }
 .method-section .formula{
   display:block;padding:16px 20px;margin:16px 0;
@@ -276,8 +280,9 @@ section{padding:100px 0}
   list-style:none;padding:0;margin:12px 0;
 }
 .method-section li{
-  font-size:12px;color:var(--text-secondary);line-height:1.8;
-  padding-left:16px;position:relative;margin-bottom:4px;
+  font-family:var(--font-prose);font-size:15px;font-weight:300;
+  color:var(--text-secondary);line-height:1.8;
+  padding-left:16px;position:relative;margin-bottom:6px;
 }
 .method-section li::before{
   content:'';position:absolute;left:0;top:10px;
@@ -322,13 +327,14 @@ section{padding:100px 0}
   border-bottom:1px solid var(--border);font-weight:400;
 }
 .milestones-table td{
-  font-size:12px;color:var(--text-secondary);padding:12px 0;
+  font-family:var(--font-prose);font-size:15px;font-weight:300;
+  color:var(--text-secondary);padding:14px 0;
   border-bottom:1px solid rgba(130,155,190,.04);
   vertical-align:top;
 }
 .milestones-table td:first-child{
-  color:var(--accent-gold);font-variant-numeric:tabular-nums;
-  white-space:nowrap;padding-right:24px;width:60px;
+  font-family:var(--font-body);color:var(--accent-gold);font-variant-numeric:tabular-nums;
+  white-space:nowrap;padding-right:24px;width:60px;font-size:12px;
 }
 .milestone-event{color:var(--text-primary);font-weight:400}
 .data-source-link{
@@ -343,8 +349,9 @@ section{padding:100px 0}
   list-style:decimal;padding-left:24px;margin:0 0 48px;
 }
 .citation-list li{
-  font-size:12px;color:var(--text-secondary);line-height:1.85;
-  margin-bottom:12px;padding-left:8px;
+  font-family:var(--font-prose);font-size:15px;font-weight:300;
+  color:var(--text-secondary);line-height:1.8;
+  margin-bottom:14px;padding-left:8px;
 }
 .citation-list a{color:var(--accent-blue);text-decoration:none;word-break:break-all}
 .citation-list a:hover{color:var(--text-primary)}
@@ -356,8 +363,9 @@ section{padding:100px 0}
 }
 .credits ul{list-style:none;padding:0}
 .credits li{
-  font-size:12px;color:var(--text-secondary);line-height:1.85;
-  margin-bottom:8px;
+  font-family:var(--font-prose);font-size:15px;font-weight:300;
+  color:var(--text-secondary);line-height:1.8;
+  margin-bottom:10px;
 }
 
 /* ── Footer / Disclaimer ──────────────────────────────── */
@@ -367,14 +375,33 @@ footer{
 }
 .disclaimer{margin-bottom:48px}
 .disclaimer p{
-  font-size:11.5px;color:var(--text-secondary);line-height:1.85;
-  margin-bottom:12px;
+  font-family:var(--font-prose);font-size:15px;font-weight:300;
+  color:var(--text-secondary);line-height:1.8;
+  margin-bottom:14px;
 }
 .footer-bottom{
   padding-top:24px;
   border-top:1px solid rgba(130,155,190,.04);
   font-size:10px;color:var(--text-dim);letter-spacing:.04em;
 }
+
+/* ── Bottom CTA ────────────────────────────────────────── */
+.bottom-cta{
+  text-align:center;padding:80px 0;
+}
+.bottom-cta-card{
+  display:inline-block;
+  background:var(--bg-surface);
+  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:40px 56px;
+  box-shadow:0 8px 40px rgba(0,0,0,.2);
+}
+.bottom-cta-text{
+  font-family:var(--font-prose);font-size:18px;font-weight:300;
+  color:var(--text-secondary);margin-bottom:24px;line-height:1.6;
+}
+.bottom-cta .btn{margin-top:8px}
 
 /* ── Responsive ────────────────────────────────────────── */
 @media(max-width:900px){
@@ -429,103 +456,18 @@ footer{
     <div class="cards">
       <div class="card reveal reveal-delay-1">
         <div class="card-number">01</div>
-        <h3>6,150 Confirmed Exoplanets</h3>
-        <p>Complete dataset from NASA's Exoplanet Archive. 137 individually textured featured planets rendered as Three.js meshes with unique surface maps. 6,013 additional planets as a WebGL Points cloud in a single draw call.</p>
+        <h3>Explore every known world</h3>
+        <p>Search, click, and fly to any of 6,150 confirmed exoplanets. Each one displays its radius, mass, temperature, orbital period, host star, and discovery details. 137 notable planets have unique surface textures; every other world is clickable too.</p>
       </div>
       <div class="card reveal reveal-delay-2">
         <div class="card-number">02</div>
-        <h3>Discovery Timeline 1992&ndash;2026</h3>
-        <p>Year-by-year playback of 30 years of exoplanet detection. Six annotated milestones including the first radial velocity detection (51 Peg b, 1995), the Kepler Space Telescope launch (2009), and the TRAPPIST-1 system (2017).</p>
+        <h3>Watch 30 years of discovery</h3>
+        <p>Press play and watch the universe fill with planets, year by year from 1992 to 2026. Annotated milestones mark the moments that changed the field: the first radial velocity detection, the Kepler launch, the TRAPPIST-1 announcement.</p>
       </div>
       <div class="card reveal reveal-delay-3">
         <div class="card-number">03</div>
-        <h3>Real Coordinates, Real Data</h3>
-        <p>Each planet positioned using its right ascension, declination, and distance from the NASA Exoplanet Archive, mapped to 3D Cartesian coordinates with logarithmic distance scaling. Physical properties displayed per-planet.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
-<!-- ═══ METHODOLOGY ════════════════════════════════════ -->
-<section aria-label="Methodology and data pipeline">
-  <div class="container">
-    <div class="section-eyebrow reveal">Methodology</div>
-    <h2 class="section-title reveal">From CSV to 3D: the data pipeline</h2>
-    <p class="section-desc reveal">How 6,150 rows of tabular data from the NASA Exoplanet Archive become an interactive three-dimensional star map.</p>
-    <div class="methodology-grid">
-      <nav class="method-nav reveal" aria-label="Methodology sections">
-        <a href="#data-source">Data Source</a>
-        <a href="#coordinates">Coordinate Mapping</a>
-        <a href="#classification">Classification</a>
-        <a href="#temperature">Temperature Estimation</a>
-        <a href="#textures">Visual Representation</a>
-        <a href="#rendering">3D Rendering</a>
-      </nav>
-      <div class="method-content">
-
-        <div class="method-section reveal" id="data-source">
-          <h3>Data Source and Processing</h3>
-          <p>The source dataset is a composite table query from the NASA Exoplanet Archive (Caltech/IPAC), accessed March 2026. Each of the 6,150 confirmed exoplanets carries 15 fields: planet name, right ascension (deg), declination (deg), distance (ly), discovery year, detection method, planet radius (R<sub>&oplus;</sub>), equilibrium temperature (K), habitable zone flag, planet mass (M<sub>&oplus;</sub>), orbital period (days), semi-major axis (AU), eccentricity, host star properties (name, effective temperature, radius, mass, spectral type), and discovery facility.</p>
-          <p>The full archive export (~50 MB CSV) is reduced to a 1.1 MB compact JSON by abbreviating field names, dropping columns not needed for visualization, and omitting null values rather than storing them explicitly. All 6,150 planets are retained regardless of data completeness&mdash;planets with missing radii, temperatures, or orbital elements are included and handled by the estimation cascade described below. This keeps the dataset small enough to load in a single HTTP request without pagination or a backend API.</p>
-        </div>
-
-        <div class="method-section reveal" id="coordinates">
-          <h3>Coordinate Mapping</h3>
-          <p>The coordinate system is heliocentric: Earth sits at the origin, and all planets are positioned relative to the Sun. Each planet's equatorial coordinates (right ascension &alpha;, declination &delta;) are converted to 3D Cartesian (x, y, z) via standard spherical-to-Cartesian transformation. Because confirmed exoplanets span distances from 4.2 light-years (Proxima Centauri b) to over 27,000 light-years, a linear distance scale would collapse the nearby systems into a single point. Distance is therefore logarithmically scaled:</p>
-          <code class="formula">d<sub>scene</sub> = log<sub>10</sub>(1 + d<sub>ly</sub>) / log<sub>10</sub>(31,001) &times; 900</code>
-          <p>This compresses the 0&ndash;30,000 light-year range into 0&ndash;900 scene units, preserving the angular distribution of systems on the sky while keeping distant discoveries visible. The trade-off: angular separations (RA/Dec) are faithfully preserved, but radial distances are nonlinear. A cluster of stars that is roughly spherical in physical space may appear elongated or compressed along the radial axis in the visualization. Concentric distance rings at 10, 100, and 1,000 light-years provide scale context for the viewer.</p>
-        </div>
-
-        <div class="method-section reveal" id="classification">
-          <h3>Planet Classification</h3>
-          <p>Planets are classified into four size categories following the scheme used by the NASA Exoplanet Archive and the Kepler mission team. The boundaries correspond to physical transitions in planet structure: below ~1.6 R<sub>&oplus;</sub>, planets are predominantly rocky with thin or no atmospheres; between 1.6&ndash;3.0 R<sub>&oplus;</sub>, volatile envelopes become significant; above ~8 R<sub>&oplus;</sub>, hydrogen-helium dominated gas giants prevail.</p>
-          <ul>
-            <li><strong>Rocky</strong> (&lt;1.6 R<sub>&oplus;</sub>) &mdash; Terrestrial planets with silicate/iron composition. Analogs: Mercury, Venus, Earth, Mars.</li>
-            <li><strong>Super-Earth</strong> (1.6&ndash;3.0 R<sub>&oplus;</sub>) &mdash; No Solar System analog. May be rocky with thick atmospheres, ocean worlds, or mini-Neptunes. The most common planet type in the galaxy.</li>
-            <li><strong>Neptune-like</strong> (3.0&ndash;8.0 R<sub>&oplus;</sub>) &mdash; Ice giants with hydrogen/helium envelopes over water-ammonia-methane interiors. Analogs: Uranus, Neptune.</li>
-            <li><strong>Gas Giant</strong> (&gt;8.0 R<sub>&oplus;</sub>) &mdash; Hydrogen-helium dominated. Includes hot Jupiters (P &lt; 10 days), warm Jupiters, and cold gas giants. Analogs: Jupiter, Saturn.</li>
-          </ul>
-          <p>Of the 6,150 planets, 1,582 lack measured radii and are classified by mass-radius relations or left unclassified. Habitable zone status follows the conservative limits of Kopparapu et al. (2013), which define the region where liquid water could persist on a rocky planet surface.</p>
-        </div>
-
-        <div class="method-section reveal" id="temperature">
-          <h3>Temperature Estimation</h3>
-          <p>Approximately 72% of planets in the archive lack a directly measured equilibrium temperature. For visualization purposes (surface color mapping and class assignment), a 5-tier estimation cascade fills in physically motivated defaults:</p>
-          <ol class="tier-list">
-            <li>Direct measurement from the archive (available for ~28% of planets)</li>
-            <li>Equilibrium temperature from semi-major axis and stellar luminosity: T<sub>eq</sub> = T<sub>star</sub> &times; &radic;(R<sub>star</sub> / 2a) &times; (1&minus;A)<sup>1/4</sup>, assuming Bond albedo A = 0.3</li>
-            <li>Semi-major axis derived from orbital period via Kepler's third law (a<sup>3</sup> = P<sup>2</sup> &times; M<sub>star</sub>), then Tier 2 applied</li>
-            <li>Host star temperature heuristic for planets with known host but no orbital data: T<sub>planet</sub> &approx; 0.117 &times; T<sub>star</sub></li>
-            <li>Detection method heuristic for remaining planets: Transit = 700 K (median of transit discoveries), RV = 500 K, Direct Imaging = 250 K, Other = 400 K</li>
-          </ol>
-          <p>These are equilibrium temperatures assuming a bare surface with no atmosphere. The cascade does not model greenhouse warming, tidal heating, or albedo variations&mdash;a Venus-like planet with a thick CO<sub>2</sub> atmosphere would have a true surface temperature far above its equilibrium value. The estimates are clearly labeled in the per-planet information panel. The cascade is designed to degrade gracefully: each tier is less precise than the last, but all produce temperatures within the physically plausible range for the given detection context.</p>
-        </div>
-
-        <div class="method-section reveal" id="textures">
-          <h3>Visual Representation</h3>
-          <p>No imaging technology can resolve the surface of an exoplanet. Planet textures in this visualization are therefore illustrative, not observational. They are generated from 49 base images sourced from NASA/JPL-Caltech Solar System imagery and Solar System Scope, transformed into 166 unique surface maps using class- and temperature-appropriate color palettes.</p>
-          <p>Seven manipulation axes produce visual diversity: hue rotation, brightness, per-channel color tint (RGB multiplication), contrast, saturation, horizontal longitude rotation, and hemisphere flip. Palettes are constrained by what atmospheric and surface chemistry predicts for each class:</p>
-          <ul>
-            <li><strong>Rocky</strong> &mdash; grays, browns, reds, oranges (regolith, iron oxide, silicate surfaces)</li>
-            <li><strong>Super-Earth</strong> &mdash; blues (deep oceans), whites (ice/cloud cover), tans (arid surfaces)</li>
-            <li><strong>Neptune-like</strong> &mdash; blues, teals, cyans (methane and H<sub>2</sub> Rayleigh scattering)</li>
-            <li><strong>Gas Giant</strong> &mdash; oranges, browns, tans, deep blues (ammonia clouds, phosphine, methane bands)</li>
-          </ul>
-          <p>The horizontal longitude rotation and hemisphere flip are particularly important for breaking up recognizable features from the source imagery&mdash;without them, Jupiter's Great Red Spot or Saturn's polar hexagon could appear on unrelated exoplanets. A Halton quasi-random sequence ensures maximum visual diversity between siblings sharing a base texture. All textures are rendered at 2048&times;1024 resolution on equirectangular projection, mapped onto spherical geometry.</p>
-        </div>
-
-        <div class="method-section reveal" id="rendering">
-          <h3>3D Rendering</h3>
-          <p>The visualization is built on Three.js r128 (WebGL) as a single HTML file with no build step or external dependencies beyond CDN-hosted libraries. The rendering is split into two tiers optimized for different levels of detail:</p>
-          <ul>
-            <li><strong>137 featured planets</strong> &mdash; individually modeled as sphere meshes with Phong shading, unique surface textures, and 3D text labels. Selected by a data-completeness scoring algorithm that favors planets with the most measured physical properties.</li>
-            <li><strong>6,013 background planets</strong> &mdash; rendered as a GPU-accelerated point cloud in a single draw call. A custom shader colors each point by equilibrium temperature and scales its size by camera distance. Clicking any point promotes it to a full mesh with texture and info panel.</li>
-          </ul>
-          <p>Post-processing applies a conservative bloom pass for star glow. An adaptive quality system monitors frame rate and automatically reduces resolution, particle counts, and effects on slower hardware to maintain interactive performance.</p>
-        </div>
-
+        <h3>Navigate real coordinates</h3>
+        <p>Orbit, zoom, and pan through a three-dimensional map built from real equatorial coordinates. Filter by detection method, planet class, distance, or habitable zone status. Distance rings at 10, 100, and 1,000 light-years provide spatial context.</p>
       </div>
     </div>
   </div>
@@ -687,10 +629,95 @@ footer{
 
 <div class="section-divider"></div>
 
+<!-- ═══ METHODOLOGY ════════════════════════════════════ -->
+<section aria-label="Methodology and data pipeline">
+  <div class="container">
+    <div class="section-eyebrow reveal">Methodology</div>
+    <h2 class="section-title reveal">From CSV to 3D: the data pipeline</h2>
+    <p class="section-desc reveal">How 6,150 rows of tabular data from the NASA Exoplanet Archive become an interactive three-dimensional star map.</p>
+    <div class="methodology-grid">
+      <nav class="method-nav reveal" aria-label="Methodology sections">
+        <a href="#data-source">Data Source</a>
+        <a href="#coordinates">Coordinate Mapping</a>
+        <a href="#classification">Classification</a>
+        <a href="#temperature">Temperature Estimation</a>
+        <a href="#textures">Visual Representation</a>
+        <a href="#rendering">3D Rendering</a>
+      </nav>
+      <div class="method-content">
+
+        <div class="method-section reveal" id="data-source">
+          <h3>Data Source and Processing</h3>
+          <p>The source dataset is a composite table query from the NASA Exoplanet Archive (Caltech/IPAC), accessed March 2026. Each of the 6,150 confirmed exoplanets carries 15 fields: planet name, right ascension (deg), declination (deg), distance (ly), discovery year, detection method, planet radius (R<sub>&oplus;</sub>), equilibrium temperature (K), habitable zone flag, planet mass (M<sub>&oplus;</sub>), orbital period (days), semi-major axis (AU), eccentricity, host star properties (name, effective temperature, radius, mass, spectral type), and discovery facility.</p>
+          <p>The full archive export (~50 MB CSV) is reduced to a 1.1 MB compact JSON by abbreviating field names, dropping columns not needed for visualization, and omitting null values rather than storing them explicitly. All 6,150 planets are retained regardless of data completeness&mdash;planets with missing radii, temperatures, or orbital elements are included and handled by the estimation cascade described below. This keeps the dataset small enough to load in a single HTTP request without pagination or a backend API.</p>
+        </div>
+
+        <div class="method-section reveal" id="coordinates">
+          <h3>Coordinate Mapping</h3>
+          <p>The coordinate system is heliocentric: Earth sits at the origin, and all planets are positioned relative to the Sun. Each planet's equatorial coordinates (right ascension &alpha;, declination &delta;) are converted to 3D Cartesian (x, y, z) via standard spherical-to-Cartesian transformation. Because confirmed exoplanets span distances from 4.2 light-years (Proxima Centauri b) to over 27,000 light-years, a linear distance scale would collapse the nearby systems into a single point. Distance is therefore logarithmically scaled:</p>
+          <code class="formula">d<sub>scene</sub> = log<sub>10</sub>(1 + d<sub>ly</sub>) / log<sub>10</sub>(31,001) &times; 900</code>
+          <p>This compresses the 0&ndash;30,000 light-year range into 0&ndash;900 scene units, preserving the angular distribution of systems on the sky while keeping distant discoveries visible. The trade-off: angular separations (RA/Dec) are faithfully preserved, but radial distances are nonlinear. A cluster of stars that is roughly spherical in physical space may appear elongated or compressed along the radial axis in the visualization. Concentric distance rings at 10, 100, and 1,000 light-years provide scale context for the viewer.</p>
+        </div>
+
+        <div class="method-section reveal" id="classification">
+          <h3>Planet Classification</h3>
+          <p>Planets are classified into four size categories following the scheme used by the NASA Exoplanet Archive and the Kepler mission team. The boundaries correspond to physical transitions in planet structure: below ~1.6 R<sub>&oplus;</sub>, planets are predominantly rocky with thin or no atmospheres; between 1.6&ndash;3.0 R<sub>&oplus;</sub>, volatile envelopes become significant; above ~8 R<sub>&oplus;</sub>, hydrogen-helium dominated gas giants prevail.</p>
+          <ul>
+            <li><strong>Rocky</strong> (&lt;1.6 R<sub>&oplus;</sub>) &mdash; Terrestrial planets with silicate/iron composition. Analogs: Mercury, Venus, Earth, Mars.</li>
+            <li><strong>Super-Earth</strong> (1.6&ndash;3.0 R<sub>&oplus;</sub>) &mdash; No Solar System analog. May be rocky with thick atmospheres, ocean worlds, or mini-Neptunes. The most common planet type in the galaxy.</li>
+            <li><strong>Neptune-like</strong> (3.0&ndash;8.0 R<sub>&oplus;</sub>) &mdash; Ice giants with hydrogen/helium envelopes over water-ammonia-methane interiors. Analogs: Uranus, Neptune.</li>
+            <li><strong>Gas Giant</strong> (&gt;8.0 R<sub>&oplus;</sub>) &mdash; Hydrogen-helium dominated. Includes hot Jupiters (P &lt; 10 days), warm Jupiters, and cold gas giants. Analogs: Jupiter, Saturn.</li>
+          </ul>
+          <p>Of the 6,150 planets, 1,582 lack measured radii and are classified by mass-radius relations or left unclassified. Habitable zone status follows the conservative limits of Kopparapu et al. (2013), which define the region where liquid water could persist on a rocky planet surface.</p>
+        </div>
+
+        <div class="method-section reveal" id="temperature">
+          <h3>Temperature Estimation</h3>
+          <p>Approximately 72% of planets in the archive lack a directly measured equilibrium temperature. For visualization purposes (surface color mapping and class assignment), a 5-tier estimation cascade fills in physically motivated defaults:</p>
+          <ol class="tier-list">
+            <li>Direct measurement from the archive (available for ~28% of planets)</li>
+            <li>Equilibrium temperature from semi-major axis and stellar luminosity: T<sub>eq</sub> = T<sub>star</sub> &times; &radic;(R<sub>star</sub> / 2a) &times; (1&minus;A)<sup>1/4</sup>, assuming Bond albedo A = 0.3</li>
+            <li>Semi-major axis derived from orbital period via Kepler's third law (a<sup>3</sup> = P<sup>2</sup> &times; M<sub>star</sub>), then Tier 2 applied</li>
+            <li>Host star temperature heuristic for planets with known host but no orbital data: T<sub>planet</sub> &approx; 0.117 &times; T<sub>star</sub></li>
+            <li>Detection method heuristic for remaining planets: Transit = 700 K (median of transit discoveries), RV = 500 K, Direct Imaging = 250 K, Other = 400 K</li>
+          </ol>
+          <p>These are equilibrium temperatures assuming a bare surface with no atmosphere. The cascade does not model greenhouse warming, tidal heating, or albedo variations&mdash;a Venus-like planet with a thick CO<sub>2</sub> atmosphere would have a true surface temperature far above its equilibrium value. The estimates are clearly labeled in the per-planet information panel. The cascade is designed to degrade gracefully: each tier is less precise than the last, but all produce temperatures within the physically plausible range for the given detection context.</p>
+        </div>
+
+        <div class="method-section reveal" id="textures">
+          <h3>Visual Representation</h3>
+          <p>No imaging technology can resolve the surface of an exoplanet. Planet textures in this visualization are therefore illustrative, not observational. They are generated from 49 base images sourced from NASA/JPL-Caltech Solar System imagery and Solar System Scope, transformed into 166 unique surface maps using class- and temperature-appropriate color palettes.</p>
+          <p>Seven manipulation axes produce visual diversity: hue rotation, brightness, per-channel color tint (RGB multiplication), contrast, saturation, horizontal longitude rotation, and hemisphere flip. Palettes are constrained by what atmospheric and surface chemistry predicts for each class:</p>
+          <ul>
+            <li><strong>Rocky</strong> &mdash; grays, browns, reds, oranges (regolith, iron oxide, silicate surfaces)</li>
+            <li><strong>Super-Earth</strong> &mdash; blues (deep oceans), whites (ice/cloud cover), tans (arid surfaces)</li>
+            <li><strong>Neptune-like</strong> &mdash; blues, teals, cyans (methane and H<sub>2</sub> Rayleigh scattering)</li>
+            <li><strong>Gas Giant</strong> &mdash; oranges, browns, tans, deep blues (ammonia clouds, phosphine, methane bands)</li>
+          </ul>
+          <p>The horizontal longitude rotation and hemisphere flip are particularly important for breaking up recognizable features from the source imagery&mdash;without them, Jupiter's Great Red Spot or Saturn's polar hexagon could appear on unrelated exoplanets. A Halton quasi-random sequence ensures maximum visual diversity between siblings sharing a base texture. All textures are rendered at 2048&times;1024 resolution on equirectangular projection, mapped onto spherical geometry.</p>
+        </div>
+
+        <div class="method-section reveal" id="rendering">
+          <h3>3D Rendering</h3>
+          <p>The visualization is built on Three.js r128 (WebGL) as a single HTML file with no build step or external dependencies beyond CDN-hosted libraries. The rendering is split into two tiers optimized for different levels of detail:</p>
+          <ul>
+            <li><strong>137 featured planets</strong> &mdash; individually modeled as sphere meshes with Phong shading, unique surface textures, and 3D text labels. Selected by a data-completeness scoring algorithm that favors planets with the most measured physical properties.</li>
+            <li><strong>6,013 background planets</strong> &mdash; rendered as a GPU-accelerated point cloud in a single draw call. A custom shader colors each point by equilibrium temperature and scales its size by camera distance. Clicking any point promotes it to a full mesh with texture and info panel.</li>
+          </ul>
+          <p>Post-processing applies a conservative bloom pass for star glow. An adaptive quality system monitors frame rate and automatically reduces resolution, particle counts, and effects on slower hardware to maintain interactive performance.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
 <!-- ═══ CITATIONS ══════════════════════════════════════ -->
 <section aria-label="Citations and references">
   <div class="container">
-    <div class="section-eyebrow reveal">Citations</div>
+    <div class="section-eyebrow reveal">References</div>
     <h2 class="section-title reveal">References</h2>
     <div class="citations reveal">
       <ol class="citation-list">
@@ -713,6 +740,18 @@ footer{
         <li><strong>Starfield imagery:</strong> ESA/Gaia/DPAC (CC BY-SA 3.0 IGO).</li>
         <li><strong>Solar System body textures:</strong> NASA Goddard Space Flight Center (Earth, Moon); NASA/SDO (Sun).</li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══ BOTTOM CTA ═════════════════════════════════════ -->
+<section class="bottom-cta" aria-label="Launch visualization">
+  <div class="container">
+    <div class="bottom-cta-card reveal">
+      <p class="bottom-cta-text">6,150 worlds. 30 years of discovery. One interactive map.</p>
+      <a href="app.html" class="btn btn-primary">Launch Visualization <span class="btn-arrow">&rarr;</span></a>
     </div>
   </div>
 </section>
