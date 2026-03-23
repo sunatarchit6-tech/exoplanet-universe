@@ -3052,6 +3052,8 @@ let _ptrStartMid={x:0,y:0};
 let _ptrWasMulti=false;
 let _ptrStartSingle={x:0,y:0};
 let _ptrLastSingle={x:0,y:0};
+let _lastTouchClickT=0;   // debounce: prevent pointer+touch double-fire
+const TOUCH_TAP_RADIUS=20; // px — larger than mouse (8px) to account for finger jitter
 
 function _addPointer(e){
   _pointers.push(e.pointerId);
@@ -3151,7 +3153,8 @@ canvas.addEventListener('pointerup',e=>{
   if(e.pointerType==='mouse') return;
   // Tap-to-select: if single pointer, didn't move much, and wasn't multi-touch
   if(_pointers.length===1&&!_ptrWasMulti){
-    if(Math.hypot(e.clientX-_ptrStartSingle.x,e.clientY-_ptrStartSingle.y)<8){
+    if(Math.hypot(e.clientX-_ptrStartSingle.x,e.clientY-_ptrStartSingle.y)<TOUCH_TAP_RADIUS){
+      _lastTouchClickT=performance.now();
       doClick(_ptrStartSingle.x,_ptrStartSingle.y);
     }
   }
@@ -3167,7 +3170,8 @@ canvas.addEventListener('pointercancel',e=>{
   // pointercancel may have zeroed clientX/clientY on some iOS versions.
   if(_pointers.length===1&&!_ptrWasMulti){
     const ex=e.clientX||_ptrLastSingle.x, ey=e.clientY||_ptrLastSingle.y;
-    if(Math.hypot(ex-_ptrStartSingle.x,ey-_ptrStartSingle.y)<8){
+    if(Math.hypot(ex-_ptrStartSingle.x,ey-_ptrStartSingle.y)<TOUCH_TAP_RADIUS){
+      _lastTouchClickT=performance.now();
       doClick(_ptrStartSingle.x,_ptrStartSingle.y);
     }
   }
@@ -3199,10 +3203,10 @@ canvas.addEventListener('touchend',e=>{
   // If pointer events handled this touch, check if they left a stale pointer
   // (iOS Safari sometimes fires touchend without a matching pointerup)
   if(_pointers.length>0&&e.touches.length===0){
-    // Force-clear stale pointers — the touch has physically ended
     _pointers.length=0;_pointerPos={};
   }
-  if(e.touches.length===0&&!wasMultiTouch&&!_ptrWasMulti){if(Math.hypot(tpx-tS.x,tpy-tS.y)<8) doClick(tS.x,tS.y);}
+  // Only fire doClick if pointer events didn't already handle it (debounce 300ms)
+  if(e.touches.length===0&&!wasMultiTouch&&!_ptrWasMulti&&(performance.now()-_lastTouchClickT>300)){if(Math.hypot(tpx-tS.x,tpy-tS.y)<TOUCH_TAP_RADIUS) doClick(tS.x,tS.y);}
   if(e.touches.length===0){wasMultiTouch=false;if(CAM.mode==='orbit'||CAM.mode==='pan') CAM.mode='idle';}
 });
 
