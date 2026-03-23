@@ -267,27 +267,29 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
     --label-size:10px;
   }
 
-  /* Title */
-  #title-block{right:var(--ui-pad);max-width:none}
-  #main-title{font-size:16px}
+  /* Title — minimal, no glass panel on mobile */
+  #title-block{right:auto;max-width:calc(100vw - 110px);padding:10px 14px;background:none;border:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+  #main-title{font-size:15px}
   #sub{display:none}
 
-  /* Counter */
-  #count-n{font-size:22px}
-  #count-l{font-size:8px}
+  /* Counter — compact, top-right, no glass panel */
+  #count-block{padding:10px 14px;background:none;border:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+  #count-n{font-size:20px}
+  #count-l{font-size:7px}
 
-  /* Search — full width (width handled by --search-width) */
-  #search-box{height:40px}
-  #search-input{font-size:14px;padding:10px 12px}
-  #search-clear{font-size:22px;padding:8px;min-width:var(--btn-min);min-height:var(--btn-min)}
+  /* Search — full width, below title area */
+  #search-wrap{width:calc(100vw - 28px);margin-top:6px}
+  #search-box{height:38px}
+  #search-input{font-size:14px;padding:8px 10px}
+  #search-clear{font-size:20px;padding:6px;min-width:var(--btn-min);min-height:var(--btn-min)}
   #search-results{max-height:50vh;left:0;right:0}
 
-  /* Filter toggle — visible */
-  #filter-toggle{display:inline-flex;top:118px;left:var(--ui-pad);min-height:var(--btn-min);min-width:var(--btn-min)}
+  /* Filter toggle — right after search */
+  #filter-toggle{display:inline-flex;top:auto;position:relative;margin-top:8px;min-height:var(--btn-min);min-width:var(--btn-min)}
   #filter-toggle:active{background:rgba(130,155,190,.25)}
 
-  /* Filters — hidden by default on mobile (width handled by --filter-width) */
-  #filters{display:none;top:160px;left:var(--ui-pad);z-index:20;background:rgba(10,14,28,.65);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:var(--ui-pad);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)}
+  /* Filters — hidden by default on mobile, positioned dynamically by JS */
+  #filters{display:none;left:var(--ui-pad);z-index:20;background:rgba(10,14,28,.75);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:var(--ui-pad);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)}
 
   /* Filter buttons — touch-sized */
   .fb{padding:8px 14px;font-size:var(--btn-size);min-height:var(--btn-min)}
@@ -309,11 +311,9 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
   #credits-overlay{display:none!important}
   #dist-indicator{display:none}
 
-  /* Toolbar repositioned */
-  #toolbar-right{bottom:auto;top:58px;right:60px}
-
-  /* Reset button — below counter, right side, larger for touch */
-  #reset-btn{bottom:auto;top:58px;left:auto;right:var(--ui-pad);padding:8px var(--ui-pad);font-size:var(--btn-size);z-index:5}
+  /* Mobile toolbar strip — single row below title block */
+  #toolbar-right{position:fixed;bottom:calc(var(--control-height) + 12px);right:var(--ui-pad);top:auto;display:flex;gap:6px;z-index:10}
+  #reset-btn{position:fixed;bottom:calc(var(--control-height) + 12px);left:var(--ui-pad);top:auto;right:auto;padding:6px 10px;font-size:9px;z-index:10}
 
   /* Controls / timeline — compact */
   #controls{gap:10px;padding:0 var(--ui-pad);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -330,9 +330,9 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
   /* Fly HUD — above controls */
   #fly-hud{bottom:90px}
 
-  /* Music player — compact mobile */
-  #music-toggle{bottom:auto;top:58px;left:var(--ui-pad);right:auto;width:var(--toolbar-btn);height:var(--toolbar-btn);font-size:18px}
-  #music-player{bottom:auto;top:104px;left:var(--ui-pad);right:var(--ui-pad);width:auto}
+  /* Music player — above reset on left side */
+  #music-toggle{position:fixed;bottom:calc(var(--control-height) + 52px);left:var(--ui-pad);top:auto;right:auto;width:36px;height:36px;font-size:16px}
+  #music-player{position:fixed;bottom:calc(var(--control-height) + 52px);left:calc(var(--ui-pad) + 44px);top:auto;right:var(--ui-pad);width:auto}
 }
 
 /* ── LARGE DESKTOP (1441px+) ─────────────────────────────── */
