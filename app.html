@@ -3162,6 +3162,15 @@ canvas.addEventListener('pointerup',e=>{
   }
 });
 canvas.addEventListener('pointercancel',e=>{
+  // iOS Safari fires pointercancel instead of pointerup in many cases.
+  // Treat as pointerup for tap detection. Use last known position since
+  // pointercancel may have zeroed clientX/clientY on some iOS versions.
+  if(_pointers.length===1&&!_ptrWasMulti){
+    const ex=e.clientX||_ptrLastSingle.x, ey=e.clientY||_ptrLastSingle.y;
+    if(Math.hypot(ex-_ptrStartSingle.x,ey-_ptrStartSingle.y)<8){
+      doClick(_ptrStartSingle.x,_ptrStartSingle.y);
+    }
+  }
   _removePointer(e);
   if(_pointers.length===0){
     _ptrWasMulti=false;
@@ -3172,10 +3181,12 @@ canvas.addEventListener('pointercancel',e=>{
 // ── Legacy touch events (fallback for browsers that don't fire pointer events) ──
 let touchStartDist=0,touchStartMid={x:0,y:0},wasMultiTouch=false,tpx=0,tpy=0,tS={x:0,y:0};
 canvas.addEventListener('touchstart',e=>{
+  // Always capture touch start position for fallback tap detection
+  if(e.touches.length===1){tpx=e.touches[0].clientX;tpy=e.touches[0].clientY;tS={x:tpx,y:tpy};}
   if(_pointers.length>0) return; // pointer events handling this
   e.preventDefault();
   camCancelFly();
-  if(e.touches.length===1){CAM.mode='orbit';tpx=e.touches[0].clientX;tpy=e.touches[0].clientY;tS={x:tpx,y:tpy};wasMultiTouch=false;}
+  if(e.touches.length===1){CAM.mode='orbit';wasMultiTouch=false;}
   if(e.touches.length>=2){wasMultiTouch=true;CAM.mode='pan';const t0=e.touches[0],t1=e.touches[1];touchStartDist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);touchStartMid={x:(t0.clientX+t1.clientX)/2,y:(t0.clientY+t1.clientY)/2};}
 },{passive:false});
 canvas.addEventListener('touchmove',e=>{
@@ -3185,8 +3196,13 @@ canvas.addEventListener('touchmove',e=>{
   else if(e.touches.length>=2){const t0=e.touches[0],t1=e.touches[1],curDist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY),curMid={x:(t0.clientX+t1.clientX)/2,y:(t0.clientY+t1.clientY)/2};if(touchStartDist>0){const rs=touchStartDist/curDist,ps=Math.pow(rs,3),sp=CAM.radius-CAM.MIN_R;CAM.radius=Math.min(CAM.MAX_R,CAM.MIN_R+sp*ps);if(ps<1&&sp<2){camera.updateMatrixWorld();const fw=new THREE.Vector3();camera.getWorldDirection(fw);CAM.center.addScaledVector(fw,(1-ps)*15*(1+CAM._center.length()*0.005));}touchStartDist=curDist;}const mx=curMid.x-touchStartMid.x,my=curMid.y-touchStartMid.y;if(Math.abs(mx)>0.5||Math.abs(my)>0.5){camera.updateMatrixWorld();const me=camera.matrixWorld.elements,rt=new THREE.Vector3(me[0],me[1],me[2]).normalize(),up=new THREE.Vector3(me[4],me[5],me[6]).normalize(),s=CAM._radius*0.003;CAM.center.addScaledVector(rt,-mx*s);CAM.center.addScaledVector(up,my*s);}touchStartMid=curMid;}
 },{passive:false});
 canvas.addEventListener('touchend',e=>{
-  if(_pointers.length>0) return;
-  if(e.touches.length===0&&!wasMultiTouch){if(Math.hypot(tpx-tS.x,tpy-tS.y)<8) doClick(tS.x,tS.y);}
+  // If pointer events handled this touch, check if they left a stale pointer
+  // (iOS Safari sometimes fires touchend without a matching pointerup)
+  if(_pointers.length>0&&e.touches.length===0){
+    // Force-clear stale pointers — the touch has physically ended
+    _pointers.length=0;_pointerPos={};
+  }
+  if(e.touches.length===0&&!wasMultiTouch&&!_ptrWasMulti){if(Math.hypot(tpx-tS.x,tpy-tS.y)<8) doClick(tS.x,tS.y);}
   if(e.touches.length===0){wasMultiTouch=false;if(CAM.mode==='orbit'||CAM.mode==='pan') CAM.mode='idle';}
 });
 
