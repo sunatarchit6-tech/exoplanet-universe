@@ -4772,10 +4772,7 @@ document.getElementById('screenshot-btn').addEventListener('click',()=>{
       // Convert data URL to blob for share API
       fetch(dataUrl).then(r=>r.blob()).then(blob=>{
         const file=new File([blob],fname,{type:'image/png'});
-        navigator.share({files:[file],title:'Exoplanet Universe'}).catch(()=>{
-          // Share cancelled or failed — fall back to download
-          const a=document.createElement('a');a.download=fname;a.href=dataUrl;a.click();
-        });
+        navigator.share({files:[file],title:'Exoplanet Universe'}).catch(()=>{});
       });
     } else {
       // Desktop: direct download
