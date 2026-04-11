@@ -63,8 +63,8 @@ The Navigator's standard: "Would a product manager at NASA greenlight this?" Spe
 
 ### Project Structure
 ```
-/Users/archit/Documents/Archit Personal/Exoplanet Project/
-├── exoplanet_3d.html         # Main 3D tool (197KB, 3,866 lines) — will be renamed to app.html
+./
+├── app.html                  # Main 3D visualization (~240KB)
 ├── nasa_data.json            # 6,150 exoplanets (1.1MB)
 ├── earth_texture.jpg          # Extracted Earth texture (212KB)
 ├── sun_texture.jpg            # Sun texture (636KB)
@@ -435,7 +435,7 @@ Thumbs.db
 ### F.2 Initialize Git + Push to GitHub
 
 ```bash
-cd "/Users/archit/Documents/Archit Personal/Exoplanet Project"
+cd exoplanet-universe
 git init
 git add .
 git commit -m "Exoplanet Universe v1.0 — 6,150 confirmed exoplanets in interactive 3D"
