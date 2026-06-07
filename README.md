@@ -2,7 +2,7 @@
 
 Interactive 3D visualization of 6,150 confirmed exoplanets from NASA's Exoplanet Archive. Real coordinates, real physical properties, 30-year discovery timeline.
 
-**[Live Demo](https://exoplanet-universe.vercel.app)**
+**[Live Demo](https://planetaryscience.xyz)**
 
 ## Features
 

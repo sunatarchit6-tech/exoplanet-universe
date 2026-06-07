@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://exoplanet-universe.vercel.app/</loc><priority>1.0</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://exoplanet-universe.vercel.app/app.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://planetaryscience.xyz/</loc><lastmod>2026-06-07</lastmod><priority>1.0</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://planetaryscience.xyz/app.html</loc><lastmod>2026-06-07</lastmod><priority>0.9</priority><changefreq>monthly</changefreq></url>
 </urlset>
