@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kerr — A Black Hole Laboratory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────── BASE ─────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:'JetBrains Mono',monospace;color:#c0d0e4;-webkit-font-smoothing:antialiased}
+body{
+  background:
+    radial-gradient(circle at 30% 20%, rgba(40,60,100,.18), transparent 50%),
+    radial-gradient(circle at 75% 80%, rgba(80,40,100,.12), transparent 50%),
+    #050810;
+  position:relative;
+}
+
+/* Starfield — pure CSS via radial gradients */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 60% 70%, #cfe, transparent),
+    radial-gradient(1px 1px at 85% 25%, #fff, transparent),
+    radial-gradient(1px 1px at 45% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 10% 65%, #fce, transparent),
+    radial-gradient(1px 1px at 90% 90%, #fff, transparent),
+    radial-gradient(2px 2px at 33% 45%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 50% 55%, #cfe, transparent),
+    radial-gradient(1px 1px at 25% 90%, #fff, transparent),
+    radial-gradient(1px 1px at 80% 50%, #fff, transparent),
+    radial-gradient(2px 2px at 15% 15%, #fff, transparent),
+    radial-gradient(1px 1px at 95% 70%, #fff, transparent);
+  background-size:100% 100%;
+  opacity:.7;
+}
+
+/* ─────────────── BLACK HOLE RENDER (placeholder) ─────────────── */
+/* This is where the real WebGL ray-tracer would live. For now: SVG fake. */
+#bh-stage{
+  position:fixed;inset:0;z-index:1;display:grid;place-items:center;
+}
+#bh-svg{
+  width:min(80vmin,720px);height:min(80vmin,720px);
+  filter:drop-shadow(0 0 40px rgba(255,180,120,.15));
+  animation:bhTilt 60s ease-in-out infinite alternate;
+}
+@keyframes bhTilt{
+  0%  {transform:rotate(-3deg) scale(1);}
+  100%{transform:rotate(3deg) scale(1.02);}
+}
+.disk-rotate{
+  transform-origin:center;
+  animation:diskSpin 80s linear infinite;
+}
+@keyframes diskSpin{
+  from{transform:rotate(0deg);}
+  to  {transform:rotate(360deg);}
+}
+
+/* ─────────────── GLASSMORPHIC PANELS ─────────────── */
+.glass{
+  position:fixed;z-index:10;pointer-events:all;
+  background:rgba(10,14,28,.55);
+  border:1px solid rgba(130,155,190,.12);
+  border-radius:14px;
+  backdrop-filter:blur(24px) saturate(1.2);
+  -webkit-backdrop-filter:blur(24px) saturate(1.2);
+  box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* ─────────────── TITLE (top-left) ─────────────── */
+#title{
+  top:28px;left:28px;padding:22px 26px;max-width:340px;
+}
+#title h1{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:500;font-style:italic;
+  font-size:32px;letter-spacing:.01em;color:#dce4f0;line-height:1;
+}
+#title .sub{
+  font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:#6a7d95;margin-top:10px;
+}
+#title .tagline{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:13px;color:#8a9db8;margin-top:14px;line-height:1.5;
+}
+
+/* ─────────────── TOOLBAR (top-right) ─────────────── */
+#toolbar{
+  top:28px;right:28px;display:flex;gap:8px;
+}
+.tool-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(10,14,28,.55);
+  border:1px solid rgba(130,155,190,.12);
+  color:#8a9db8;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .2s;
+  backdrop-filter:blur(20px) saturate(1.2);
+  -webkit-backdrop-filter:blur(20px) saturate(1.2);
+}
+.tool-btn:hover{color:#dce4f0;border-color:rgba(130,155,190,.3);}
+
+/* ─────────────── CONTROLS (right side) ─────────────── */
+#controls{
+  top:50%;right:28px;transform:translateY(-50%);
+  width:280px;padding:22px 22px 24px;
+}
+#controls h2{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-weight:400;font-size:15px;color:#dce4f0;margin-bottom:4px;
+}
+#controls .section-label{
+  font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+  color:#556680;margin:18px 0 10px;
+}
+.slider-row{margin-bottom:14px;}
+.slider-row .label-line{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:6px;
+}
+.slider-row label{
+  font-size:10px;letter-spacing:.08em;color:#a0b0c4;text-transform:uppercase;
+}
+.slider-row .value{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:#dce4f0;letter-spacing:.02em;
+}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:2px;background:rgba(130,155,190,.18);
+  border-radius:1px;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:12px;height:12px;border-radius:50%;
+  background:#8a9db8;cursor:pointer;
+  border:2px solid #050810;
+  transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2);background:#c0d0e4;}
+input[type=range]::-moz-range-thumb{
+  width:12px;height:12px;border-radius:50%;
+  background:#8a9db8;cursor:pointer;border:2px solid #050810;
+}
+
+/* Dropdown */
+.dropdown{
+  width:100%;padding:8px 12px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(130,155,190,.12);
+  border-radius:8px;color:#c0d0e4;
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:.04em;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a9db8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  padding-right:32px;
+}
+
+/* Preset buttons */
+.preset-row{display:flex;gap:8px;margin-bottom:10px;}
+.preset-btn{
+  flex:1;padding:9px 6px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(130,155,190,.12);
+  border-radius:8px;color:#c0d0e4;cursor:pointer;
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:13px;transition:all .2s;
+}
+.preset-btn:hover{
+  background:rgba(130,155,190,.08);
+  border-color:rgba(130,155,190,.3);
+  color:#dce4f0;
+}
+.preset-btn .sub{
+  display:block;font-family:'JetBrains Mono',monospace;font-style:normal;
+  font-size:7px;letter-spacing:.18em;text-transform:uppercase;
+  color:#6a7d95;margin-top:2px;
+}
+
+/* Mode button */
+.mode-btn{
+  width:100%;padding:11px;margin-top:6px;
+  background:rgba(255,180,120,.04);
+  border:1px solid rgba(255,180,120,.18);
+  border-radius:8px;color:#ffd0a0;cursor:pointer;
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;
+  letter-spacing:.02em;transition:all .25s;
+}
+.mode-btn:hover{
+  background:rgba(255,180,120,.08);
+  border-color:rgba(255,180,120,.35);
+}
+
+/* ─────────────── STATS PANEL (bottom-left) ─────────────── */
+#stats{
+  bottom:28px;left:28px;padding:18px 22px;min-width:220px;
+}
+#stats .section-label{
+  font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+  color:#556680;margin-bottom:12px;
+}
+.stat-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:7px;font-size:10px;
+}
+.stat-row .k{
+  color:#8a9db8;letter-spacing:.04em;
+}
+.stat-row .v{
+  font-family:'JetBrains Mono',monospace;color:#dce4f0;
+  letter-spacing:.02em;
+}
+.stat-row .v .unit{color:#6a7d95;margin-left:2px;font-size:9px;}
+
+/* ─────────────── OVERLAY TOGGLES (bottom-center) ─────────────── */
+#overlays{
+  bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;gap:8px;padding:8px;
+}
+.overlay-chip{
+  padding:8px 14px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(130,155,190,.12);
+  border-radius:20px;color:#8a9db8;cursor:pointer;
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  transition:all .2s;user-select:none;
+}
+.overlay-chip:hover{color:#c0d0e4;}
+.overlay-chip.active{
+  background:rgba(130,155,190,.12);
+  border-color:rgba(130,155,190,.4);
+  color:#dce4f0;
+}
+
+/* ─────────────── HINT (bottom-right) ─────────────── */
+#hint{
+  bottom:32px;right:28px;font-size:8px;
+  letter-spacing:.18em;text-transform:uppercase;color:#4a6080;
+}
+
+/* responsive nudge */
+@media(max-width:900px){
+  #title{max-width:240px;padding:16px 18px;}
+  #title h1{font-size:24px;}
+  #controls{width:240px;padding:16px;}
+  #overlays{flex-wrap:wrap;justify-content:center;width:calc(100% - 56px);}
+  #stats{padding:14px 16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ─────────────── BLACK HOLE RENDER PLACEHOLDER ─────────────── -->
+<!-- The actual ray-traced Kerr renderer will replace this <svg>. -->
+<div id="bh-stage">
+  <svg id="bh-svg" viewBox="-200 -200 400 400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Accretion disk gradient: hot inner edge → cooler outer -->
+      <radialGradient id="diskGrad" cx="0" cy="0" r="180" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stop-color="#fff5d0" stop-opacity="0"/>
+        <stop offset="22%"  stop-color="#fff5d0" stop-opacity="0"/>
+        <stop offset="35%"  stop-color="#ffd070" stop-opacity=".9"/>
+        <stop offset="50%"  stop-color="#ff8040" stop-opacity=".95"/>
+        <stop offset="68%"  stop-color="#cc4020" stop-opacity=".7"/>
+        <stop offset="85%"  stop-color="#601810" stop-opacity=".3"/>
+        <stop offset="100%" stop-color="#200808" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Doppler asymmetry: brighter on one side -->
+      <linearGradient id="doppler" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0%" stop-color="#fff" stop-opacity=".0"/>
+        <stop offset="50%" stop-color="#fff" stop-opacity=".22"/>
+        <stop offset="100%" stop-color="#fff" stop-opacity=".0"/>
+      </linearGradient>
+      <!-- Photon ring glow -->
+      <radialGradient id="photonRing" cx="0" cy="0" r="78" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stop-color="#000" stop-opacity="0"/>
+        <stop offset="85%"  stop-color="#000" stop-opacity="0"/>
+        <stop offset="92%"  stop-color="#ffeed0" stop-opacity=".9"/>
+        <stop offset="96%"  stop-color="#ffaa66" stop-opacity=".5"/>
+        <stop offset="100%" stop-color="#ffaa66" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Shadow gradient -->
+      <radialGradient id="shadow" cx="0" cy="0" r="80" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stop-color="#000" stop-opacity="1"/>
+        <stop offset="85%"  stop-color="#000" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Lensed-over-top arc -->
+      <linearGradient id="lensedTop" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#ffaa55" stop-opacity="0"/>
+        <stop offset="60%" stop-color="#ffaa55" stop-opacity=".55"/>
+        <stop offset="100%" stop-color="#fff5d0" stop-opacity=".9"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Back of accretion disk (slightly tilted ellipse, behind shadow on bottom) -->
+    <g class="disk-rotate">
+      <ellipse cx="0" cy="0" rx="180" ry="50" fill="url(#diskGrad)"/>
+    </g>
+
+    <!-- Lensed arc — the back of the disk lifted up over the top -->
+    <path d="M -130 -10
+             Q -90 -90, 0 -95
+             Q 90 -90, 130 -10
+             Q 90 -55, 0 -58
+             Q -90 -55, -130 -10 Z"
+          fill="url(#lensedTop)" opacity=".85"/>
+
+    <!-- Photon ring (thin bright halo) -->
+    <circle cx="0" cy="0" r="72" fill="url(#photonRing)"/>
+
+    <!-- Shadow (the dark middle) -->
+    <circle cx="0" cy="0" r="62" fill="url(#shadow)"/>
+
+    <!-- Doppler-brightened limb on the bottom-left (gas moving toward viewer) -->
+    <ellipse cx="-30" cy="20" rx="120" ry="30" fill="url(#doppler)" opacity=".5"
+             transform="rotate(-8)"/>
+  </svg>
+</div>
+
+<!-- ─────────────── TITLE ─────────────── -->
+<div id="title" class="glass">
+  <div class="sub">Black Hole Laboratory</div>
+  <h1>Kerr</h1>
+  <div class="tagline">A real-time ray-tracer of curved spacetime.<br>Every pixel solves Einstein's equations.</div>
+</div>
+
+<!-- ─────────────── TOOLBAR ─────────────── -->
+<div id="toolbar">
+  <button class="tool-btn" title="About">?</button>
+  <button class="tool-btn" title="Fullscreen">⛶</button>
+</div>
+
+<!-- ─────────────── CONTROLS ─────────────── -->
+<div id="controls" class="glass">
+  <h2>Black hole</h2>
+  <div class="section-label">Geometry</div>
+
+  <div class="slider-row">
+    <div class="label-line">
+      <label>Spin a/M</label>
+      <span class="value" id="vSpin">0.90</span>
+    </div>
+    <input type="range" id="spin" min="0" max="0.998" step="0.001" value="0.90">
+  </div>
+
+  <div class="slider-row">
+    <div class="label-line">
+      <label>Inclination</label>
+      <span class="value" id="vIncl">60°</span>
+    </div>
+    <input type="range" id="incl" min="0" max="90" step="1" value="60">
+  </div>
+
+  <div class="slider-row">
+    <div class="label-line">
+      <label>Observer r/r<sub>g</sub></label>
+      <span class="value" id="vDist">30</span>
+    </div>
+    <input type="range" id="dist" min="5" max="200" step="1" value="30">
+  </div>
+
+  <div class="slider-row">
+    <div class="label-line">
+      <label>Mass</label>
+      <span class="value" id="vMass">6.5e9 M☉</span>
+    </div>
+    <input type="range" id="mass" min="0" max="10" step="0.01" value="9.81">
+  </div>
+
+  <div class="section-label">Background</div>
+  <select class="dropdown">
+    <option>Star field</option>
+    <option>Milky Way panorama</option>
+    <option>Hubble Deep Field</option>
+    <option>Cosmic microwave background</option>
+    <option>EHT M87* image</option>
+  </select>
+
+  <div class="section-label">Real targets</div>
+  <div class="preset-row">
+    <button class="preset-btn">M87*<span class="sub">EHT 2019</span></button>
+    <button class="preset-btn">Sgr A*<span class="sub">EHT 2022</span></button>
+  </div>
+
+  <button class="mode-btn">↓  Free-fall observer</button>
+</div>
+
+<!-- ─────────────── STATS ─────────────── -->
+<div id="stats" class="glass">
+  <div class="section-label">Live geometry</div>
+  <div class="stat-row"><span class="k">Event horizon r₊</span><span class="v">1.44<span class="unit">r<sub>g</sub></span></span></div>
+  <div class="stat-row"><span class="k">Inner horizon r₋</span><span class="v">0.56<span class="unit">r<sub>g</sub></span></span></div>
+  <div class="stat-row"><span class="k">Ergosphere (eq.)</span><span class="v">2.00<span class="unit">r<sub>g</sub></span></span></div>
+  <div class="stat-row"><span class="k">ISCO (prograde)</span><span class="v">2.32<span class="unit">r<sub>g</sub></span></span></div>
+  <div class="stat-row"><span class="k">ISCO (retrograde)</span><span class="v">8.43<span class="unit">r<sub>g</sub></span></span></div>
+  <div class="stat-row"><span class="k">Photon sphere</span><span class="v">1.56<span class="unit">r<sub>g</sub></span></span></div>
+  <div class="stat-row"><span class="k">Schwarzschild radius</span><span class="v">128<span class="unit">AU</span></span></div>
+  <div class="stat-row"><span class="k">Hawking T</span><span class="v">9×10⁻¹⁸<span class="unit">K</span></span></div>
+</div>
+
+<!-- ─────────────── OVERLAY TOGGLES ─────────────── -->
+<div id="overlays" class="glass">
+  <div class="overlay-chip active">Accretion disk</div>
+  <div class="overlay-chip">Photon ring</div>
+  <div class="overlay-chip">Ergosphere</div>
+  <div class="overlay-chip">ISCO</div>
+  <div class="overlay-chip">Geodesic trace</div>
+  <div class="overlay-chip">Coord grid</div>
+</div>
+
+<!-- ─────────────── HINT ─────────────── -->
+<div id="hint">Drag to orbit · Scroll to zoom</div>
+
+<script>
+/* ───────── minimal interactivity so the mockup feels live ───────── */
+const fmt = (n, d=2) => n.toFixed(d);
+
+// Spin
+const spin = document.getElementById('spin');
+spin.addEventListener('input', () => {
+  document.getElementById('vSpin').textContent = fmt(parseFloat(spin.value));
+});
+
+// Inclination
+const incl = document.getElementById('incl');
+incl.addEventListener('input', () => {
+  document.getElementById('vIncl').textContent = incl.value + '°';
+  // tilt the SVG to give a "responding" feeling
+  const i = parseFloat(incl.value);
+  const ratio = 0.1 + (i / 90) * 0.9; // squash ellipses vertically
+  document.querySelectorAll('#bh-svg ellipse').forEach(e => {
+    e.style.transform = `scaleY(${ratio})`;
+    e.style.transformOrigin = 'center';
+  });
+});
+
+// Distance
+const dist = document.getElementById('dist');
+dist.addEventListener('input', () => {
+  document.getElementById('vDist').textContent = dist.value;
+  const d = parseFloat(dist.value);
+  const scale = Math.max(0.4, 1.2 - d/200);
+  document.getElementById('bh-svg').style.transform = `scale(${scale})`;
+});
+
+// Mass slider → log-scale display
+const mass = document.getElementById('mass');
+mass.addEventListener('input', () => {
+  const m = Math.pow(10, parseFloat(mass.value));
+  let txt;
+  if (m < 100) txt = fmt(m, 1) + ' M☉';
+  else if (m < 1e6) txt = (m/1e3).toFixed(1) + 'e3 M☉';
+  else if (m < 1e9) txt = (m/1e6).toFixed(1) + 'e6 M☉';
+  else txt = (m/1e9).toFixed(1) + 'e9 M☉';
+  document.getElementById('vMass').textContent = txt;
+});
+
+// Overlay chips toggle active state
+document.querySelectorAll('.overlay-chip').forEach(c => {
+  c.addEventListener('click', () => c.classList.toggle('active'));
+});
+
+// Preset buttons set sliders
+const preset = (a, i, m, label) => () => {
+  spin.value = a; spin.dispatchEvent(new Event('input'));
+  incl.value = i; incl.dispatchEvent(new Event('input'));
+  mass.value = m; mass.dispatchEvent(new Event('input'));
+};
+document.querySelectorAll('.preset-btn')[0].addEventListener('click', preset(0.9, 17, 9.81, 'M87*'));
+document.querySelectorAll('.preset-btn')[1].addEventListener('click', preset(0.5, 30, 6.62, 'Sgr A*'));
+</script>
+</body>
+</html>

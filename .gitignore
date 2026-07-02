@@ -1,21 +1,14 @@
 # Dependencies
 node_modules/
 
-# Development artifacts
-test_screenshots/
+# Local editor/tooling
 .claude/
-*.py
-*.mjs
-exoplanet_3d_backup.html
-AUDIT_REPORT.md
-FULL_PLANET_AUDIT.md
-lighthouse-*
 
-# Source textures (not deployed — only planets/ subfolder is runtime)
-textures/nasa/
-textures/generated/
-textures/*.jpg
-textures/*.webp
+# Regenerable artifacts & stale backups — NOT committed, will NOT transfer via git clone.
+# Regenerate with the tools in scripts/, or copy archive/ manually if you want them on the new machine.
+archive/
+test_screenshots/
+lighthouse-*
 
 # OS files
 .DS_Store

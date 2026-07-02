@@ -48,16 +48,21 @@ The landing page is at `index.html`. The 3D visualization is at `app.html`.
 ```
 .
 ├── index.html              # Landing page
-├── app.html                # Main 3D visualization (~240KB, single-file)
-├── nasa_data.json          # 6,150 exoplanets (1.1MB compact JSON)
-├── earth_texture.jpg       # Earth texture (212KB)
-├── sun_texture.jpg         # Sun surface texture (636KB)
-├── moon_texture.jpg        # Moon texture — NASA LRO (684KB)
-├── starfield.jpg           # Background starfield (612KB)
-├── textures/planets/       # 166 planet textures (2048x1024 JPEGs)
+├── app.html                # Main 3D visualization (single-file)
+├── data/
+│   └── nasa_data.json      # 6,150 exoplanets (1.1MB compact JSON)
+├── textures/
+│   ├── planets/            # 166 planet textures (2048x1024 JPEGs, deployed)
+│   ├── scene/              # Earth / Sun / Moon / starfield backdrop textures
+│   ├── nasa/               # Real NASA reference textures (on-demand)
+│   ├── generated/          # Procedurally generated textures
+│   └── source/             # Source art / class base textures
 ├── tests/
 │   ├── test.html           # 85 automated tests
 │   └── test_visual.html    # 15 manual visual checks
+├── docs/                   # DEPLOYMENT.md + audit reports
+├── scripts/                # Texture generation + test tooling
+├── ripple/                 # Sibling project: gravitational-wave prototypes
 ├── og-image.png            # Social sharing image (1200x630)
 ├── favicon.svg             # SVG favicon
 ├── favicon.ico             # ICO favicon (32x32, 16x16)
@@ -66,6 +71,7 @@ The landing page is at `index.html`. The 3D visualization is at `app.html`.
 ├── sitemap.xml             # Sitemap for search engines
 └── vercel.json             # Vercel deployment config (cache headers, redirects)
 ```
+(archive/ holds git-ignored, regenerable artifacts: lighthouse reports, screenshots, backup.)
 
 ## Tech Stack
 

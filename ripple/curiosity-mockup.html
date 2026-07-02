@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curiosity — A Rover's Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────── BASE ─────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:'JetBrains Mono',monospace;color:#dccab8;-webkit-font-smoothing:antialiased}
+body{
+  background:
+    radial-gradient(ellipse at 15% 25%, rgba(140,60,30,.15), transparent 55%),
+    radial-gradient(ellipse at 85% 75%, rgba(80,30,20,.12), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(40,20,15,.4), transparent 70%),
+    #0a0604;
+  position:relative;
+}
+
+/* ─────────────── GLASS PANELS ─────────────── */
+.glass{
+  position:fixed;z-index:10;pointer-events:all;
+  background:rgba(20,12,8,.55);
+  border:1px solid rgba(190,140,100,.12);
+  border-radius:14px;
+  backdrop-filter:blur(24px) saturate(1.15);
+  -webkit-backdrop-filter:blur(24px) saturate(1.15);
+  box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* ─────────────── MAP STAGE ─────────────── */
+#map-stage{
+  position:fixed;inset:0;z-index:1;display:grid;place-items:center;
+  padding-bottom:130px; /* room for timeline */
+}
+#map-svg{
+  width:min(90vmin,800px);height:min(90vmin,800px);
+  filter:drop-shadow(0 0 60px rgba(180,80,40,.08));
+}
+
+/* Mars terrain colors */
+.crater-outline{fill:none;stroke:rgba(170,90,50,.4);stroke-width:1.5;stroke-dasharray:3 5;}
+.crater-fill{fill:rgba(60,28,18,.5);}
+.mt-sharp{fill:url(#mtSharpGrad);}
+.contour{fill:none;stroke:rgba(140,75,45,.18);stroke-width:.8;}
+.traverse{fill:none;stroke:#ffb066;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;
+          filter:drop-shadow(0 0 4px rgba(255,170,80,.5));}
+.traverse-completed{stroke:#ffb066;}
+.traverse-future{stroke:rgba(255,170,80,.18);stroke-dasharray:2 3;}
+.current-pos{fill:#fff5d0;filter:drop-shadow(0 0 6px rgba(255,200,100,.9));}
+.current-ring{fill:none;stroke:#ffd070;stroke-width:1;opacity:.6;
+              animation:pulse 2.5s ease-in-out infinite;}
+@keyframes pulse{
+  0%,100%{r:6;opacity:.6;}
+  50%{r:10;opacity:.2;}
+}
+.loc-dot{fill:rgba(220,180,140,.5);}
+.loc-label{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:9px;
+           fill:rgba(200,160,120,.7);letter-spacing:.05em;}
+.loc-label-current{fill:#fff5d0;font-size:11px;}
+
+/* ─────────────── TITLE (top-left) ─────────────── */
+#title{
+  top:28px;left:28px;padding:22px 26px;max-width:340px;
+}
+#title h1{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:500;font-style:italic;
+  font-size:36px;letter-spacing:.01em;color:#f0e0c8;line-height:1;
+}
+#title .sub{
+  font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:#a08070;margin-bottom:8px;
+}
+#title .tagline{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:13px;color:#c0a896;margin-top:14px;line-height:1.5;
+}
+
+/* ─────────────── TOOLBAR (top-right) ─────────────── */
+#toolbar{
+  top:28px;right:28px;display:flex;gap:8px;
+}
+.tool-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(20,12,8,.55);
+  border:1px solid rgba(190,140,100,.15);
+  color:#c0a896;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .2s;
+  backdrop-filter:blur(20px) saturate(1.15);
+  -webkit-backdrop-filter:blur(20px) saturate(1.15);
+}
+.tool-btn:hover{color:#f0e0c8;border-color:rgba(190,140,100,.35);}
+
+/* ─────────────── SOL INFO (left) ─────────────── */
+#sol-info{
+  top:50%;left:28px;transform:translateY(-50%);
+  width:280px;padding:22px;
+}
+.sol-line{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+#sol-info .sol-num{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:32px;color:#f0e0c8;line-height:1;
+}
+#sol-info .earth-date{
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:#a08070;margin-top:6px;
+}
+#sol-info .location{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:15px;color:#dccab8;margin-top:14px;line-height:1.3;
+}
+#sol-info .coords{
+  font-size:9px;color:#806858;margin-top:2px;letter-spacing:.04em;
+}
+
+/* NAVCAM placeholder */
+.navcam-frame{
+  margin-top:18px;border-radius:8px;overflow:hidden;
+  border:1px solid rgba(190,140,100,.18);position:relative;
+  aspect-ratio:4/3;
+}
+.navcam-img{
+  width:100%;height:100%;
+  background:
+    /* sky band */
+    linear-gradient(180deg,
+      #4a2818 0%, #6b3820 18%, #7d4628 25%,
+      #5a2c18 28%, #3a1d10 40%, #2a1408 100%),
+    /* fine grain texture overlay */
+    radial-gradient(circle at 30% 70%, rgba(200,120,60,.15), transparent 30%);
+  position:relative;
+}
+.navcam-img::before{
+  /* horizon rock silhouettes */
+  content:'';position:absolute;left:0;right:0;top:25%;height:8%;
+  background:
+    radial-gradient(ellipse at 20% 100%, #1c0c06 30%, transparent 60%),
+    radial-gradient(ellipse at 50% 100%, #1c0c06 25%, transparent 55%),
+    radial-gradient(ellipse at 80% 100%, #1c0c06 35%, transparent 65%);
+}
+.navcam-img::after{
+  /* foreground rocks */
+  content:'';position:absolute;left:0;right:0;bottom:0;height:55%;
+  background:
+    radial-gradient(ellipse at 25% 80%, rgba(70,32,18,.9) 8%, transparent 22%),
+    radial-gradient(ellipse at 70% 90%, rgba(80,40,22,.85) 10%, transparent 25%),
+    radial-gradient(ellipse at 50% 60%, rgba(60,28,16,.7) 5%, transparent 18%),
+    radial-gradient(ellipse at 85% 65%, rgba(90,45,25,.8) 7%, transparent 20%);
+}
+.navcam-tag{
+  position:absolute;top:8px;left:8px;
+  font-size:7px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(240,224,200,.5);font-family:'JetBrains Mono',monospace;
+  background:rgba(0,0,0,.4);padding:3px 7px;border-radius:3px;
+}
+.navcam-caption{
+  position:absolute;bottom:8px;right:8px;
+  font-size:7px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(240,224,200,.45);
+}
+
+/* Activity tag */
+.activity{
+  margin-top:14px;padding:10px 12px;
+  background:rgba(255,180,100,.05);
+  border-left:2px solid rgba(255,180,100,.4);
+  border-radius:4px;
+  font-size:10px;color:#e0c8a8;letter-spacing:.04em;line-height:1.5;
+}
+.activity .label{
+  font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+  color:#a08070;margin-bottom:3px;
+}
+
+/* ─────────────── TERRAIN (right) ─────────────── */
+#terrain{
+  top:50%;right:28px;transform:translateY(-50%);
+  width:260px;padding:22px;
+}
+.section-label{
+  font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+  color:#806858;margin-bottom:14px;
+}
+.section-label:not(:first-child){margin-top:22px;}
+
+/* AI4MARS terrain bars */
+.terrain-bar{margin-bottom:11px;}
+.terrain-bar .row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:5px;font-size:10px;
+}
+.terrain-bar .label{color:#c0a896;letter-spacing:.04em;}
+.terrain-bar .pct{font-family:'JetBrains Mono',monospace;color:#f0e0c8;font-size:9px;}
+.terrain-bar .track{
+  height:4px;background:rgba(190,140,100,.1);
+  border-radius:2px;overflow:hidden;
+}
+.terrain-bar .fill{
+  height:100%;border-radius:2px;transition:width .4s ease;
+}
+.fill-bedrock{background:linear-gradient(90deg,#cea84a,#f0d070);}
+.fill-soil{background:linear-gradient(90deg,#4a78b0,#70a0d0);}
+.fill-sand{background:linear-gradient(90deg,#8050a0,#a878c0);}
+.fill-bigrock{background:linear-gradient(90deg,#c04830,#e06840);}
+
+/* Mission stats */
+.stat-row{
+  display:flex;justify-content:space-between;
+  font-size:10px;margin-bottom:7px;
+}
+.stat-row .k{color:#a08070;letter-spacing:.04em;}
+.stat-row .v{font-family:'JetBrains Mono',monospace;color:#f0e0c8;letter-spacing:.02em;}
+.stat-row .v .unit{color:#806858;margin-left:2px;font-size:9px;}
+
+/* ─────────────── TIMELINE (bottom) ─────────────── */
+#timeline{
+  bottom:24px;left:50%;transform:translateX(-50%);
+  width:min(calc(100vw - 56px),1100px);
+  padding:18px 28px 16px;
+}
+.timeline-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;
+}
+.timeline-head .sol-display{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:16px;color:#f0e0c8;
+}
+.timeline-head .controls{display:flex;gap:6px;}
+.play-btn{
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(190,140,100,.08);
+  border:1px solid rgba(190,140,100,.2);
+  color:#c0a896;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;transition:all .2s;
+}
+.play-btn:hover{color:#f0e0c8;background:rgba(190,140,100,.15);}
+
+.slider-container{
+  position:relative;height:32px;display:flex;align-items:center;
+}
+#sol-slider{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:2px;background:rgba(190,140,100,.18);
+  border-radius:1px;outline:none;cursor:pointer;position:relative;z-index:2;
+}
+#sol-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:#ffb066;cursor:pointer;
+  border:2px solid #0a0604;
+  box-shadow:0 0 12px rgba(255,170,80,.6);
+  transition:transform .15s;
+}
+#sol-slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
+#sol-slider::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:#ffb066;cursor:pointer;border:2px solid #0a0604;
+}
+
+/* Milestone markers */
+.milestones{
+  position:absolute;inset:0;pointer-events:none;
+}
+.milestone{
+  position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,180,100,.4);
+  pointer-events:all;cursor:pointer;
+  transition:all .2s;
+}
+.milestone:hover{background:#ffd070;transform:translate(-50%,-50%) scale(1.5);}
+.milestone-label{
+  position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+  font-size:7px;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(200,160,120,.5);white-space:nowrap;pointer-events:none;
+  transition:color .2s;
+}
+.milestone:hover + .milestone-label{color:#f0e0c8;}
+
+/* Year ticks */
+.year-ticks{
+  display:flex;justify-content:space-between;
+  margin-top:8px;font-size:8px;color:#806858;letter-spacing:.12em;
+}
+
+/* ─────────────── RESPONSIVE ─────────────── */
+@media(max-width:1100px){
+  #title{max-width:240px;padding:16px 18px;}
+  #title h1{font-size:28px;}
+  #sol-info, #terrain{width:220px;padding:16px;}
+  #sol-info .sol-num{font-size:26px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ─────────────── TITLE ─────────────── -->
+<div id="title" class="glass">
+  <div class="sub">A Rover's Journey</div>
+  <h1>Curiosity</h1>
+  <div class="tagline">Every sol across Gale Crater.<br>What it drove over and what it saw.</div>
+</div>
+
+<!-- ─────────────── TOOLBAR ─────────────── -->
+<div id="toolbar">
+  <button class="tool-btn" title="About">?</button>
+  <button class="tool-btn" title="Fullscreen">⛶</button>
+</div>
+
+<!-- ─────────────── MAP (Gale Crater) ─────────────── -->
+<div id="map-stage">
+  <svg id="map-svg" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="mtSharpGrad" cx="0.5" cy="0.4" r="0.6">
+        <stop offset="0%"  stop-color="#5a2818" stop-opacity=".9"/>
+        <stop offset="60%" stop-color="#3a180c" stop-opacity=".7"/>
+        <stop offset="100%" stop-color="#1c0a04" stop-opacity=".4"/>
+      </radialGradient>
+      <radialGradient id="craterGrad" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0%"   stop-color="rgba(100,50,30,0.35)"/>
+        <stop offset="60%"  stop-color="rgba(60,28,18,0.5)"/>
+        <stop offset="100%" stop-color="rgba(40,18,10,0.3)"/>
+      </radialGradient>
+    </defs>
+
+    <!-- Crater fill + rim -->
+    <circle cx="400" cy="400" r="330" fill="url(#craterGrad)"/>
+    <circle cx="400" cy="400" r="330" class="crater-outline"/>
+    <text x="400" y="50" text-anchor="middle" class="loc-label" style="font-size:11px;letter-spacing:.3em;">GALE CRATER · 155 km</text>
+
+    <!-- Contour rings (subtle elevation) -->
+    <circle cx="400" cy="430" r="220" class="contour"/>
+    <circle cx="400" cy="430" r="170" class="contour"/>
+    <circle cx="400" cy="430" r="120" class="contour"/>
+    <circle cx="400" cy="430" r="70" class="contour"/>
+
+    <!-- Mount Sharp (Aeolis Mons) -->
+    <ellipse cx="400" cy="430" rx="140" ry="120" class="mt-sharp"/>
+    <text x="400" y="430" text-anchor="middle" class="loc-label" style="font-size:10px;letter-spacing:.18em;fill:rgba(220,180,140,.4);">MOUNT SHARP</text>
+    <text x="400" y="445" text-anchor="middle" class="loc-label" style="font-size:7px;letter-spacing:.14em;fill:rgba(180,130,90,.4);">AEOLIS MONS</text>
+
+    <!-- Completed traverse path (Bradbury → current) -->
+    <path d="M 455 145
+             Q 470 165, 480 195
+             Q 495 215, 470 245
+             Q 445 270, 432 290
+             Q 425 305, 430 320
+             Q 435 340, 425 360
+             Q 420 380, 430 405
+             Q 435 420, 425 440
+             Q 422 458, 430 472"
+          class="traverse traverse-completed"/>
+
+    <!-- Future traverse hint (continuing south up Mount Sharp) -->
+    <path d="M 430 472 Q 432 490, 425 510 Q 418 535, 410 555"
+          class="traverse traverse-future"/>
+
+    <!-- Key locations along the path -->
+    <circle cx="455" cy="145" r="3" class="loc-dot"/>
+    <text x="465" y="140" class="loc-label">Bradbury Landing · Sol 0</text>
+
+    <circle cx="480" cy="195" r="2.5" class="loc-dot"/>
+    <text x="490" y="198" class="loc-label">Yellowknife Bay · Sol 130</text>
+
+    <circle cx="470" cy="245" r="2.5" class="loc-dot"/>
+    <text x="480" y="248" class="loc-label">Kimberley · Sol 590</text>
+
+    <circle cx="432" cy="290" r="2.5" class="loc-dot"/>
+    <text x="335" y="293" class="loc-label" style="text-anchor:end">Pahrump Hills · Sol 753</text>
+
+    <circle cx="425" cy="360" r="2.5" class="loc-dot"/>
+    <text x="335" y="363" class="loc-label" style="text-anchor:end">Vera Rubin Ridge · Sol 1641</text>
+
+    <circle cx="430" cy="405" r="2.5" class="loc-dot"/>
+    <text x="340" y="408" class="loc-label" style="text-anchor:end">Glen Torridon · Sol 2300</text>
+
+    <circle cx="425" cy="440" r="2.5" class="loc-dot"/>
+    <text x="335" y="443" class="loc-label" style="text-anchor:end">Mont Mercou · Sol 3018</text>
+
+    <!-- Current position -->
+    <circle cx="430" cy="472" r="9" class="current-ring"/>
+    <circle cx="430" cy="472" r="4" class="current-pos"/>
+    <text x="445" y="476" class="loc-label loc-label-current">▸ Sulfate Unit</text>
+
+    <!-- Compass -->
+    <g transform="translate(720,720)">
+      <circle cx="0" cy="0" r="20" fill="none" stroke="rgba(190,140,100,.25)" stroke-width=".8"/>
+      <line x1="0" y1="-16" x2="0" y2="16" stroke="rgba(190,140,100,.3)" stroke-width=".6"/>
+      <line x1="-16" y1="0" x2="16" y2="0" stroke="rgba(190,140,100,.3)" stroke-width=".6"/>
+      <text x="0" y="-22" text-anchor="middle" class="loc-label" style="font-size:8px;">N</text>
+    </g>
+
+    <!-- Scale bar -->
+    <g transform="translate(80,720)">
+      <line x1="0" y1="0" x2="80" y2="0" stroke="rgba(190,140,100,.4)" stroke-width="1"/>
+      <line x1="0" y1="-3" x2="0" y2="3" stroke="rgba(190,140,100,.4)" stroke-width="1"/>
+      <line x1="80" y1="-3" x2="80" y2="3" stroke="rgba(190,140,100,.4)" stroke-width="1"/>
+      <text x="40" y="14" text-anchor="middle" class="loc-label" style="font-size:8px;">20 km</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ─────────────── SOL INFO (left) ─────────────── -->
+<div id="sol-info" class="glass">
+  <div class="sol-line">
+    <div class="sol-num">Sol <span id="sol-num">3018</span></div>
+  </div>
+  <div class="earth-date" id="earth-date">March 12, 2021</div>
+  <div class="location" id="location">Mont Mercou</div>
+  <div class="coords">−4.7°S · 137.4°E · −4150 m MOLA</div>
+
+  <div class="navcam-frame">
+    <div class="navcam-img"></div>
+    <span class="navcam-tag">NAVCAM L</span>
+    <span class="navcam-caption">NASA/JPL-Caltech</span>
+  </div>
+
+  <div class="activity">
+    <div class="label">Activity</div>
+    Drilled "Nontron" target. Returned to contact science on a layered sedimentary outcrop.
+  </div>
+</div>
+
+<!-- ─────────────── TERRAIN (right) ─────────────── -->
+<div id="terrain" class="glass">
+  <div class="section-label">Terrain in view <span style="color:#604838;float:right;font-size:7px;">AI4MARS</span></div>
+
+  <div class="terrain-bar">
+    <div class="row"><span class="label">Bedrock</span><span class="pct">46%</span></div>
+    <div class="track"><div class="fill fill-bedrock" style="width:46%"></div></div>
+  </div>
+  <div class="terrain-bar">
+    <div class="row"><span class="label">Soil</span><span class="pct">36%</span></div>
+    <div class="track"><div class="fill fill-soil" style="width:36%"></div></div>
+  </div>
+  <div class="terrain-bar">
+    <div class="row"><span class="label">Sand</span><span class="pct">16%</span></div>
+    <div class="track"><div class="fill fill-sand" style="width:16%"></div></div>
+  </div>
+  <div class="terrain-bar">
+    <div class="row"><span class="label">Big Rock</span><span class="pct">2%</span></div>
+    <div class="track"><div class="fill fill-bigrock" style="width:2%"></div></div>
+  </div>
+
+  <div class="section-label">Mission</div>
+  <div class="stat-row"><span class="k">Sols on Mars</span><span class="v">3,018</span></div>
+  <div class="stat-row"><span class="k">Distance driven</span><span class="v">25.7<span class="unit">km</span></span></div>
+  <div class="stat-row"><span class="k">Elevation gained</span><span class="v">+458<span class="unit">m</span></span></div>
+  <div class="stat-row"><span class="k">Samples drilled</span><span class="v">31</span></div>
+  <div class="stat-row"><span class="k">Images returned</span><span class="v">947k</span></div>
+  <div class="stat-row"><span class="k">Wheel damage</span><span class="v">Moderate</span></div>
+</div>
+
+<!-- ─────────────── TIMELINE ─────────────── -->
+<nav id="timeline" class="glass" aria-label="Mission timeline">
+  <div class="timeline-head">
+    <div class="sol-display">Sol <span id="sol-display">3018</span> · <span id="date-display">Mar 12, 2021</span></div>
+    <div class="controls">
+      <button class="play-btn" title="Play"><span>▶</span></button>
+      <button class="play-btn" title="Skip to current"><span>↦</span></button>
+    </div>
+  </div>
+  <div class="slider-container">
+    <input type="range" id="sol-slider" min="0" max="4921" step="1" value="3018"
+           aria-label="Sol slider">
+    <div class="milestones" id="milestones"></div>
+  </div>
+  <div class="year-ticks">
+    <span>2012</span><span>2014</span><span>2016</span><span>2018</span>
+    <span>2020</span><span>2022</span><span>2024</span><span>2026</span>
+  </div>
+</nav>
+
+<script>
+/* ─────────────── data ─────────────── */
+// Curiosity landed at Bradbury Landing on 2012-08-06 UTC
+// 1 Mars sol ≈ 1.0274912510 Earth days
+const LANDING = new Date(Date.UTC(2012, 7, 6, 5, 17));
+const SOL_TO_MS = 1.0274912510 * 86400 * 1000;
+const MAX_SOL = 4921; // approx current
+
+function solToDate(sol){
+  return new Date(LANDING.getTime() + sol * SOL_TO_MS);
+}
+function fmtDate(d){
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
+}
+
+// Real Curiosity mission milestones (approximate sols)
+const MILESTONES = [
+  {sol: 0,    label: 'Landing'},
+  {sol: 130,  label: 'Yellowknife Bay'},
+  {sol: 182,  label: 'First drill'},
+  {sol: 590,  label: 'Kimberley'},
+  {sol: 753,  label: 'Mt Sharp base'},
+  {sol: 1099, label: 'Wheel damage'},
+  {sol: 1641, label: 'Vera Rubin Ridge'},
+  {sol: 2300, label: 'Clay-bearing unit'},
+  {sol: 3018, label: 'Mont Mercou'},
+  {sol: 3550, label: 'Greenheugh'},
+  {sol: 4200, label: 'Sulfate unit'},
+];
+
+// Per-sol info table (just a few representative entries for the mockup)
+const SOL_DATA = {
+  0:    {loc:'Bradbury Landing', activity:'Touchdown on Aeolis Palus. First images returned.',     terrain:[30,52,16,2], dist:0},
+  130:  {loc:'Yellowknife Bay',  activity:'Confirmed habitable ancient lakebed.',                  terrain:[50,30,18,2], dist:.7},
+  590:  {loc:'Kimberley',        activity:'Multi-layered sandstone outcrop investigation.',         terrain:[40,38,20,2], dist:6.4},
+  753:  {loc:'Pahrump Hills',    activity:'Base of Mt Sharp reached. Mudstone drilling campaign.',  terrain:[55,28,15,2], dist:9.0},
+  1641: {loc:'Vera Rubin Ridge', activity:'Hematite-rich ridge ascent. ChemCam survey.',            terrain:[60,22,15,3], dist:18.7},
+  2300: {loc:'Glen Torridon',    activity:'Clay-bearing unit. Highest scientific yield to date.',   terrain:[52,30,16,2], dist:21.7},
+  3018: {loc:'Mont Mercou',      activity:'Drilled "Nontron" target. Returned to contact science on a layered sedimentary outcrop.', terrain:[46,36,16,2], dist:25.7},
+  3550: {loc:'Greenheugh Pediment', activity:'Capping unit climb. Wheel preservation route.',       terrain:[38,38,22,2], dist:28.4},
+  4200: {loc:'Sulfate Unit',     activity:'Sulfate-bearing stratigraphy. Environmental transition.', terrain:[34,40,24,2], dist:31.6},
+  4921: {loc:'Sulfate Unit',     activity:'Ongoing campaign in the sulfate-bearing strata.',        terrain:[34,40,24,2], dist:32.4},
+};
+
+/* ─────────────── DOM refs ─────────────── */
+const slider = document.getElementById('sol-slider');
+const solNum = document.getElementById('sol-num');
+const earthDate = document.getElementById('earth-date');
+const locationEl = document.getElementById('location');
+const solDisplay = document.getElementById('sol-display');
+const dateDisplay = document.getElementById('date-display');
+const milestonesEl = document.getElementById('milestones');
+const bars = document.querySelectorAll('#terrain .terrain-bar');
+const activityEl = document.querySelector('.activity');
+const distEl = document.querySelectorAll('#terrain .stat-row .v')[1];
+const solsStatEl = document.querySelectorAll('#terrain .stat-row .v')[0];
+
+/* ─────────────── milestone dots ─────────────── */
+MILESTONES.forEach(m => {
+  const pct = (m.sol / MAX_SOL) * 100;
+  const dot = document.createElement('div');
+  dot.className = 'milestone';
+  dot.style.left = pct + '%';
+  dot.title = `Sol ${m.sol} · ${m.label}`;
+  dot.addEventListener('click', () => {
+    slider.value = m.sol;
+    slider.dispatchEvent(new Event('input'));
+  });
+  const label = document.createElement('span');
+  label.className = 'milestone-label';
+  label.textContent = m.label;
+  label.style.left = pct + '%';
+  label.style.position = 'absolute';
+  label.style.top = '-22px';
+  label.style.transform = 'translateX(-50%)';
+  milestonesEl.appendChild(dot);
+  milestonesEl.appendChild(label);
+});
+
+/* ─────────────── update on slider change ─────────────── */
+function findNearestEntry(sol){
+  // pick the entry with sol ≤ current sol, closest
+  const keys = Object.keys(SOL_DATA).map(Number).sort((a,b) => a - b);
+  let best = keys[0];
+  for (const k of keys){ if (k <= sol) best = k; else break; }
+  return SOL_DATA[best];
+}
+
+function update(){
+  const sol = parseInt(slider.value, 10);
+  const d = solToDate(sol);
+  const ds = fmtDate(d);
+  solNum.textContent = sol.toLocaleString();
+  earthDate.textContent = ds;
+  solDisplay.textContent = sol.toLocaleString();
+  dateDisplay.textContent = ds;
+
+  const entry = findNearestEntry(sol);
+  locationEl.textContent = entry.loc;
+  activityEl.innerHTML = '<div class="label">Activity</div>' + entry.activity;
+
+  // Terrain bars (Bedrock, Soil, Sand, Big Rock)
+  entry.terrain.forEach((pct, i) => {
+    const bar = bars[i];
+    bar.querySelector('.pct').textContent = pct + '%';
+    bar.querySelector('.fill').style.width = pct + '%';
+  });
+
+  // Stats
+  solsStatEl.textContent = sol.toLocaleString();
+  distEl.innerHTML = entry.dist.toFixed(1) + '<span class="unit">km</span>';
+}
+slider.addEventListener('input', update);
+update();
+
+/* ─────────────── play button ─────────────── */
+const playBtn = document.querySelectorAll('.play-btn')[0];
+let playing = null;
+playBtn.addEventListener('click', () => {
+  if (playing){ clearInterval(playing); playing = null; playBtn.firstChild.textContent='▶'; return; }
+  playBtn.firstChild.textContent='⏸';
+  playing = setInterval(() => {
+    const v = parseInt(slider.value, 10);
+    if (v >= MAX_SOL){ clearInterval(playing); playing = null; playBtn.firstChild.textContent='▶'; return; }
+    slider.value = Math.min(MAX_SOL, v + 18);
+    slider.dispatchEvent(new Event('input'));
+  }, 40);
+});
+
+/* Skip-to-current button */
+const skipBtn = document.querySelectorAll('.play-btn')[1];
+skipBtn.addEventListener('click', () => {
+  slider.value = MAX_SOL;
+  slider.dispatchEvent(new Event('input'));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,3247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ripple — A Spacetime Field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#000;color:#c0c8d4;font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased}
+canvas{display:block;width:100%;height:100%}
+
+/* ───── Edge-hover trigger (invisible) ───── */
+#edge-trigger{
+  position:fixed;right:0;top:0;width:24px;height:100%;z-index:5;
+}
+
+/* ───── Parameter panel (slides in from right) ───── */
+#params{
+  position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:10;
+  width:280px;padding:24px;
+  background:rgba(8,10,18,.7);
+  border-left:1px solid rgba(180,200,230,.12);
+  border-top:1px solid rgba(180,200,230,.12);
+  border-bottom:1px solid rgba(180,200,230,.12);
+  border-radius:14px 0 0 14px;
+  backdrop-filter:blur(24px) saturate(1.2);
+  -webkit-backdrop-filter:blur(24px) saturate(1.2);
+  transition:right .3s cubic-bezier(.2,.8,.3,1);
+  box-shadow:-8px 0 32px rgba(0,0,0,.4);
+}
+#edge-trigger:hover ~ #params,
+#params:hover,
+#params.pinned{ right:0; }
+
+#params h3{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:18px;color:#dde4f0;margin-bottom:4px;
+}
+#params .sub{
+  font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:#5a6878;margin-bottom:18px;
+}
+
+.sliderRow{margin-bottom:14px;}
+.sliderRow .label{
+  display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;
+  font-size:10px;letter-spacing:.04em;color:#a0b0c4;
+}
+.sliderRow .label .v{
+  font-family:'JetBrains Mono',monospace;color:#dde4f0;font-size:10px;
+}
+.sliderRow input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:2px;
+  background:rgba(180,200,230,.15);border-radius:1px;outline:none;cursor:pointer;
+}
+.sliderRow input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+  background:#a8c0e0;cursor:pointer;border:2px solid #080a12;
+}
+.sliderRow input[type=range]::-moz-range-thumb{
+  width:12px;height:12px;border-radius:50%;background:#a8c0e0;cursor:pointer;border:2px solid #080a12;
+}
+
+.section-divider{
+  margin:18px 0 12px;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:#5a6878;
+}
+
+.btnRow{display:flex;gap:8px;margin-top:6px;}
+.btn{
+  flex:1;padding:9px 4px;
+  background:rgba(180,200,230,.04);
+  border:1px solid rgba(180,200,230,.12);
+  border-radius:6px;color:#c0c8d4;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  transition:all .2s;
+}
+.btn:hover{background:rgba(180,200,230,.1);border-color:rgba(180,200,230,.3);color:#dde4f0;}
+.btn.primary{background:rgba(168,192,224,.1);border-color:rgba(168,192,224,.4);color:#dde4f0;}
+.btn.primary:hover{background:rgba(168,192,224,.18);}
+
+.preset-btn{
+  width:100%;margin-top:5px;padding:8px 10px;text-align:left;
+  background:rgba(180,200,230,.03);
+  border:1px solid rgba(180,200,230,.1);
+  border-radius:6px;color:#a0b0c4;cursor:pointer;
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;
+  transition:all .2s;
+  display:flex;justify-content:space-between;align-items:baseline;
+}
+.preset-btn:hover{
+  background:rgba(180,200,230,.08);color:#dde4f0;border-color:rgba(180,200,230,.25);
+}
+.preset-btn .pmeta{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;
+  color:#5a6878;font-style:normal;
+}
+
+/* ───── Bottom corner hints ───── */
+#hint{
+  position:fixed;left:24px;bottom:20px;z-index:5;
+  font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:#4a5868;line-height:1.7;pointer-events:none;
+}
+#hint kbd{
+  font-family:'JetBrains Mono',monospace;
+  background:rgba(180,200,230,.08);
+  border:1px solid rgba(180,200,230,.12);
+  padding:1px 5px;border-radius:3px;font-size:8px;
+  color:#a0b0c4;letter-spacing:.05em;
+}
+
+/* ───── Title (top left, very minimal) ───── */
+#title{
+  position:fixed;left:24px;top:22px;z-index:5;pointer-events:none;
+}
+#title .name{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:22px;color:#dde4f0;line-height:1;
+}
+#title .desc{
+  font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+  color:#5a6878;margin-top:6px;
+}
+
+/* ───── Story overlay (under the wordmark) — event identity + one-line story ───── */
+#story-overlay{
+  position:fixed;left:24px;top:88px;z-index:5;pointer-events:none;
+  max-width:340px;
+}
+#story-overlay .ev-name{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.25em;
+  color:#dde4f0;text-transform:uppercase;margin-bottom:6px;
+}
+#story-overlay .ev-meta{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.18em;
+  color:#5a6878;text-transform:uppercase;margin-bottom:12px;
+}
+#story-overlay .ev-story{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;
+  font-size:16px;line-height:1.4;color:#c0c8d4;
+}
+
+/* ───── Listen mode UI ───── */
+#listen-drop{
+  position:fixed;inset:0;z-index:18;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(6,7,13,.45);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:opacity .5s;
+}
+#listen-drop.active{display:flex;}
+#listen-drop.gone{opacity:0;pointer-events:none;}
+#listen-drop.dragging{background:rgba(255,178,122,.06);}
+#listen-drop .ld-card{
+  text-align:center;max-width:520px;padding:48px 36px;
+  border:1px dashed rgba(255,255,255,.18);
+  border-radius:22px;
+  background:rgba(10,14,28,.55);
+  backdrop-filter:blur(20px) saturate(1.2);
+}
+#listen-drop .ld-eyebrow{
+  font-size:10px;letter-spacing:.32em;color:#5a6878;text-transform:uppercase;
+  margin-bottom:14px;
+}
+#listen-drop h1{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;
+  font-size:38px;line-height:1.05;color:#e8ecf4;margin-bottom:18px;
+}
+#listen-drop h1 em{color:#ffb27a;font-style:italic;}
+#listen-drop .ld-sub{
+  font-family:'Cormorant Garamond',serif;font-size:16px;color:#9aa3b8;
+  line-height:1.5;margin-bottom:28px;
+}
+#listen-drop .ld-row{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;
+}
+#listen-drop button{
+  padding:12px 20px;
+  font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.18);
+  color:#e8ecf4;border-radius:10px;cursor:pointer;transition:all .2s;
+}
+#listen-drop button:hover{
+  background:rgba(255,178,122,.12);border-color:rgba(255,178,122,.5);color:#ffb27a;
+}
+#listen-drop button.primary{
+  background:rgba(255,178,122,.1);border-color:rgba(255,178,122,.5);color:#ffb27a;
+}
+#listen-drop .ld-hint{
+  font-size:9px;letter-spacing:.2em;color:#5a6878;text-transform:uppercase;
+  margin-top:6px;
+}
+#listen-drop input[type=file]{display:none;}
+
+#listen-np{
+  position:fixed;left:24px;bottom:60px;z-index:6;display:none;align-items:center;gap:16px;
+  padding:14px 18px;background:rgba(10,14,28,.55);
+  border:1px solid rgba(255,255,255,.08);border-radius:12px;
+  backdrop-filter:blur(20px) saturate(1.2);
+}
+#listen-np.visible{display:flex;}
+#listen-np .lnp-eyebrow{font-size:8px;letter-spacing:.28em;color:#5a6878;text-transform:uppercase;}
+#listen-np .lnp-title{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:#dde4f0;
+  max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#listen-np .lnp-btn{
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  color:#c0c8d4;cursor:pointer;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+}
+#listen-np .lnp-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+
+#interp-toggle{
+  position:fixed;right:24px;top:92px;z-index:6;display:none;flex-direction:column;gap:6px;
+}
+#interp-toggle.visible{display:flex;}
+#interp-toggle .it-label{
+  font-size:8px;letter-spacing:.28em;color:#5a6878;text-transform:uppercase;
+  text-align:right;margin-bottom:2px;
+}
+#interp-toggle button{
+  padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:.18em;text-transform:uppercase;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:#9aa3b8;border-radius:6px;cursor:pointer;
+  transition:all .15s;text-align:right;min-width:140px;
+}
+#interp-toggle button:hover{background:rgba(255,255,255,.08);color:#dde4f0;}
+#interp-toggle button.active{
+  background:rgba(255,178,122,.12);border-color:rgba(255,178,122,.4);color:#ffb27a;
+}
+
+/* Hide events-only chrome when in listen mode (set by body class) */
+body.listen #params,
+body.listen #story-overlay,
+body.listen #status,
+body.listen #edge-hint,
+body.listen #phase-narration,
+body.listen #hint,
+body.listen #intro-overlay,
+body.listen #labels-toggle,
+body.listen #learn-btn,
+body.listen #detail-panel,
+body.listen #back-to-sky,
+body.listen .anno-anchor,
+body.listen .anno-label{
+  display:none !important;
+}
+
+/* Sky view: hide detail-only chrome; the catalog IS the screen */
+body.sky #params,
+body.sky #story-overlay,
+body.sky #status,
+body.sky #edge-hint,
+body.sky #phase-narration,
+body.sky #hint,
+body.sky #intro-overlay,
+body.sky #labels-toggle,
+body.sky #learn-btn,
+body.sky #detail-panel,
+body.sky #back-to-sky,
+body.sky .anno-anchor,
+body.sky .anno-label{
+  display:none !important;
+}
+
+/* ───── Sky tooltip + back button ───── */
+#sky-tooltip{
+  position:fixed;z-index:11;pointer-events:none;
+  background:rgba(10,14,28,.85);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  padding:14px 18px;max-width:300px;
+  backdrop-filter:blur(20px) saturate(1.2);
+  -webkit-backdrop-filter:blur(20px) saturate(1.2);
+  opacity:0;transform:translateY(4px);transition:opacity .18s,transform .18s;
+}
+#sky-tooltip.visible{opacity:1;transform:translateY(0);}
+#sky-tooltip .st-name{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.22em;
+  color:#dde4f0;text-transform:uppercase;margin-bottom:4px;
+}
+#sky-tooltip .st-meta{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.18em;
+  color:#5a6878;text-transform:uppercase;margin-bottom:10px;
+}
+#sky-tooltip .st-story{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;
+  color:#c0c8d4;line-height:1.4;
+}
+
+#sky-hint{
+  position:fixed;left:50%;bottom:48px;transform:translateX(-50%);z-index:5;
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em;
+  color:#5a6878;text-transform:uppercase;pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+body.sky #sky-hint{opacity:1;}
+
+/* ───── Filter chips (sky view) ───── */
+#sky-filters{
+  position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:6;
+  display:none;flex-direction:column;align-items:center;gap:10px;
+  pointer-events:auto;
+}
+body.sky #sky-filters{display:flex;}
+#sky-filters .chip-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(10,14,28,.55);
+  border:1px solid rgba(180,200,230,.08);
+  border-radius:999px;padding:6px 12px;
+  backdrop-filter:blur(20px) saturate(1.2);
+  -webkit-backdrop-filter:blur(20px) saturate(1.2);
+}
+#sky-filters .chip-label{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.28em;
+  color:#5a6878;text-transform:uppercase;margin-right:6px;
+}
+#sky-filters .chip{
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;
+  color:#9aa3b8;text-transform:uppercase;
+  padding:6px 12px;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.06);background:transparent;
+  transition:all .15s;
+}
+#sky-filters .chip:hover{color:#dde4f0;border-color:rgba(255,255,255,.18);}
+#sky-filters .chip.active{
+  background:rgba(255,178,122,.14);
+  border-color:rgba(255,178,122,.45);
+  color:#ffb27a;
+}
+#sky-filters .chip[data-type="BNS"].active{background:rgba(143,200,255,.16);border-color:rgba(143,200,255,.45);color:#8fc8ff;}
+#sky-filters .chip[data-type="NSBH"].active{background:rgba(160,255,208,.14);border-color:rgba(160,255,208,.45);color:#a0ffd0;}
+#sky-filters .chip[data-type="IMBH"].active{background:rgba(200,155,255,.14);border-color:rgba(200,155,255,.45);color:#c89bff;}
+
+#back-to-sky{
+  position:fixed;left:24px;bottom:24px;z-index:6;display:none;
+  padding:10px 16px;
+  font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:#c0c8d4;cursor:pointer;
+  background:rgba(10,14,28,.55);
+  border:1px solid rgba(255,255,255,.10);border-radius:8px;
+  backdrop-filter:blur(20px) saturate(1.2);
+  transition:all .15s;
+}
+#back-to-sky:hover{background:rgba(255,178,122,.1);color:#ffb27a;border-color:rgba(255,178,122,.3);}
+body.detail #back-to-sky{display:block;}
+
+/* ───── Mode tabs (top center) ───── */
+#mode-tabs{
+  position:fixed;left:50%;top:22px;transform:translateX(-50%);z-index:10;
+  display:flex;gap:0;
+  background:rgba(10,14,28,.55);
+  border:1px solid rgba(180,200,230,.10);
+  border-radius:999px;
+  backdrop-filter:blur(20px) saturate(1.2);
+  -webkit-backdrop-filter:blur(20px) saturate(1.2);
+  padding:4px;
+}
+#mode-tabs button{
+  border:none;background:transparent;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:#5a6878;cursor:pointer;
+  padding:8px 18px;border-radius:999px;
+  transition:all .25s cubic-bezier(.2,.8,.3,1);
+}
+#mode-tabs button:hover{color:#dde4f0;}
+#mode-tabs button.active{
+  background:rgba(168,192,224,.14);
+  color:#dde4f0;
+}
+
+/* ───── Status (top right corner) ───── */
+#status{
+  position:fixed;right:24px;top:22px;z-index:5;pointer-events:none;
+  text-align:right;
+}
+#status .freq{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:#dde4f0;letter-spacing:.04em;
+}
+#status .phase{
+  font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+  color:#5a6878;margin-top:6px;
+}
+#status .phase.inspiral{color:#7090b8;}
+#status .phase.merger{color:#d09060;}
+#status .phase.ringdown{color:#a070b0;}
+
+/* ───── Edge hint chevron ───── */
+#edge-hint{
+  position:fixed;right:6px;top:50%;transform:translateY(-50%);z-index:6;
+  font-size:14px;color:rgba(180,200,230,.25);pointer-events:none;
+  animation:edgePulse 3s ease-in-out infinite;
+}
+@keyframes edgePulse{
+  0%,100%{opacity:.25;transform:translate(0,-50%);}
+  50%{opacity:.5;transform:translate(-3px,-50%);}
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * IN-SCENE LABELS (annotations)
+ * ════════════════════════════════════════════════════════════════ */
+.anno-anchor{
+  position:fixed;width:0;height:0;pointer-events:none;
+  z-index:4;transition:opacity .3s;
+}
+.anno-anchor.dimmed{opacity:.15;}
+.anno-anchor.hidden{opacity:0;pointer-events:none;}
+.anno-anchor::before{
+  content:'';position:absolute;left:-4px;top:-4px;
+  width:8px;height:8px;border-radius:50%;
+  background:#a8c0e0;
+  box-shadow:0 0 10px rgba(168,192,224,.7);
+  animation:annoPulse 2s ease-in-out infinite;
+}
+@keyframes annoPulse{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.4);opacity:.6;}
+}
+.anno-anchor[data-id="binary"]::before{background:#ff8866;box-shadow:0 0 10px rgba(255,136,102,.7);}
+.anno-anchor[data-id="test-masses"]::before{background:#a8c0e0;box-shadow:0 0 10px rgba(168,192,224,.7);}
+.anno-anchor[data-id="wave-shells"]::before{background:#ffaa66;box-shadow:0 0 10px rgba(255,170,102,.7);}
+.anno-anchor[data-id="axis"]::before{background:#ffd070;box-shadow:0 0 10px rgba(255,208,112,.7);}
+.anno-anchor[data-id="equator"]::before{background:#7090b8;box-shadow:0 0 10px rgba(112,144,184,.7);}
+
+.anno-label{
+  position:absolute;left:14px;top:-12px;
+  padding:5px 12px;
+  background:rgba(8,10,18,.65);
+  border:1px solid rgba(180,200,230,.18);
+  border-radius:14px;
+  backdrop-filter:blur(12px) saturate(1.2);
+  -webkit-backdrop-filter:blur(12px) saturate(1.2);
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:#b0c0d4;
+  white-space:nowrap;
+  pointer-events:all;cursor:pointer;
+  transition:all .2s;
+  user-select:none;
+}
+.anno-label:hover{
+  background:rgba(20,24,38,.85);
+  color:#e0e8f4;border-color:rgba(180,200,230,.45);
+  transform:translateY(-1px);
+}
+.anno-label:active{transform:translateY(0);}
+.anno-label::after{
+  content:'?';margin-left:6px;
+  display:inline-block;
+  font-size:8px;
+  width:11px;height:11px;line-height:11px;text-align:center;
+  border:1px solid rgba(180,200,230,.4);
+  border-radius:50%;
+  color:rgba(180,200,230,.7);
+}
+.anno-label:hover::after{
+  border-color:rgba(220,232,244,.7);color:#dde4f0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * DETAIL PANEL (slides in from left when annotation clicked)
+ * ════════════════════════════════════════════════════════════════ */
+#detail-panel{
+  position:fixed;left:24px;top:50%;transform:translateY(-50%) translateX(-20px);
+  width:340px;max-height:78vh;overflow-y:auto;
+  padding:26px 28px 24px;
+  background:rgba(8,10,18,.82);
+  border:1px solid rgba(180,200,230,.18);
+  border-radius:14px;
+  backdrop-filter:blur(28px) saturate(1.2);
+  -webkit-backdrop-filter:blur(28px) saturate(1.2);
+  z-index:30;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease, transform .3s cubic-bezier(.2,.8,.3,1);
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+}
+#detail-panel.open{
+  opacity:1;pointer-events:all;
+  transform:translateY(-50%) translateX(0);
+}
+#detail-panel .detail-eyebrow{
+  font-size:8px;letter-spacing:.24em;text-transform:uppercase;
+  color:#5a6878;margin-bottom:8px;
+}
+#detail-panel h3{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:24px;color:#f0e4d0;margin-bottom:14px;line-height:1.2;
+}
+#detail-panel .detail-body{
+  font-size:12px;line-height:1.7;color:#b8c4d4;
+}
+#detail-panel .detail-body p{margin-bottom:12px;}
+#detail-panel .detail-body em{font-style:italic;color:#dde4f0;}
+#detail-panel .detail-body strong{color:#f0e4d0;font-weight:500;}
+
+#detail-close{
+  position:absolute;top:14px;right:14px;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(180,200,230,.06);
+  border:1px solid rgba(180,200,230,.18);
+  color:#a0b0c4;cursor:pointer;
+  font-size:14px;line-height:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+#detail-close:hover{background:rgba(180,200,230,.15);color:#dde4f0;}
+
+.detail-nav{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:20px;padding-top:16px;
+  border-top:1px solid rgba(180,200,230,.1);
+}
+.detail-nav button{
+  padding:6px 10px;
+  background:transparent;border:1px solid rgba(180,200,230,.15);
+  border-radius:6px;color:#8a98ac;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  transition:all .2s;
+}
+.detail-nav button:hover:not(:disabled){
+  color:#dde4f0;border-color:rgba(180,200,230,.4);
+}
+.detail-nav button:disabled{opacity:.3;cursor:not-allowed;}
+.detail-nav .counter{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.1em;color:#5a6878;
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * PHASE NARRATION (floats top-center during phase changes)
+ * ════════════════════════════════════════════════════════════════ */
+#phase-narration{
+  position:fixed;top:90px;left:50%;transform:translateX(-50%) translateY(-10px);
+  padding:12px 26px;
+  background:rgba(8,10,18,.75);
+  border:1px solid rgba(180,200,230,.25);
+  border-radius:24px;
+  backdrop-filter:blur(16px) saturate(1.2);
+  -webkit-backdrop-filter:blur(16px) saturate(1.2);
+  color:#f0e4d0;
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:15px;letter-spacing:.01em;
+  opacity:0;
+  transition:opacity .5s ease, transform .5s cubic-bezier(.2,.8,.3,1);
+  pointer-events:none;
+  z-index:20;
+  white-space:nowrap;
+}
+#phase-narration.visible{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * INTRO OVERLAY (first-load welcome)
+ * ════════════════════════════════════════════════════════════════ */
+#intro-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,1,4,.7);
+  backdrop-filter:blur(12px) saturate(1.1);
+  -webkit-backdrop-filter:blur(12px) saturate(1.1);
+  z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .8s ease;
+}
+#intro-overlay.gone{opacity:0;pointer-events:none;}
+
+.intro-card{
+  max-width:520px;padding:42px 50px 36px;
+  background:rgba(14,18,32,.9);
+  border:1px solid rgba(180,200,230,.18);
+  border-radius:18px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  animation:introIn .8s cubic-bezier(.2,.9,.3,1);
+}
+@keyframes introIn{
+  from{opacity:0;transform:translateY(20px) scale(.96);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+.intro-eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.32em;text-transform:uppercase;
+  color:#7090b8;margin-bottom:14px;
+}
+.intro-card h2{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:36px;color:#f4ecd8;margin-bottom:8px;line-height:1.1;
+}
+.intro-card .sub{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:15px;color:#a8b8cc;margin-bottom:24px;
+}
+.intro-card p{
+  font-size:12.5px;line-height:1.75;color:#a8b8cc;margin-bottom:14px;
+}
+.intro-card .hint{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:#6080a0;margin:20px 0 24px;line-height:1.8;
+}
+.intro-card .hint kbd{
+  font-family:'JetBrains Mono',monospace;
+  background:rgba(180,200,230,.08);
+  border:1px solid rgba(180,200,230,.18);
+  padding:2px 6px;border-radius:3px;color:#a8c0d4;
+  margin:0 2px;
+}
+#intro-begin{
+  padding:12px 36px;
+  background:rgba(168,192,224,.12);
+  border:1px solid rgba(168,192,224,.45);
+  border-radius:8px;color:#dde4f0;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  cursor:pointer;transition:all .25s;
+}
+#intro-begin:hover{
+  background:rgba(168,192,224,.2);
+  border-color:rgba(168,192,224,.7);
+  color:#ffffff;
+  transform:translateY(-1px);
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * LEARN BUTTON (re-trigger intro / tour)
+ * ════════════════════════════════════════════════════════════════ */
+#learn-btn{
+  position:fixed;bottom:22px;right:24px;z-index:5;
+  padding:9px 16px;
+  background:rgba(8,10,18,.65);
+  border:1px solid rgba(180,200,230,.15);
+  border-radius:22px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:#b0c0d4;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  transition:all .2s;
+}
+#learn-btn:hover{
+  background:rgba(20,24,38,.85);
+  border-color:rgba(180,200,230,.4);
+  color:#dde4f0;transform:translateY(-1px);
+}
+
+#labels-toggle{
+  position:fixed;bottom:22px;right:130px;z-index:5;
+  padding:9px 14px;
+  background:rgba(8,10,18,.65);
+  border:1px solid rgba(180,200,230,.15);
+  border-radius:22px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:#8a98ac;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  transition:all .2s;
+}
+#labels-toggle:hover{
+  color:#dde4f0;border-color:rgba(180,200,230,.35);
+}
+#labels-toggle.on{color:#dde4f0;border-color:rgba(180,200,230,.35);}
+</style>
+</head>
+<body>
+
+<!-- ─────────── TITLE ─────────── -->
+<div id="title">
+  <div class="name">Ripple</div>
+  <div class="desc" id="title-desc">A spacetime field</div>
+</div>
+
+<!-- ─────────── MODE TABS ─────────── -->
+<div id="mode-tabs">
+  <button id="tab-events" class="active">Events</button>
+  <button id="tab-listen">Listen</button>
+</div>
+
+<!-- ─────────── STATUS (frequency + phase) ─────────── -->
+<div id="status">
+  <div class="freq" id="freq-display">f = 35 Hz</div>
+  <div class="phase inspiral" id="phase-display">Inspiral</div>
+</div>
+
+<!-- ─────────── EDGE HOVER PANEL ─────────── -->
+<div id="edge-trigger"></div>
+<div id="edge-hint">⟨</div>
+
+<!-- ─────────── EVENT STORY OVERLAY ─────────── -->
+<div id="story-overlay">
+  <div class="ev-name" id="story-name">GW150914</div>
+  <div class="ev-meta" id="story-meta">35.6 + 30.6 M☉ · 410 Mpc · Sep 14, 2015</div>
+  <div class="ev-story" id="story-text">The first gravitational wave ever observed.</div>
+</div>
+
+<aside id="params">
+  <h3>Binary</h3>
+  <div class="sub">Live source</div>
+
+  <div class="sliderRow">
+    <div class="label"><span>Primary mass</span><span class="v"><span id="m1v">35.6</span> M☉</span></div>
+    <input type="range" id="m1" min="1" max="100" step="0.1" value="35.6">
+  </div>
+  <div class="sliderRow">
+    <div class="label"><span>Secondary mass</span><span class="v"><span id="m2v">30.6</span> M☉</span></div>
+    <input type="range" id="m2" min="1" max="100" step="0.1" value="30.6">
+  </div>
+  <div class="sliderRow">
+    <div class="label"><span>Orbital axis tilt</span><span class="v"><span id="tiltv">0</span>°</span></div>
+    <input type="range" id="tilt" min="0" max="90" step="1" value="0">
+  </div>
+  <div class="sliderRow">
+    <div class="label"><span>Time speed</span><span class="v"><span id="speedv">1.0</span>×</span></div>
+    <input type="range" id="speed" min="0.1" max="3" step="0.05" value="1.0">
+  </div>
+
+  <div class="btnRow">
+    <button class="btn primary" id="play-btn">▶ Play</button>
+    <button class="btn" id="reset-btn">↺ Reset</button>
+  </div>
+  <div class="btnRow" style="margin-top:8px">
+    <button class="btn" id="audio-btn">♪ Audio off</button>
+  </div>
+
+  <div class="section-divider">Real detections</div>
+  <button class="preset-btn" data-event="GW150914">
+    GW150914 <span class="pmeta">35.6 + 30.6</span>
+  </button>
+  <button class="preset-btn" data-event="GW170817">
+    GW170817 <span class="pmeta">BNS · 1.46 + 1.27</span>
+  </button>
+  <button class="preset-btn" data-event="GW190521">
+    GW190521 <span class="pmeta">IMBH · 85 + 66</span>
+  </button>
+  <button class="preset-btn" data-event="GW151226">
+    GW151226 <span class="pmeta">14 + 7.5</span>
+  </button>
+  <button class="preset-btn" data-event="GW250114">
+    GW250114 <span class="pmeta">34 + 32 · loudest</span>
+  </button>
+  <button class="preset-btn" data-event="GW190412">
+    GW190412 <span class="pmeta">30 + 8 · asymmetric</span>
+  </button>
+  <button class="preset-btn" data-event="GW190814">
+    GW190814 <span class="pmeta">23 + 2.6 · mass gap</span>
+  </button>
+  <button class="preset-btn" data-event="GW230529">
+    GW230529 <span class="pmeta">NSBH · 3.6 + 1.4</span>
+  </button>
+  <button class="preset-btn" data-event="GW200129">
+    GW200129 <span class="pmeta">34 + 24 · precessing</span>
+  </button>
+</aside>
+
+<!-- ─────────── BOTTOM HINT ─────────── -->
+<div id="hint">
+  <kbd>Drag</kbd> orbit · <kbd>Scroll</kbd> zoom · <kbd>Space</kbd> play · <kbd>R</kbd> reset
+</div>
+
+<!-- ─────────── LABEL TOGGLE + LEARN BUTTON ─────────── -->
+<button id="labels-toggle" class="on" title="Show or hide in-scene labels">Labels on</button>
+<button id="learn-btn" title="Start guided tour">? Tour</button>
+
+<!-- ─────────── PHASE NARRATION ─────────── -->
+<div id="phase-narration"></div>
+
+<!-- ─────────── DETAIL PANEL ─────────── -->
+<aside id="detail-panel">
+  <button id="detail-close" aria-label="Close">×</button>
+  <div class="detail-eyebrow" id="detail-eyebrow">Annotation</div>
+  <h3 id="detail-title">—</h3>
+  <div class="detail-body" id="detail-body"></div>
+  <div class="detail-nav">
+    <button id="detail-prev">← Prev</button>
+    <span class="counter" id="detail-counter">1 / 5</span>
+    <button id="detail-next">Next →</button>
+  </div>
+</aside>
+
+<!-- ─────────── SKY VIEW UI ─────────── -->
+<div id="sky-tooltip">
+  <div class="st-name" id="st-name">—</div>
+  <div class="st-meta" id="st-meta">—</div>
+  <div class="st-story" id="st-story">—</div>
+</div>
+<div id="sky-hint">Hover anything · Click to fly in</div>
+
+<!-- ─────────── SKY FILTER CHIPS ─────────── -->
+<div id="sky-filters">
+  <div class="chip-row">
+    <span class="chip-label">Type</span>
+    <button class="chip" data-type="BBH">BBH</button>
+    <button class="chip" data-type="BNS">BNS</button>
+    <button class="chip" data-type="NSBH">NSBH</button>
+    <button class="chip" data-type="IMBH">IMBH</button>
+  </div>
+  <div class="chip-row">
+    <span class="chip-label">Run</span>
+    <button class="chip" data-run="O1">O1</button>
+    <button class="chip" data-run="O2">O2</button>
+    <button class="chip" data-run="O3">O3</button>
+    <button class="chip" data-run="O4">O4</button>
+    <button class="chip" data-run="O5">O5</button>
+  </div>
+</div>
+<button id="back-to-sky">← Back to sky</button>
+
+<!-- ─────────── LISTEN MODE — DROP ZONE ─────────── -->
+<div id="listen-drop">
+  <div class="ld-card">
+    <div class="ld-eyebrow">Listen mode</div>
+    <h1>Hear your music through <em>Einstein's eyes</em>.</h1>
+    <p class="ld-sub">The same test-mass field that responds to a real merger will respond to any signal. Drop a song. Share a tab. Open a microphone. Watch spacetime shimmer.</p>
+    <div class="ld-row">
+      <button class="primary" id="ld-file">Choose a song</button>
+      <button id="ld-tab">Share a tab</button>
+      <button id="ld-mic">Microphone</button>
+    </div>
+    <div class="ld-hint">or drop an audio file anywhere</div>
+    <input type="file" id="ld-file-input" accept="audio/*">
+  </div>
+</div>
+
+<!-- ─────────── LISTEN MODE — NOW PLAYING ─────────── -->
+<div id="listen-np">
+  <div>
+    <div class="lnp-eyebrow">Listening</div>
+    <div class="lnp-title" id="lnp-title">—</div>
+  </div>
+  <button class="lnp-btn" id="lnp-toggle" title="Play / pause">⏸</button>
+  <button class="lnp-btn" id="lnp-stop" title="Stop">✕</button>
+</div>
+
+<!-- ─────────── LISTEN MODE — INTERPRETATION TOGGLE ─────────── -->
+<div id="interp-toggle">
+  <div class="it-label">Interpretation</div>
+  <button id="interp-spectral" class="active">Spectral</button>
+  <button id="interp-waveform">Waveform · honest</button>
+</div>
+
+<!-- ─────────── INTRO OVERLAY ─────────── -->
+<div id="intro-overlay">
+  <div class="intro-card">
+    <div class="intro-eyebrow" id="intro-eyebrow">GW150914 · Sep 14, 2015</div>
+    <h2>You are watching<br>spacetime ripple.</h2>
+    <div class="sub" id="intro-sub">The first gravitational wave humans ever directly detected.</div>
+    <p id="intro-body">Two black holes — 35.6 and 30.6 times the mass of the Sun — collided 1.3 billion light-years away. The wave they made took 1.3 billion years to reach Earth, where LIGO measured it on September 14, 2015.</p>
+    <p>What you see here is the same event, in three dimensions, slowed down and visualised so you can explore it from any angle.</p>
+    <div class="hint">
+      Click the glowing dots in the scene to learn what each piece is.<br>
+      <kbd>Drag</kbd> to orbit · <kbd>Scroll</kbd> to zoom · <kbd>Space</kbd> to play
+    </div>
+    <button id="intro-begin">Begin</button>
+  </div>
+</div>
+
+<!-- ─────────── THREE.JS ─────────── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+ * RIPPLE — a live spacetime field
+ *
+ * Conventions:
+ *   - Geometric units (G = c = 1).
+ *   - Time and length scaled so a stellar-mass merger plays out
+ *     over ~6 seconds with the binary occupying ~unit-size scene.
+ *   - Strain h is normalised; absolute values are not physical,
+ *     pattern and time-evolution are.
+ *
+ * Physics:
+ *   - Inspiral frequency follows the leading-order chirp:
+ *       f_GW(t) = (1/π) · (5/(256 τ))^(3/8) · (G M_chirp/c³)^(-5/8)
+ *     where τ = t_c - t is time-to-coalescence and
+ *     M_chirp = (m1 m2)^(3/5) / (m1+m2)^(1/5)
+ *   - Strain amplitude ∝ f^(2/3) during inspiral.
+ *   - Merger/ringdown handled phenomenologically.
+ *   - Far-field quadrupole radiation pattern:
+ *       h_+ ∝ (1+cos²θ)/2 · cos(2Φ - 2φ)
+ *       h_× ∝ cos θ        · sin(2Φ - 2φ)
+ *     where θ is polar angle from orbital axis,
+ *     φ is azimuth, Φ is GW phase.
+ * ════════════════════════════════════════════════════════════════ */
+
+/* ─────────── scene setup ─────────── */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000308);
+
+const camera = new THREE.PerspectiveCamera(
+  55, window.innerWidth / window.innerHeight, 0.1, 1000
+);
+camera.position.set(8, 4, 16);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.rotateSpeed = 0.6;
+controls.zoomSpeed = 0.8;
+controls.minDistance = 2;
+controls.maxDistance = 80;
+
+/* ─────────── starfield background ─────────── */
+{
+  const N = 1500;
+  const positions = new Float32Array(N * 3);
+  const colors    = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    // distribute on a large sphere
+    const r = 200 + Math.random() * 100;
+    const θ = Math.acos(2 * Math.random() - 1);
+    const φ = 2 * Math.PI * Math.random();
+    positions[3*i]   = r * Math.sin(θ) * Math.cos(φ);
+    positions[3*i+1] = r * Math.cos(θ);
+    positions[3*i+2] = r * Math.sin(θ) * Math.sin(φ);
+    const c = 0.4 + 0.6 * Math.random();
+    colors[3*i] = c; colors[3*i+1] = c * (0.85 + 0.15*Math.random()); colors[3*i+2] = c;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  g.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+  const m = new THREE.PointsMaterial({
+    size: 0.8, sizeAttenuation: true, vertexColors: true,
+    transparent: true, opacity: 0.7, depthWrite: false,
+  });
+  scene.add(new THREE.Points(g, m));
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * BINARY — two spheres orbiting + spiraling in
+ * ════════════════════════════════════════════════════════════════ */
+const binaryGroup = new THREE.Group();
+scene.add(binaryGroup);
+
+const bh1Mat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+const bh2Mat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+const bh1 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), bh1Mat);
+const bh2 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), bh2Mat);
+binaryGroup.add(bh1, bh2);
+
+// Subtle accretion glow around each BH — soft radial gradient (no
+// rectangle artifact). Canvas2D-painted texture, additively blended.
+function makeGlowTexture(){
+  const size = 128;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  g.addColorStop(0.00, 'rgba(255, 220, 170, 1.0)');
+  g.addColorStop(0.18, 'rgba(255, 170, 100, 0.55)');
+  g.addColorStop(0.45, 'rgba(255, 110, 50, 0.18)');
+  g.addColorStop(1.00, 'rgba(255, 80, 20, 0.0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
+}
+const glowTexture = makeGlowTexture();
+const glowMat = new THREE.SpriteMaterial({
+  map: glowTexture,
+  color: 0xffaa66, transparent: true, opacity: 0.6,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const bh1Glow = new THREE.Sprite(glowMat.clone());
+const bh2Glow = new THREE.Sprite(glowMat.clone());
+binaryGroup.add(bh1Glow, bh2Glow);
+
+/* ════════════════════════════════════════════════════════════════
+ * TEST-MASS FIELD — sphere of points around binary,
+ * deformed radially by passing wave
+ * ════════════════════════════════════════════════════════════════ */
+const testMassShader = {
+  uniforms: {
+    time:        { value: 0 },
+    gwPhase:     { value: 0 },     // current GW phase at source
+    gwFreq:      { value: 0 },     // current GW angular freq at source
+    amplitude:   { value: 0 },     // current strain amplitude
+    sphereRadius:{ value: 6.0 },
+    axisTilt:    { value: 0 },     // tilt of orbital axis (radians, around X)
+    // Listen-mode extras: spectral overlays and waveform-direct strain
+    bassPulse:   { value: 0 },     // low-band amplification for h+ overlay
+    trebleMix:   { value: 0 },     // high-band amplification for h× overlay
+    mode:        { value: 0 },     // 0 = spectral (events + spectral listen), 1 = waveform
+    hPlusGlobal: { value: 0 },     // mode-1: direct strain h+(t) from waveform
+    hCrossGlobal:{ value: 0 },     // mode-1: direct strain h×(t)
+  },
+  vertexShader: /* glsl */`
+    uniform float time;
+    uniform float gwPhase;
+    uniform float gwFreq;
+    uniform float amplitude;
+    uniform float sphereRadius;
+    uniform float axisTilt;
+    uniform float bassPulse;
+    uniform float trebleMix;
+    uniform int   mode;
+    uniform float hPlusGlobal;
+    uniform float hCrossGlobal;
+
+    varying float vIntensity;
+
+    void main(){
+      // Original spherical position
+      vec3 dir = normalize(position);
+
+      // Rotate to the binary's orbital axis frame
+      // (orbital axis = (sin(tilt), cos(tilt), 0) roughly — we tilt the radiation pattern)
+      vec3 axis = vec3(sin(axisTilt), cos(axisTilt), 0.0);
+
+      // Polar angle θ from orbital axis
+      float cosTheta = dot(dir, axis);
+      float sinTheta = sqrt(max(0.0, 1.0 - cosTheta*cosTheta));
+
+      // Azimuth φ in plane perpendicular to axis
+      // build basis: e1 = perpendicular reference, e2 = axis × e1
+      vec3 e1 = normalize(vec3(axis.y, -axis.x, 0.0));   // perpendicular in XY
+      if (length(e1) < 1e-4) e1 = vec3(1.0, 0.0, 0.0);
+      vec3 e2 = cross(axis, e1);
+      float cx = dot(dir, e1);
+      float cy = dot(dir, e2);
+      float phi = atan(cy, cx);
+
+      // Retarded GW phase: wave reached this radius after travel time r/c
+      // Approx: phase here = sourcePhase - 2*ω*(r/c)
+      float rRet = sphereRadius;
+      float gwPhaseAtR = gwPhase - 2.0 * gwFreq * rRet;
+
+      // Quadrupolar pattern (transverse-traceless, far-field)
+      float plusPattern  = (1.0 + cosTheta*cosTheta) * 0.5;
+      float crossPattern = cosTheta;
+
+      float hPlus, hCross;
+      if (mode == 0){
+        // SPECTRAL — synthesised binary quadrupole. Used by events and by the
+        // "spectral" interpretation of Listen mode. Bass/treble overlays add
+        // visual richness for music-driven strain.
+        hPlus  = amplitude * plusPattern  * cos(gwPhaseAtR - 2.0 * phi)
+               + bassPulse * plusPattern * cos(gwPhaseAtR * 0.5 - 2.0 * phi) * 0.5;
+        hCross = amplitude * crossPattern * sin(gwPhaseAtR - 2.0 * phi)
+               + trebleMix * crossPattern * sin(gwPhaseAtR * 2.0 - 4.0 * phi) * 0.4;
+      } else {
+        // WAVEFORM — plane wave from infinity. The signal IS the strain.
+        // No fake orbital axis; uniform shear across the sphere.
+        hPlus  = hPlusGlobal;
+        hCross = hCrossGlobal;
+      }
+
+      // ── Transverse displacement (TT-gauge strain) ──
+      // Real GW strain is transverse: each test mass is sheared in the plane
+      // perpendicular to the wave's propagation direction, never pushed along it.
+      // Local transverse basis (eTheta, ePhi) at this point.
+      vec3 eTheta = (sinTheta < 1e-3)
+        ? e1                                  // degenerate at the poles
+        : normalize(axis - cosTheta * dir);   // tangent to meridian
+      vec3 ePhi = cross(dir, eTheta);         // tangent to parallel
+
+      // Apply polarization tensor h_TT to a tangent reference (cos phi, sin phi)
+      // in the (eTheta, ePhi) basis. Spin-2 shearing: h+ acts as diag(+1,-1),
+      // h× as the off-diagonal swap. The result is transverse motion whose
+      // amplitude varies quadrupolarly across the sphere.
+      float cPhi = cos(phi);
+      float sPhi = sin(phi);
+      float dTheta = hPlus * cPhi + hCross * sPhi;
+      float dPhi   = -hPlus * sPhi + hCross * cPhi;
+
+      float transverseScale = 1.6;
+      vec3 displaced = position + transverseScale * (dTheta * eTheta + dPhi * ePhi);
+
+      vIntensity = sqrt(hPlus*hPlus + hCross*hCross);
+
+      gl_PointSize = 2.5 + vIntensity * 4.0;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */`
+    varying float vIntensity;
+    void main(){
+      vec2 uv = gl_PointCoord - vec2(0.5);
+      float d = length(uv);
+      if (d > 0.5) discard;
+      float alpha = (1.0 - d*2.0) * (0.4 + 0.6*vIntensity);
+      vec3 cold = vec3(0.35, 0.55, 0.85);
+      vec3 hot  = vec3(1.0, 0.75, 0.45);
+      vec3 col = mix(cold, hot, smoothstep(0.0, 1.0, vIntensity));
+      gl_FragColor = vec4(col, alpha);
+    }
+  `,
+};
+
+// Build test-mass points: an icosphere subdivision via lat/lon grid
+const testMassGeo = (() => {
+  const positions = [];
+  const NLat = 36, NLon = 72;
+  const R = 6.0;
+  for (let i = 1; i < NLat; i++){
+    const θ = (i / NLat) * Math.PI;
+    for (let j = 0; j < NLon; j++){
+      const φ = (j / NLon) * 2 * Math.PI;
+      const x = R * Math.sin(θ) * Math.cos(φ);
+      const y = R * Math.cos(θ);
+      const z = R * Math.sin(θ) * Math.sin(φ);
+      positions.push(x, y, z);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  return g;
+})();
+
+const testMassMat = new THREE.ShaderMaterial({
+  uniforms: testMassShader.uniforms,
+  vertexShader: testMassShader.vertexShader,
+  fragmentShader: testMassShader.fragmentShader,
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const testMassPoints = new THREE.Points(testMassGeo, testMassMat);
+scene.add(testMassPoints);
+
+/* ════════════════════════════════════════════════════════════════
+ * SKY CATALOG — every event as a glowing point at its real
+ * (RA, Dec) on a celestial sphere centred on the camera origin.
+ * The catalog *is* the sky.
+ * ════════════════════════════════════════════════════════════════ */
+const SKY_RADIUS = 50;
+const skyGroup = new THREE.Group();
+skyGroup.visible = false;
+scene.add(skyGroup);
+
+function makeSkyPointTexture(){
+  const size = 128;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  g.addColorStop(0.00, 'rgba(255, 255, 255, 1.0)');
+  g.addColorStop(0.20, 'rgba(255, 240, 210, 0.7)');
+  g.addColorStop(0.55, 'rgba(255, 200, 160, 0.18)');
+  g.addColorStop(1.00, 'rgba(255, 160, 100, 0.0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+const SKY_POINT_TEX = makeSkyPointTexture();
+
+function raDecToVec3(raHours, decDeg, radius){
+  const ra = raHours * Math.PI / 12;
+  const dec = decDeg * Math.PI / 180;
+  return new THREE.Vector3(
+    radius * Math.cos(dec) * Math.cos(ra),
+    radius * Math.sin(dec),
+    radius * Math.cos(dec) * Math.sin(ra),
+  );
+}
+
+const skySprites = new Map();   // eventId -> Sprite
+function buildSky(){
+  for (const id in EVENTS){
+    if (id === 'YOURS') continue;
+    const ev = EVENTS[id];
+    if (ev.ra == null) continue;
+    const mat = new THREE.SpriteMaterial({
+      map: SKY_POINT_TEX,
+      color: ev.theme.glow,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.85,
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.copy(raDecToVec3(ev.ra, ev.dec, SKY_RADIUS));
+    const baseSize = 2.2;
+    sprite.scale.setScalar(baseSize);
+    sprite.userData = { eventId: id, baseSize, hovered: false };
+    skyGroup.add(sprite);
+    skySprites.set(id, sprite);
+  }
+}
+// buildSky() is called after EVENTS is declared (see sky-view block).
+
+/* ════════════════════════════════════════════════════════════════
+ * KILONOVA — a one-shot multi-colour flash at merger for events
+ * where neutron-star matter is disrupted (BNS, NSBH). Triggered
+ * by detecting the merger crossing in animate().
+ * ════════════════════════════════════════════════════════════════ */
+function makeKilonovaTexture(){
+  const size = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  g.addColorStop(0.00, 'rgba(255, 255, 240, 1.0)');
+  g.addColorStop(0.08, 'rgba(255, 240, 180, 0.95)');
+  g.addColorStop(0.22, 'rgba(255, 180, 100, 0.7)');
+  g.addColorStop(0.42, 'rgba(255, 90, 60, 0.4)');
+  g.addColorStop(0.72, 'rgba(180, 40, 100, 0.18)');
+  g.addColorStop(1.00, 'rgba(120, 20, 80, 0.0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+const kilonovaSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: makeKilonovaTexture(),
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  opacity: 0,
+  depthWrite: false,
+}));
+kilonovaSprite.scale.setScalar(0.01);
+scene.add(kilonovaSprite);
+
+let kilonovaTriggerTime = -1;   // simTime at which the flash began (-1 = inactive)
+let prevAnimSimT = -1;          // for merger-crossing detection in animate()
+
+/* ════════════════════════════════════════════════════════════════
+ * WAVE SHELLS — concentric translucent spheres carrying the
+ * outgoing wave pattern. Each shell shows the strain amplitude
+ * at retarded time.
+ * ════════════════════════════════════════════════════════════════ */
+const numShells = 14;
+const shellGroup = new THREE.Group();
+scene.add(shellGroup);
+
+// Shared shader source for shells
+const shellShader = {
+  vertexShader: /* glsl */`
+    varying vec3 vLocalPos;
+    varying vec3 vNormal;
+    void main(){
+      vLocalPos = position;
+      vNormal = normal;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */`
+    uniform float time;
+    uniform float shellRadius;
+    uniform float gwPhase;
+    uniform float gwFreq;
+    uniform float amplitude;
+    uniform float axisTilt;
+    uniform float shellFade;       // 0..1 — fades shells as they expand out
+    varying vec3 vLocalPos;
+    varying vec3 vNormal;
+
+    void main(){
+      vec3 dir = normalize(vLocalPos);
+
+      // orbital axis (tilted)
+      vec3 axis = normalize(vec3(sin(axisTilt), cos(axisTilt), 0.0));
+
+      float cosTheta = dot(dir, axis);
+      float sinTheta = sqrt(max(0.0, 1.0 - cosTheta*cosTheta));
+
+      vec3 e1 = normalize(vec3(axis.y, -axis.x, 0.0));
+      if (length(e1) < 1e-4) e1 = vec3(1.0, 0.0, 0.0);
+      vec3 e2 = cross(axis, e1);
+      float cx = dot(dir, e1);
+      float cy = dot(dir, e2);
+      float phi = atan(cy, cx);
+
+      // GW phase at this shell radius
+      float gwPhaseAtR = gwPhase - 2.0 * gwFreq * shellRadius;
+
+      float plusPattern  = (1.0 + cosTheta*cosTheta) * 0.5;
+      float crossPattern = cosTheta;
+
+      float hPlus  = amplitude * plusPattern  * cos(gwPhaseAtR - 2.0 * phi);
+      float hCross = amplitude * crossPattern * sin(gwPhaseAtR - 2.0 * phi);
+      float intensity = sqrt(hPlus*hPlus + hCross*hCross);
+
+      // Radial fade (older shells far away dim out)
+      float radialFade = 1.0 / (1.0 + shellRadius * 0.04);
+
+      // Color: cold blue → warm orange with intensity
+      vec3 cold = vec3(0.20, 0.35, 0.65);
+      vec3 hot  = vec3(1.00, 0.70, 0.40);
+      vec3 col = mix(cold, hot, smoothstep(0.0, 0.7, intensity));
+
+      // Highlight the radiation lobes (axis bright, equator dim)
+      float lobe = mix(0.4, 1.0, plusPattern);
+
+      float alpha = intensity * radialFade * shellFade * lobe * 0.55;
+
+      gl_FragColor = vec4(col, alpha);
+    }
+  `,
+};
+
+const shells = [];
+for (let i = 0; i < numShells; i++){
+  const uniforms = {
+    time:        { value: 0 },
+    shellRadius: { value: 0 },
+    gwPhase:     { value: 0 },
+    gwFreq:      { value: 0 },
+    amplitude:   { value: 0 },
+    axisTilt:    { value: 0 },
+    shellFade:   { value: 1.0 },
+  };
+  const mat = new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader: shellShader.vertexShader,
+    fragmentShader: shellShader.fragmentShader,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const geo = new THREE.SphereGeometry(1, 64, 48);
+  const mesh = new THREE.Mesh(geo, mat);
+  shellGroup.add(mesh);
+  shells.push({
+    mesh, uniforms,
+    radius: 0,
+    birthTime: -i * 0.4,   // staggered births
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * PHYSICS — chirp + binary kinematics
+ * ════════════════════════════════════════════════════════════════ */
+/* ────────────────────────────────────────────────────────────────
+ * EVENTS — the LIGO catalog as first-class data.
+ * Each event carries its own real frequency range, story, and tint.
+ * ──────────────────────────────────────────────────────────────── */
+const EVENTS = {
+  GW150914: {
+    id: 'GW150914', name: 'GW150914', type: 'BBH',
+    m1: 35.6, m2: 30.6, distance: 410, date: 'Sep 14, 2015',
+    detectors: 'LIGO Hanford + Livingston',
+    fStart: 35, fPeak: 250,
+    ra: 7.5, dec: -65, run: 'O1',
+    significance: 'The first gravitational wave ever observed.',
+    theme: { glow: 0xffaa66 },
+    voice: {
+      fRingdown: 250, ringDecay: 2.0,  ringLevel: 0.18,
+      thudFreq: 50,   thudLevel: 0.25, noiseBurstLevel: 0.15,
+      subOctaveMix: 0.35,
+    },
+  },
+  GW170817: {
+    id: 'GW170817', name: 'GW170817', type: 'BNS',
+    m1: 1.46, m2: 1.27, distance: 40, date: 'Aug 17, 2017',
+    detectors: 'LIGO + Virgo + Fermi',
+    fStart: 30, fPeak: 1200,
+    ra: 13.16, dec: -23.4, run: 'O2',
+    significance: 'Two neutron stars colliding. 1.7 seconds later a gamma-ray burst lit Fermi; hours later the kilonova flared in every observatory on Earth. Gold being forged in real time.',
+    theme: { glow: 0x8fc8ff },
+    voice: {
+      // BNS in reality has no clean ringdown — the post-merger signal was
+      // never confidently detected. So we dissolve: chirp rises, a soft
+      // exhale at coalescence, then a long natural fade. No bell.
+      fRingdown: 0, ringDecay: 0.1, ringLevel: 0,
+      thudFreq: 80, thudLevel: 0.04, noiseBurstLevel: 0.05,
+      subOctaveMix: 0.18,
+      chirpRelease: 0.45,
+    },
+  },
+  GW190521: {
+    id: 'GW190521', name: 'GW190521', type: 'IMBH',
+    m1: 85, m2: 66, distance: 5300, date: 'May 21, 2019',
+    detectors: 'LIGO + Virgo',
+    fStart: 25, fPeak: 80,
+    ra: 12.4, dec: 35, run: 'O3',
+    significance: 'The heaviest merger ever detected. The 142 M☉ remnant is the first confirmed intermediate-mass black hole.',
+    theme: { glow: 0xc89bff },
+    voice: {
+      // Heavy IMBH: deep, slow ring, big thud, heavy sub.
+      fRingdown: 75,  ringDecay: 3.5, ringLevel: 0.22,
+      thudFreq: 32,   thudLevel: 0.32, noiseBurstLevel: 0.18,
+      subOctaveMix: 0.55,
+    },
+  },
+  GW151226: {
+    id: 'GW151226', name: 'GW151226', type: 'BBH',
+    m1: 14.2, m2: 7.5, distance: 440, date: 'Dec 26, 2015',
+    detectors: 'LIGO Hanford + Livingston',
+    fStart: 35, fPeak: 450,
+    ra: 4.0, dec: -45, run: 'O1',
+    significance: 'The Boxing Day event. Lighter masses, longer chirp — proof the first detection was not a fluke.',
+    theme: { glow: 0xffaa66 },
+    voice: {
+      fRingdown: 450, ringDecay: 1.5, ringLevel: 0.16,
+      thudFreq: 60,   thudLevel: 0.20, noiseBurstLevel: 0.13,
+      subOctaveMix: 0.28,
+    },
+  },
+  GW250114: {
+    id: 'GW250114', name: 'GW250114', type: 'BBH',
+    m1: 33.8, m2: 32.3, distance: 405, date: 'Jan 14, 2025',
+    detectors: 'LIGO Hanford + Livingston + Virgo',
+    fStart: 35, fPeak: 280,
+    ra: 10.0, dec: 20, run: 'O4',
+    significance: 'The loudest signal ever recorded. The first event where multiple ringdown tones were resolved — a struck bell with overtones.',
+    theme: { glow: 0xffd9a0 },
+    voice: {
+      // The clearest bell: louder and longer-lived than canonical,
+      // and we layer an overtone for the resolved second-mode hint.
+      fRingdown: 280, ringDecay: 2.8, ringLevel: 0.22,
+      thudFreq: 50,   thudLevel: 0.26, noiseBurstLevel: 0.15,
+      subOctaveMix: 0.35,
+      overtoneFreq: 470, overtoneLevel: 0.07,
+    },
+  },
+  GW190412: {
+    id: 'GW190412', name: 'GW190412', type: 'BBH',
+    m1: 30, m2: 8.4, distance: 740, date: 'Apr 12, 2019',
+    detectors: 'LIGO + Virgo',
+    fStart: 30, fPeak: 280,
+    ra: 8.0, dec: 35, run: 'O3',
+    significance: 'The first clearly asymmetric merger. Mass ratio ~4:1 — watch the lighter black hole sweep around the near-stationary giant.',
+    theme: { glow: 0xffc890 },
+    voice: {
+      fRingdown: 270, ringDecay: 1.8, ringLevel: 0.18,
+      thudFreq: 55,   thudLevel: 0.24, noiseBurstLevel: 0.14,
+      subOctaveMix: 0.32,
+    },
+  },
+  GW190814: {
+    id: 'GW190814', name: 'GW190814', type: 'BBH',
+    m1: 23.2, m2: 2.6, distance: 240, date: 'Aug 14, 2019',
+    detectors: 'LIGO + Virgo',
+    fStart: 35, fPeak: 380,
+    ra: 0.4, dec: -26, run: 'O3',
+    significance: 'A 23 M☉ black hole and a 2.6 M☉ object that fits no known category. Mass-gap territory — too heavy for a neutron star, too light for a black hole. The lightest companion ever recorded.',
+    theme: { glow: 0xc0ffaa },
+    voice: {
+      fRingdown: 360, ringDecay: 1.4, ringLevel: 0.16,
+      thudFreq: 70,   thudLevel: 0.20, noiseBurstLevel: 0.12,
+      subOctaveMix: 0.25,
+    },
+  },
+  GW230529: {
+    id: 'GW230529', name: 'GW230529', type: 'NSBH',
+    m1: 3.6, m2: 1.4, distance: 200, date: 'May 29, 2023',
+    detectors: 'LIGO Livingston',
+    fStart: 60, fPeak: 1000,
+    ra: 18.0, dec: -30, run: 'O4',
+    significance: 'A neutron star swallowed by an object in the mass gap. The 3.6 M☉ primary is heavier than any known neutron star and lighter than any black hole — its nature is open.',
+    theme: { glow: 0xa0ffd0 },
+    voice: {
+      // NSBH: the neutron star is tidally disrupted as it spirals in, no clean ringdown.
+      fRingdown: 0, ringDecay: 0.1, ringLevel: 0,
+      thudFreq: 80, thudLevel: 0.06, noiseBurstLevel: 0.07,
+      subOctaveMix: 0.20,
+      chirpRelease: 0.35,
+    },
+  },
+  GW200129: {
+    id: 'GW200129', name: 'GW200129', type: 'BBH',
+    m1: 34.5, m2: 24, distance: 900, date: 'Jan 29, 2020',
+    detectors: 'LIGO + Virgo',
+    fStart: 30, fPeak: 220,
+    ra: 5.0, dec: 60, run: 'O3',
+    significance: 'The strongest evidence yet for orbital precession. The axis itself wobbles during inspiral — the binary is dancing as it dies.',
+    theme: { glow: 0xff90c0 },
+    voice: {
+      fRingdown: 220, ringDecay: 2.2, ringLevel: 0.18,
+      thudFreq: 48,   thudLevel: 0.26, noiseBurstLevel: 0.15,
+      subOctaveMix: 0.40,
+    },
+    precession: {
+      period: 1.8,        // scene-time seconds for a full precession cycle
+      coneAngle: 0.32,    // ~18° half-angle wobble
+    },
+  },
+  YOURS: {
+    id: 'YOURS', name: 'Your binary', type: 'CUSTOM',
+    m1: 35.6, m2: 30.6, distance: null, date: 'Never observed',
+    detectors: 'Synthetic',
+    fStart: 35, fPeak: 250,
+    significance: 'A binary that does not exist. Move the masses; hear what would have been.',
+    theme: { glow: 0x7fc0a0 },
+    // voice is computed dynamically from masses — see computeYoursVoice()
+  },
+};
+const DEFAULT_EVENT = 'GW150914';
+
+const physics = {
+  currentEvent: DEFAULT_EVENT,
+  m1: 35.6,        // solar masses
+  m2: 30.6,
+  axisTilt: 0,
+  speed: 1.0,
+  // scene-time integration
+  simTime: 0,           // simulated time since start
+  playing: true,
+  // derived
+  totalDuration: 8.0,   // visual duration of the whole event (sec)
+  tMerger: 6.0,         // when merger occurs in simTime
+  gwPhase: 0,           // accumulated GW phase
+  audioOn: false,
+};
+
+function chirpMass(m1, m2){
+  return Math.pow(m1*m2, 3/5) / Math.pow(m1+m2, 1/5);
+}
+
+// Phenomenological frequency evolution (visual). f_init is the GW frequency
+// (twice the orbital frequency) at t=0. Frequency rises following the
+// leading-order chirp until merger, peaks, then a damped ringdown.
+function currentGWFreq(t){
+  const tM = physics.tMerger;
+  const fInit = 0.7;            // angular freq at start (scene units, rad/s)
+  const fPeak = 8.0 + 0.04*(physics.m1+physics.m2); // higher mass → ringdown freq scaling
+  if (t < tM){
+    // Avoid divergence — clamp τ
+    const τ = Math.max(0.05, tM - t);
+    const τ0 = tM;
+    // f ∝ τ^(-3/8); normalise so f(0) = fInit
+    return fInit * Math.pow(τ0 / τ, 3/8);
+  }else{
+    // Ringdown: damped at fPeak * 1.3
+    const dt = t - tM;
+    return fPeak * 1.3 * Math.exp(-dt * 0.5);
+  }
+}
+
+function currentAmplitude(t){
+  const tM = physics.tMerger;
+  if (t < tM * 0.95){
+    // Inspiral: A ∝ f^(2/3) (post-Newtonian leading order)
+    const f = currentGWFreq(t);
+    return Math.min(1.2, 0.35 * Math.pow(f / 0.7, 2/3));
+  }else if (t < tM){
+    // Merger ramp-up
+    const x = (t - tM*0.95) / (tM*0.05);
+    return 1.0 + 1.5 * x;
+  }else{
+    // Ringdown exponential decay
+    const dt = t - tM;
+    return 2.5 * Math.exp(-dt * 1.6);
+  }
+}
+
+function currentPhase(prev, freq, dt){
+  return prev + freq * dt * 2.0;  // GW phase = 2× orbital phase contribution
+}
+
+function binarySeparation(t, m1, m2){
+  const tM = physics.tMerger;
+  // Newton-Kepler: r ∝ ((m1+m2)/ω²)^(1/3)
+  // ω = orbital angular freq = gw_freq / 2 (in scene units)
+  const fGW = currentGWFreq(t);
+  if (t > tM){
+    // Single final BH
+    return 0;
+  }
+  const M = m1 + m2;
+  const ω = Math.max(0.5, fGW / 2);
+  // r in arbitrary scene units, normalised
+  const r0 = 3.0 * Math.pow(M / 65 * 0.7 / ω, 2/3);
+  return Math.max(0.4, r0);
+}
+
+function setMassesAndScale(){
+  const m1 = physics.m1, m2 = physics.m2;
+  const M = m1 + m2;
+  // Schwarzschild radius ∝ mass (scaled)
+  bh1.scale.setScalar(0.25 * Math.pow(m1, 1/3));
+  bh2.scale.setScalar(0.25 * Math.pow(m2, 1/3));
+  // Glow sizes
+  bh1Glow.scale.setScalar(0.8 * Math.pow(m1, 1/3));
+  bh2Glow.scale.setScalar(0.8 * Math.pow(m2, 1/3));
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * AUDIO — per-event chirp + sub-octave + merger transient + ringdown bell
+ *
+ * Graph:
+ *   chirp osc (sine, sweeps in real Hz) ──┐
+ *   sub osc  (sine, fGW/2)               ├──► master ──► destination
+ *   ring osc (sine, fRingdown)           │
+ *   merger transient (noise burst + thud, one-shot at t = tMerger)
+ * ════════════════════════════════════════════════════════════════ */
+let audioCtx = null;
+let masterGain = null;
+let chirpOsc = null, chirpGain = null;
+let subOsc   = null, subGain   = null;
+let ringOsc  = null, ringGain  = null;
+let audioStarted = false;
+let prevAudioSimT = -1;   // for detecting the merger crossing
+
+function startAudio(){
+  if (!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioStarted) return;
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 1.0;
+  masterGain.connect(audioCtx.destination);
+
+  chirpOsc  = audioCtx.createOscillator(); chirpOsc.type = 'sine';
+  chirpGain = audioCtx.createGain();       chirpGain.gain.value = 0;
+  chirpOsc.connect(chirpGain).connect(masterGain);
+  chirpOsc.start();
+
+  subOsc  = audioCtx.createOscillator();   subOsc.type = 'sine';
+  subGain = audioCtx.createGain();         subGain.gain.value = 0;
+  subOsc.connect(subGain).connect(masterGain);
+  subOsc.start();
+
+  ringOsc  = audioCtx.createOscillator();  ringOsc.type = 'sine';
+  ringGain = audioCtx.createGain();        ringGain.gain.value = 0;
+  ringOsc.connect(ringGain).connect(masterGain);
+  ringOsc.start();
+
+  audioStarted = true;
+  prevAudioSimT = -1;
+}
+function stopAudio(){
+  if (!audioCtx) return;
+  const tNow = audioCtx.currentTime;
+  if (chirpGain) chirpGain.gain.setTargetAtTime(0, tNow, 0.02);
+  if (subGain)   subGain.gain.setTargetAtTime(0, tNow, 0.02);
+  if (ringGain)  ringGain.gain.setTargetAtTime(0, tNow, 0.02);
+}
+
+// Map scene-units GW freq to the event's real Hz range, log-scaled so the
+// perceived rise matches the actual chirp shape.
+function sceneToRealHz(sceneFreq){
+  const ev = EVENTS[physics.currentEvent] || EVENTS[DEFAULT_EVENT];
+  const sLo = 0.7;
+  const sHi = 8.0 + 0.04*(physics.m1 + physics.m2);
+  const t = (Math.log(Math.max(sceneFreq, sLo)) - Math.log(sLo))
+          / (Math.log(sHi) - Math.log(sLo));
+  const clamped = Math.max(0, Math.min(1, t));
+  return ev.fStart * Math.pow(ev.fPeak / ev.fStart, clamped);
+}
+
+// Heavier remnants ring lower and longer. Compute a synthetic voice
+// for the YOURS preset by scaling against GW150914 (66 M☉ total).
+function computeYoursVoice(){
+  const M = Math.max(2, physics.m1 + physics.m2);
+  return {
+    fRingdown: Math.max(40, Math.min(900, 250 * 66 / M)),
+    ringDecay: Math.max(0.6, Math.min(4.0, 1.0 + M / 35)),
+    ringLevel: 0.18,
+    thudFreq:  Math.max(25, Math.min(80, 50 * Math.sqrt(66 / M))),
+    thudLevel: 0.25,
+    noiseBurstLevel: 0.15,
+    subOctaveMix: Math.max(0.18, Math.min(0.55, 0.20 + M / 200)),
+  };
+}
+function getVoice(){
+  const ev = EVENTS[physics.currentEvent] || EVENTS[DEFAULT_EVENT];
+  // YOURS and catalog events have no preset voice — synthesise one from masses.
+  if (ev.id === 'YOURS' || !ev.voice) return computeYoursVoice();
+  return ev.voice;
+}
+
+function tickAudio(simT){
+  if (!physics.audioOn || !audioCtx || !audioStarted) return;
+  const tNow  = audioCtx.currentTime;
+  const tM    = physics.tMerger;
+  const voice = getVoice();
+  const fGW   = currentGWFreq(simT);
+  const realHz = sceneToRealHz(fGW);
+
+  // Detect merger crossing → one-shot transient
+  if (prevAudioSimT >= 0 && prevAudioSimT < tM && simT >= tM){
+    fireMergerTransient(voice, tNow);
+  }
+  prevAudioSimT = simT;
+
+  if (simT < tM){
+    // INSPIRAL — chirp + sub-octave rising; ringdown silent
+    chirpOsc.frequency.setTargetAtTime(realHz, tNow, 0.02);
+    const amp = currentAmplitude(simT);
+    const chirpVol = Math.min(0.18, amp * 0.12);
+    chirpGain.gain.setTargetAtTime(chirpVol, tNow, 0.05);
+
+    subOsc.frequency.setTargetAtTime(realHz / 2, tNow, 0.02);
+    subGain.gain.setTargetAtTime(chirpVol * voice.subOctaveMix, tNow, 0.05);
+
+    ringGain.gain.setTargetAtTime(0, tNow, 0.02);
+  } else {
+    // RINGDOWN — chirp & sub release; ring bell (if any) fades from peak.
+    // chirpRelease lets BNS-style events dissolve gracefully instead of cutting.
+    const release = voice.chirpRelease || 0.01;
+    chirpGain.gain.setTargetAtTime(0, tNow, release);
+    subGain.gain.setTargetAtTime(0, tNow, release);
+
+    if (voice.ringLevel > 0){
+      ringOsc.frequency.setTargetAtTime(voice.fRingdown, tNow, 0.01);
+      const dt = simT - tM;
+      const ringVol = voice.ringLevel * Math.exp(-dt / voice.ringDecay);
+      ringGain.gain.setTargetAtTime(ringVol, tNow, 0.03);
+    } else {
+      ringGain.gain.setTargetAtTime(0, tNow, 0.02);
+    }
+  }
+}
+
+// Schedule a one-shot impact at the merger instant: a short bandpassed
+// noise burst layered with a low-frequency thud transient.
+function fireMergerTransient(voice, tNow){
+  // 1) Bandpassed noise burst, ~80 ms, decaying envelope
+  const burstDur = 0.08;
+  const bufLen = Math.floor(audioCtx.sampleRate * burstDur);
+  const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++){
+    const env = Math.exp(-i / bufLen * 5);
+    data[i] = (Math.random() * 2 - 1) * env;
+  }
+  const noiseSrc = audioCtx.createBufferSource();
+  noiseSrc.buffer = buf;
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 200; bp.Q.value = 1.2;
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.value = voice.noiseBurstLevel;
+  noiseSrc.connect(bp).connect(noiseGain).connect(masterGain);
+  noiseSrc.start(tNow);
+  noiseSrc.stop(tNow + burstDur + 0.05);
+
+  // 2) Low-frequency thud — short sine impulse, exponential decay
+  const thud = audioCtx.createOscillator();
+  thud.type = 'sine';
+  thud.frequency.value = voice.thudFreq;
+  const thudGain = audioCtx.createGain();
+  thudGain.gain.setValueAtTime(voice.thudLevel, tNow);
+  thudGain.gain.exponentialRampToValueAtTime(0.0001, tNow + 0.20);
+  thud.connect(thudGain).connect(masterGain);
+  thud.start(tNow);
+  thud.stop(tNow + 0.25);
+
+  // 3) Optional overtone — a second ringdown mode (e.g. GW250114)
+  if (voice.overtoneFreq){
+    const over = audioCtx.createOscillator();
+    over.type = 'sine';
+    over.frequency.value = voice.overtoneFreq;
+    const overGain = audioCtx.createGain();
+    overGain.gain.setValueAtTime(voice.overtoneLevel || 0.06, tNow);
+    overGain.gain.exponentialRampToValueAtTime(0.0001, tNow + (voice.ringDecay || 2.0));
+    over.connect(overGain).connect(masterGain);
+    over.start(tNow);
+    over.stop(tNow + (voice.ringDecay || 2.0) + 0.1);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * MAIN ANIMATION LOOP
+ * ════════════════════════════════════════════════════════════════ */
+const clock = new THREE.Clock();
+let orbitalPhase = 0;
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  const dtReal = Math.min(clock.getDelta(), 0.05);
+  const dt = dtReal * physics.speed;
+
+  // ═══ LISTEN MODE — audio-driven strain, separate from events physics ═══
+  if (appMode === 'listen'){
+    testMassShader.uniforms.time.value = clock.elapsedTime;
+    if (listenIsPlaying){
+      if (interpretation === 'spectral'){
+        const a = analyseListenSpectral();
+        const ampTarget    = Math.min(2.2, a.rms * 3.2);
+        const freqTarget   = 0.6 + a.centroid * 0.012;
+        const bassTarget   = a.bass * 1.6;
+        const trebleTarget = a.treble * 1.4;
+        listenAmpSm    = lerp(listenAmpSm,    ampTarget,    0.18);
+        listenFreqSm   = lerp(listenFreqSm,   freqTarget,   0.10);
+        listenBassSm   = lerp(listenBassSm,   bassTarget,   0.25);
+        listenTrebleSm = lerp(listenTrebleSm, trebleTarget, 0.22);
+        listenGlowSm   = lerp(listenGlowSm,   a.bass,       0.20);
+        testMassShader.uniforms.amplitude.value = listenAmpSm;
+        testMassShader.uniforms.gwFreq.value    = listenFreqSm;
+        testMassShader.uniforms.gwPhase.value  += listenFreqSm * dtReal * 2.0;
+        testMassShader.uniforms.bassPulse.value = listenBassSm;
+        testMassShader.uniforms.trebleMix.value = listenTrebleSm;
+      } else {
+        // waveform mode: feed audio samples directly as h+, h×
+        const w = analyseListenWaveform();
+        listenHPlusSm  = lerp(listenHPlusSm,  w.hPlus  * 1.4, 0.45);
+        listenHCrossSm = lerp(listenHCrossSm, w.hCross * 1.4, 0.45);
+        testMassShader.uniforms.hPlusGlobal.value  = listenHPlusSm;
+        testMassShader.uniforms.hCrossGlobal.value = listenHCrossSm;
+        listenGlowSm = lerp(listenGlowSm, Math.abs(listenHPlusSm), 0.2);
+      }
+    } else {
+      // idle drift so the field isn't dead before audio loads
+      const breath = 0.10 + 0.04 * Math.sin(clock.elapsedTime * 0.4);
+      listenAmpSm = lerp(listenAmpSm, breath, 0.05);
+      listenFreqSm = lerp(listenFreqSm, 0.7, 0.03);
+      testMassShader.uniforms.amplitude.value = listenAmpSm;
+      testMassShader.uniforms.gwFreq.value    = listenFreqSm;
+      testMassShader.uniforms.gwPhase.value  += listenFreqSm * dtReal * 2.0;
+      testMassShader.uniforms.bassPulse.value = 0;
+      testMassShader.uniforms.trebleMix.value = 0;
+      listenGlowSm = lerp(listenGlowSm, breath, 0.05);
+    }
+    flyToUpdate();
+    controls.update();
+    renderer.render(scene, camera);
+    return;  // skip events-mode physics
+  }
+
+  // ═══ EVENTS MODE — original binary chirp physics ═══
+  if (physics.playing){
+    physics.simTime += dt;
+    if (physics.simTime > physics.totalDuration){
+      physics.simTime = 0;
+      orbitalPhase = 0;
+    }
+  }
+
+  const t = physics.simTime;
+
+  // Compute current physics
+  const fGW    = currentGWFreq(t);
+  const amp    = currentAmplitude(t);
+  orbitalPhase += (fGW / 2) * dt;  // orbital angular frequency = fGW/2
+  physics.gwPhase = 2 * orbitalPhase;
+
+  // ─── Precession: wobble the orbital axis during inspiral for events that
+  // exhibit it. The slider provides the base tilt; precession adds a
+  // sinusoidal cone-wobble that locks at merger. ───
+  const currentEv = EVENTS[physics.currentEvent];
+  {
+    const baseTilt = parseFloat(tiltSlider.value) * Math.PI / 180;
+    if (currentEv && currentEv.precession && t < physics.tMerger){
+      physics.axisTilt = baseTilt
+        + currentEv.precession.coneAngle * Math.sin(2 * Math.PI * t / currentEv.precession.period);
+    } else {
+      physics.axisTilt = baseTilt;
+    }
+  }
+
+  // ─── Kilonova flash: detect merger crossing on BNS/NSBH events ───
+  if (prevAnimSimT >= 0 && prevAnimSimT < physics.tMerger && t >= physics.tMerger){
+    if (currentEv && (currentEv.type === 'BNS' || currentEv.type === 'NSBH')){
+      kilonovaTriggerTime = t;
+    }
+  }
+  // Loop reset clears the flash
+  if (t < prevAnimSimT) kilonovaTriggerTime = -1;
+  prevAnimSimT = t;
+
+  // Animate the flash if active
+  if (kilonovaTriggerTime >= 0){
+    const elapsed = t - kilonovaTriggerTime;
+    const FLASH_DURATION = 2.5;
+    if (elapsed < FLASH_DURATION){
+      // Fast rise (first 0.08 s), then exponential decay
+      const phase = elapsed / FLASH_DURATION;
+      const intensity = phase < 0.08
+        ? (phase / 0.08)
+        : Math.exp(-(phase - 0.08) * 3.2);
+      kilonovaSprite.material.opacity = intensity * 0.95;
+      kilonovaSprite.scale.setScalar(0.6 + phase * 8.5);
+    } else {
+      kilonovaSprite.material.opacity = 0;
+      kilonovaSprite.scale.setScalar(0.01);
+      kilonovaTriggerTime = -1;
+    }
+  } else {
+    kilonovaSprite.material.opacity = 0;
+  }
+
+  // ─── Binary kinematics ───
+  if (t < physics.tMerger){
+    const sep = binarySeparation(t, physics.m1, physics.m2);
+    const m1 = physics.m1, m2 = physics.m2, M = m1+m2;
+    const r1 = sep * (m2/M);
+    const r2 = sep * (m1/M);
+    const cosθ = Math.cos(orbitalPhase);
+    const sinθ = Math.sin(orbitalPhase);
+    // Orbital plane is perpendicular to axis (which is tilted around X by axisTilt)
+    const tilt = physics.axisTilt;
+    // Orbit in plane perpendicular to (sin tilt, cos tilt, 0) — use basis:
+    // e_x = (cos tilt, -sin tilt, 0), e_z = (0, 0, 1)
+    const ex = [Math.cos(tilt), -Math.sin(tilt), 0];
+    const ez = [0, 0, 1];
+    bh1.position.set(
+      r1 * (ex[0]*cosθ + ez[0]*sinθ),
+      r1 * (ex[1]*cosθ + ez[1]*sinθ),
+      r1 * (ex[2]*cosθ + ez[2]*sinθ),
+    );
+    bh2.position.set(
+     -r2 * (ex[0]*cosθ + ez[0]*sinθ),
+     -r2 * (ex[1]*cosθ + ez[1]*sinθ),
+     -r2 * (ex[2]*cosθ + ez[2]*sinθ),
+    );
+    bh1.visible = bh2.visible = true;
+    bh1Glow.visible = bh2Glow.visible = true;
+    bh1Glow.position.copy(bh1.position);
+    bh2Glow.position.copy(bh2.position);
+  }else{
+    // Final merged BH at origin
+    bh1.position.set(0,0,0);
+    bh2.visible = false;
+    bh2Glow.visible = false;
+    // The remnant slightly grows
+    const finalSize = 0.28 * Math.pow(physics.m1 + physics.m2, 1/3);
+    bh1.scale.setScalar(finalSize);
+    bh1Glow.scale.setScalar(2.4 * finalSize);
+  }
+
+  // ─── Test-mass field uniforms ───
+  testMassShader.uniforms.time.value      = t;
+  testMassShader.uniforms.gwPhase.value   = physics.gwPhase;
+  testMassShader.uniforms.gwFreq.value    = fGW;
+  testMassShader.uniforms.amplitude.value = amp;
+  testMassShader.uniforms.axisTilt.value  = physics.axisTilt;
+
+  // ─── Wave shells: each shell expands outward, then resets ───
+  for (let i = 0; i < shells.length; i++){
+    const s = shells[i];
+    // Each shell expands at "the speed of light" — scaled
+    const cScene = 4.0;
+    const shellMaxR = 60;
+    const periodPerShell = shellMaxR / cScene;
+    const phase = (t - s.birthTime) % periodPerShell;
+    if (phase < 0) continue;
+    s.radius = phase * cScene;
+    s.mesh.scale.setScalar(s.radius);
+    // Fade in early, fade out late
+    const fadeIn  = Math.min(1.0, s.radius / 3.0);
+    const fadeOut = Math.max(0.0, 1.0 - (s.radius / shellMaxR));
+    s.uniforms.shellFade.value = fadeIn * fadeOut;
+    s.uniforms.shellRadius.value = s.radius;
+    s.uniforms.gwPhase.value     = physics.gwPhase;
+    s.uniforms.gwFreq.value      = fGW;
+    s.uniforms.amplitude.value   = amp;
+    s.uniforms.axisTilt.value    = physics.axisTilt;
+    s.uniforms.time.value        = t;
+  }
+
+  // ─── Status overlay ───
+  updateStatus(t, fGW);
+  tickAudio(t);
+
+  flyToUpdate();
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ─────────── Status overlay ─────────── */
+const freqEl  = document.getElementById('freq-display');
+const phaseEl = document.getElementById('phase-display');
+function updateStatus(t, fGW){
+  const realHz = sceneToRealHz(fGW);
+  freqEl.textContent = `f = ${realHz.toFixed(0)} Hz`;
+  let label, cls;
+  if (t < physics.tMerger * 0.92){ label = 'Inspiral'; cls = 'inspiral'; }
+  else if (t < physics.tMerger * 1.05){ label = 'Merger'; cls = 'merger'; }
+  else { label = 'Ringdown'; cls = 'ringdown'; }
+  phaseEl.textContent = label;
+  phaseEl.className = 'phase ' + cls;
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * UI WIRING
+ * ════════════════════════════════════════════════════════════════ */
+const m1Slider = document.getElementById('m1');
+const m2Slider = document.getElementById('m2');
+const tiltSlider = document.getElementById('tilt');
+const speedSlider = document.getElementById('speed');
+
+const m1v = document.getElementById('m1v');
+const m2v = document.getElementById('m2v');
+const tiltv = document.getElementById('tiltv');
+const speedv = document.getElementById('speedv');
+
+// If the user nudges masses away from the current preset, switch to YOURS
+// so the URL + story reflect that they're now driving a synthetic binary.
+function checkMassDrift(){
+  if (physics.currentEvent === 'YOURS') return;
+  const ev = EVENTS[physics.currentEvent];
+  if (Math.abs(physics.m1 - ev.m1) > 0.1 || Math.abs(physics.m2 - ev.m2) > 0.1){
+    physics.currentEvent = 'YOURS';
+    applyEventTheme(EVENTS.YOURS);
+    updateStoryOverlay(EVENTS.YOURS);
+  }
+}
+
+m1Slider.oninput = () => {
+  physics.m1 = parseFloat(m1Slider.value);
+  m1v.textContent = physics.m1.toFixed(1);
+  setMassesAndScale();
+  checkMassDrift();
+  if (physics.currentEvent === 'YOURS') updateStoryOverlay(EVENTS.YOURS);
+  scheduleURLUpdate();
+};
+m2Slider.oninput = () => {
+  physics.m2 = parseFloat(m2Slider.value);
+  m2v.textContent = physics.m2.toFixed(1);
+  setMassesAndScale();
+  checkMassDrift();
+  if (physics.currentEvent === 'YOURS') updateStoryOverlay(EVENTS.YOURS);
+  scheduleURLUpdate();
+};
+tiltSlider.oninput = () => {
+  const deg = parseFloat(tiltSlider.value);
+  physics.axisTilt = deg * Math.PI / 180;
+  tiltv.textContent = deg;
+  scheduleURLUpdate();
+};
+speedSlider.oninput = () => {
+  physics.speed = parseFloat(speedSlider.value);
+  speedv.textContent = physics.speed.toFixed(1);
+};
+
+const playBtn = document.getElementById('play-btn');
+playBtn.onclick = () => {
+  physics.playing = !physics.playing;
+  playBtn.textContent = physics.playing ? '⏸ Pause' : '▶ Play';
+};
+
+const resetBtn = document.getElementById('reset-btn');
+resetBtn.onclick = () => {
+  physics.simTime = 0;
+  orbitalPhase = 0;
+  setMassesAndScale();
+};
+
+const audioBtn = document.getElementById('audio-btn');
+audioBtn.onclick = () => {
+  physics.audioOn = !physics.audioOn;
+  if (physics.audioOn){
+    startAudio();
+    audioBtn.textContent = '♪ Audio on';
+  }else{
+    stopAudio();
+    audioBtn.textContent = '♪ Audio off';
+  }
+};
+
+/* ════════════════════════════════════════════════════════════════
+ * EVENT LOADING — switch the simulation to a specific real event
+ * ════════════════════════════════════════════════════════════════ */
+function applyEventTheme(ev){
+  const c = new THREE.Color(ev.theme.glow);
+  bh1Glow.material.color.copy(c);
+  bh2Glow.material.color.copy(c);
+}
+
+const storyName = document.getElementById('story-name');
+const storyMeta = document.getElementById('story-meta');
+const storyText = document.getElementById('story-text');
+
+function updateStoryOverlay(ev){
+  if (!storyName) return;
+  storyName.textContent = ev.name;
+  const parts = [];
+  if (ev.type === 'CUSTOM'){
+    parts.push(`${physics.m1.toFixed(1)} + ${physics.m2.toFixed(1)} M☉`);
+    parts.push('Synthetic');
+  } else {
+    parts.push(`${ev.m1.toFixed(1)} + ${ev.m2.toFixed(1)} M☉`);
+    if (ev.distance) parts.push(`${ev.distance} Mpc`);
+    parts.push(ev.date);
+  }
+  storyMeta.textContent = parts.join(' · ');
+  storyText.textContent = ev.significance;
+
+  // Sync the intro overlay copy too (it's still visible on first load)
+  const introEyebrow = document.getElementById('intro-eyebrow');
+  const introSub     = document.getElementById('intro-sub');
+  const introBody    = document.getElementById('intro-body');
+  if (introEyebrow && ev.type !== 'CUSTOM'){
+    introEyebrow.textContent = `${ev.name} · ${ev.date}`;
+    introSub.textContent = ev.significance;
+    const distTxt = (() => {
+      if (!ev.distance) return '';
+      const mly = ev.distance * 3.262;
+      if (mly >= 1000) return ` ${(mly / 1000).toFixed(1)} billion light-years away`;
+      return ` ${mly.toFixed(0)} million light-years away`;
+    })();
+    const m1s = ev.m1.toFixed(1), m2s = ev.m2.toFixed(1);
+    const kind = ev.type === 'BNS' ? 'neutron stars' : 'black holes';
+    introBody.textContent = `Two ${kind} — ${m1s} and ${m2s} times the mass of the Sun — collided${distTxt}. LIGO recorded the wave on ${ev.date}.`;
+  }
+}
+
+function loadEvent(id){
+  const ev = EVENTS[id] || EVENTS[DEFAULT_EVENT];
+  physics.currentEvent = ev.id;
+  physics.m1 = ev.m1;
+  physics.m2 = ev.m2;
+  m1Slider.value = ev.m1;
+  m2Slider.value = ev.m2;
+  m1v.textContent = ev.m1.toFixed(1);
+  m2v.textContent = ev.m2.toFixed(1);
+  physics.simTime = 0;
+  orbitalPhase = 0;
+  setMassesAndScale();
+  applyEventTheme(ev);
+  updateStoryOverlay(ev);
+  scheduleURLUpdate();
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.onclick = () => {
+    const eventId = btn.dataset.event;
+    if (eventId) loadEvent(eventId);
+  };
+});
+
+/* ════════════════════════════════════════════════════════════════
+ * URL STATE — deep-linkable event / masses / tilt
+ * ════════════════════════════════════════════════════════════════ */
+let urlUpdateTimer = null;
+function scheduleURLUpdate(){
+  if (urlUpdateTimer) clearTimeout(urlUpdateTimer);
+  urlUpdateTimer = setTimeout(writeURL, 250);
+}
+function writeURL(){
+  const params = new URLSearchParams();
+  if (typeof appMode !== 'undefined' && appMode === 'listen'){
+    params.set('mode', 'listen');
+  } else {
+    if (physics.currentEvent === 'YOURS'){
+      params.set('m1', physics.m1.toFixed(1));
+      params.set('m2', physics.m2.toFixed(1));
+    } else {
+      params.set('event', physics.currentEvent);
+    }
+    const tiltDeg = Math.round(physics.axisTilt * 180 / Math.PI);
+    if (tiltDeg > 0) params.set('tilt', tiltDeg);
+  }
+  const url = window.location.pathname + '?' + params.toString();
+  history.replaceState(null, '', url);
+}
+function readURL(){
+  const params = new URLSearchParams(window.location.search);
+  const tilt = parseFloat(params.get('tilt'));
+  const applyTilt = () => {
+    if (!isNaN(tilt) && tilt >= 0 && tilt <= 90){
+      physics.axisTilt = tilt * Math.PI / 180;
+      tiltSlider.value = tilt;
+      tiltv.textContent = tilt;
+    }
+  };
+  const event = params.get('event');
+  const m1 = parseFloat(params.get('m1'));
+  const m2 = parseFloat(params.get('m2'));
+  if (event && EVENTS[event]){
+    loadEvent(event);
+    applyTilt();
+    return;
+  }
+  if (!isNaN(m1) && !isNaN(m2) && m1 >= 1 && m1 <= 100 && m2 >= 1 && m2 <= 100){
+    physics.currentEvent = 'YOURS';
+    physics.m1 = m1; physics.m2 = m2;
+    m1Slider.value = m1; m2Slider.value = m2;
+    m1v.textContent = m1.toFixed(1); m2v.textContent = m2.toFixed(1);
+    setMassesAndScale();
+    applyEventTheme(EVENTS.YOURS);
+    updateStoryOverlay(EVENTS.YOURS);
+    applyTilt();
+    return;
+  }
+  loadEvent(DEFAULT_EVENT);
+  applyTilt();
+}
+readURL();
+
+function lerp(a, b, t){ return a + (b - a) * t; }
+
+/* ════════════════════════════════════════════════════════════════
+ * LISTEN MODE — audio-driven strain
+ * ════════════════════════════════════════════════════════════════ */
+let appMode = 'events';          // 'events' or 'listen'
+let interpretation = 'spectral'; // 'spectral' or 'waveform'
+
+// Listen-mode audio graph (separate from the chirp engine)
+let listenAudioCtx = null;
+let listenAnalyser = null;
+let listenFreqData = null;
+let listenTimeData = null;
+let listenAudioEl = null;
+let listenMicStream = null;
+let listenSource = null;
+let listenIsPlaying = false;
+let listenTitle = '';
+let listenAmpSm = 0, listenFreqSm = 1, listenBassSm = 0, listenTrebleSm = 0;
+let listenHPlusSm = 0, listenHCrossSm = 0;
+let listenGlowSm = 0;
+
+function ensureListenCtx(){
+  if (listenAudioCtx) return;
+  listenAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  listenAnalyser = listenAudioCtx.createAnalyser();
+  listenAnalyser.fftSize = 2048;
+  listenAnalyser.smoothingTimeConstant = 0.75;
+  listenFreqData = new Uint8Array(listenAnalyser.frequencyBinCount);
+  listenTimeData = new Uint8Array(listenAnalyser.frequencyBinCount);
+}
+
+function disconnectListenSource(){
+  if (listenSource){ try { listenSource.disconnect(); } catch(_){} listenSource = null; }
+  if (listenAudioEl){ try { listenAudioEl.pause(); } catch(_){} listenAudioEl = null; }
+  if (listenMicStream){ try { listenMicStream.getTracks().forEach(t => t.stop()); } catch(_){} listenMicStream = null; }
+  listenIsPlaying = false;
+}
+
+function listenLoadFile(file){
+  ensureListenCtx();
+  disconnectListenSource();
+  if (listenAudioCtx.state === 'suspended') listenAudioCtx.resume();
+  const url = URL.createObjectURL(file);
+  listenAudioEl = new Audio();
+  listenAudioEl.src = url;
+  listenAudioEl.crossOrigin = 'anonymous';
+  listenAudioEl.loop = true;
+  listenAudioEl.play().catch(err => console.warn('play failed', err));
+  listenSource = listenAudioCtx.createMediaElementSource(listenAudioEl);
+  listenSource.connect(listenAnalyser);
+  listenAnalyser.connect(listenAudioCtx.destination);
+  listenTitle = file.name.replace(/\.[^.]+$/, '');
+  listenIsPlaying = true;
+  enterListenPlayingUI();
+}
+
+async function listenUseMic(){
+  ensureListenCtx();
+  disconnectListenSource();
+  if (listenAudioCtx.state === 'suspended') listenAudioCtx.resume();
+  try {
+    listenMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    listenSource = listenAudioCtx.createMediaStreamSource(listenMicStream);
+    listenSource.connect(listenAnalyser);
+    listenTitle = 'Microphone';
+    listenIsPlaying = true;
+    enterListenPlayingUI();
+  } catch(err){ alert('Microphone access denied or unavailable.'); }
+}
+
+async function listenUseTab(){
+  if (!navigator.mediaDevices.getDisplayMedia){
+    alert('Tab sharing requires Chrome or Edge.'); return;
+  }
+  ensureListenCtx();
+  disconnectListenSource();
+  if (listenAudioCtx.state === 'suspended') listenAudioCtx.resume();
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { width: 1, height: 1, frameRate: 1 }, audio: true,
+    });
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length === 0){
+      alert('No audio shared. Tick "Share tab audio" in the picker.');
+      stream.getTracks().forEach(t => t.stop());
+      return;
+    }
+    stream.getVideoTracks().forEach(t => t.stop());
+    listenMicStream = new MediaStream(audioTracks);
+    listenSource = listenAudioCtx.createMediaStreamSource(listenMicStream);
+    listenSource.connect(listenAnalyser);
+    listenTitle = 'Shared tab';
+    listenIsPlaying = true;
+    enterListenPlayingUI();
+    audioTracks[0].addEventListener('ended', listenStopAll);
+  } catch(err){
+    if (err.name !== 'NotAllowedError') alert('Tab share failed: ' + err.message);
+  }
+}
+
+function listenStopAll(){
+  disconnectListenSource();
+  exitListenPlayingUI();
+}
+
+function analyseListenSpectral(){
+  if (!listenAnalyser || !listenIsPlaying) return { rms: 0, centroid: 0, bass: 0, treble: 0 };
+  listenAnalyser.getByteFrequencyData(listenFreqData);
+  const N = listenFreqData.length;
+  let sumSq = 0;
+  for (let i = 0; i < N; i++) sumSq += listenFreqData[i] * listenFreqData[i];
+  const rms = Math.sqrt(sumSq / N) / 255;
+  let wSum = 0, aSum = 0;
+  for (let i = 0; i < N; i++){ wSum += i * listenFreqData[i]; aSum += listenFreqData[i]; }
+  const centroid = aSum > 0 ? wSum / aSum : 0;
+  let bSum = 0;
+  for (let i = 0; i < 16; i++) bSum += listenFreqData[i];
+  const bass = bSum / (16 * 255);
+  let tSum = 0, tN = 0;
+  for (let i = 200; i < N; i++){ tSum += listenFreqData[i]; tN++; }
+  const treble = tN > 0 ? (tSum / (tN * 255)) : 0;
+  return { rms, centroid, bass, treble };
+}
+function analyseListenWaveform(){
+  if (!listenAnalyser || !listenIsPlaying) return { hPlus: 0, hCross: 0 };
+  listenAnalyser.getByteTimeDomainData(listenTimeData);
+  const N = listenTimeData.length;
+  return {
+    hPlus:  (listenTimeData[N - 1]  - 128) / 128,
+    hCross: (listenTimeData[N - 16] - 128) / 128,
+  };
+}
+
+/* ────── Mode switching ────── */
+const tabEvents  = document.getElementById('tab-events');
+const tabListen  = document.getElementById('tab-listen');
+const listenDrop = document.getElementById('listen-drop');
+const listenNp   = document.getElementById('listen-np');
+const lnpTitle   = document.getElementById('lnp-title');
+const lnpToggle  = document.getElementById('lnp-toggle');
+const lnpStop    = document.getElementById('lnp-stop');
+const interpToggle    = document.getElementById('interp-toggle');
+const interpSpectral  = document.getElementById('interp-spectral');
+const interpWaveform  = document.getElementById('interp-waveform');
+const titleDescEl = document.getElementById('title-desc');
+
+function setAppMode(m){
+  appMode = m;
+  document.body.classList.toggle('listen', m === 'listen');
+  tabEvents.classList.toggle('active', m === 'events');
+  tabListen.classList.toggle('active', m === 'listen');
+  if (m === 'listen'){
+    // Hide events-mode scene pieces
+    bh1.visible = false; bh2.visible = false;
+    bh1Glow.visible = false; bh2Glow.visible = false;
+    shellGroup.visible = false;
+    // Pause chirp audio
+    if (physics.audioOn){ stopAudio(); }
+    // Show listen UI
+    if (!listenIsPlaying) listenDrop.classList.add('active');
+    listenDrop.classList.remove('gone');
+    interpToggle.classList.add('visible');
+    if (listenIsPlaying) listenNp.classList.add('visible');
+    titleDescEl.textContent = 'Music as spacetime strain';
+  } else {
+    // Restore events-mode scene
+    bh1.visible = true; bh2.visible = true;
+    bh1Glow.visible = true; bh2Glow.visible = true;
+    shellGroup.visible = true;
+    listenDrop.classList.remove('active');
+    interpToggle.classList.remove('visible');
+    listenNp.classList.remove('visible');
+    testMassShader.uniforms.mode.value = 0;
+    testMassShader.uniforms.bassPulse.value = 0;
+    testMassShader.uniforms.trebleMix.value = 0;
+    titleDescEl.textContent = 'A spacetime field';
+  }
+  scheduleURLUpdate();
+}
+function setInterpretation(m){
+  interpretation = m;
+  interpSpectral.classList.toggle('active', m === 'spectral');
+  interpWaveform.classList.toggle('active', m === 'waveform');
+  testMassShader.uniforms.mode.value = (m === 'waveform' ? 1 : 0);
+}
+
+tabEvents.addEventListener('click', () => setAppMode('events'));
+tabListen.addEventListener('click', () => setAppMode('listen'));
+interpSpectral.addEventListener('click', () => setInterpretation('spectral'));
+interpWaveform.addEventListener('click', () => setInterpretation('waveform'));
+
+function enterListenPlayingUI(){
+  listenDrop.classList.add('gone');
+  setTimeout(() => listenDrop.classList.remove('active', 'gone'), 600);
+  listenNp.classList.add('visible');
+  lnpTitle.textContent = listenTitle;
+  lnpToggle.textContent = '⏸';
+}
+function exitListenPlayingUI(){
+  listenNp.classList.remove('visible');
+  if (appMode === 'listen') listenDrop.classList.add('active');
+}
+
+document.getElementById('ld-file').addEventListener('click', () => document.getElementById('ld-file-input').click());
+document.getElementById('ld-file-input').addEventListener('change', e => {
+  if (e.target.files[0]) listenLoadFile(e.target.files[0]);
+});
+document.getElementById('ld-tab').addEventListener('click', listenUseTab);
+document.getElementById('ld-mic').addEventListener('click', listenUseMic);
+lnpToggle.addEventListener('click', () => {
+  if (listenAudioEl){
+    if (listenAudioEl.paused){ listenAudioEl.play(); lnpToggle.textContent = '⏸'; listenIsPlaying = true; }
+    else { listenAudioEl.pause(); lnpToggle.textContent = '▸'; listenIsPlaying = false; }
+  }
+});
+lnpStop.addEventListener('click', listenStopAll);
+
+// Drag-and-drop on body (only meaningful in listen mode)
+['dragover','dragenter'].forEach(ev => document.body.addEventListener(ev, e => {
+  if (appMode !== 'listen') return;
+  e.preventDefault(); listenDrop.classList.add('dragging');
+}));
+['dragleave','drop'].forEach(ev => document.body.addEventListener(ev, e => {
+  e.preventDefault(); listenDrop.classList.remove('dragging');
+}));
+document.body.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if (!f || !f.type.startsWith('audio/')) return;
+  if (appMode !== 'listen') setAppMode('listen');
+  listenLoadFile(f);
+});
+
+/* ════════════════════════════════════════════════════════════════
+ * FULL CATALOG — every GWTC event as a Points cloud.
+ * Mirrors the Exoplanet Universe bgPoints pattern: one draw call,
+ * per-point colour and size attributes, custom shader for distance
+ * attenuation. Featured sprites stay on top.
+ * ════════════════════════════════════════════════════════════════ */
+let catalogData = [];          // array of {name, m1, m2, distance, snr, type, date, catalog, ra, dec}
+let catalogPoints = null;
+const TYPE_COLORS = {
+  BBH:  [1.00, 0.70, 0.45],
+  BNS:  [0.55, 0.80, 1.00],
+  NSBH: [0.60, 1.00, 0.78],
+  IMBH: [0.80, 0.60, 1.00],
+};
+
+// GPS time → JS Date (approximate; ignores leap seconds beyond the rough offset)
+function gpsToDate(gps){
+  if (!gps || !isFinite(gps)) return 'unknown';
+  const epochMs = Date.UTC(1980, 0, 6) - 18 * 1000;
+  const d = new Date(epochMs + gps * 1000);
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Deterministic pseudo-sky-position from event name. Real RA/Dec require
+// per-event detail fetches; these stable hash positions give the catalog
+// its visual scatter without rotating between page loads. Featured events
+// retain their true RA/Dec.
+function nameToSkyPos(name){
+  let h = 2166136261;
+  for (let i = 0; i < name.length; i++){
+    h ^= name.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  const u = (h % 10000) / 10000;
+  const v = (((h * 2654435761) >>> 0) % 10000) / 10000;
+  const ra = u * 24;
+  const dec = Math.acos(2*v - 1) * 180 / Math.PI - 90;
+  return { ra, dec };
+}
+
+function classifyType(m1, m2){
+  if (m1 < 3 && m2 < 3) return 'BNS';
+  if (m2 < 3 && m1 >= 3) return 'NSBH';
+  if (m1 + m2 > 100)    return 'IMBH';
+  return 'BBH';
+}
+
+// Map GPS time → observing run identifier (O1..O5).
+function deriveRun(gps){
+  if (!gps || !isFinite(gps)) return null;
+  const epochMs = Date.UTC(1980, 0, 6) - 18 * 1000;
+  const d = new Date(epochMs + gps * 1000);
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  if (y <= 2015) return 'O1';
+  if (y === 2016 && m < 5) return 'O1';
+  if (y === 2016 || (y === 2017 && m < 9)) return 'O2';
+  if (y === 2018) return 'O2';
+  if (y === 2019 || (y === 2020 && m < 4)) return 'O3';
+  if (y >= 2023 && y <= 2025) return 'O4';
+  return 'O5';
+}
+
+// If a pending deep-link points to a catalog event we haven't loaded yet,
+// store the name here and resolve it once loadCatalog() finishes.
+let pendingCatalogEventId = null;
+
+async function loadCatalog(){
+  try {
+    const r = await fetch('https://gwosc.org/eventapi/json/GWTC/');
+    if (!r.ok) return;
+    const j = await r.json();
+    const featured = new Set(Object.keys(EVENTS));
+    const items = [];
+    for (const [versionedName, ev] of Object.entries(j.events || {})){
+      const name = ev.commonName || versionedName.split('-v')[0];
+      if (featured.has(name)) continue;
+      const m1 = ev.mass_1_source;
+      const m2 = ev.mass_2_source;
+      if (m1 == null || m2 == null || !isFinite(m1) || !isFinite(m2)) continue;
+      if (m1 < 0.1 || m2 < 0.1 || m1 > 1000 || m2 > 1000) continue;
+      const distance = ev.luminosity_distance;
+      const snr = ev.network_matched_filter_snr || 10;
+      const type = classifyType(m1, m2);
+      const date = gpsToDate(ev.GPS);
+      const run = deriveRun(ev.GPS);
+      const pos = nameToSkyPos(name);
+      items.push({
+        name, m1, m2,
+        distance: distance || null,
+        snr, type, date, run,
+        catalog: ev['catalog.shortName'] || 'GWTC',
+        ra: pos.ra, dec: pos.dec,
+      });
+    }
+    catalogData = items;
+    buildCatalogCloud();
+    console.log(`Loaded ${items.length} catalog events`);
+    // Resolve any deferred deep-link to a catalog event
+    if (pendingCatalogEventId){
+      const idx = catalogData.findIndex(e => e.name === pendingCatalogEventId);
+      if (idx >= 0){
+        loadCatalogEvent(idx);
+        setEventsView('detail');
+      }
+      pendingCatalogEventId = null;
+    }
+  } catch(e){
+    console.warn('GWOSC catalog fetch failed (offline?)', e);
+  }
+}
+
+function buildCatalogCloud(){
+  if (catalogPoints){ skyGroup.remove(catalogPoints); catalogPoints = null; }
+  const N = catalogData.length;
+  if (N === 0) return;
+  const positions = new Float32Array(N * 3);
+  const colors    = new Float32Array(N * 3);
+  const sizes     = new Float32Array(N);
+  const dims      = new Float32Array(N);   // 0 = full, 1 = dimmed by filter
+  for (let i = 0; i < N; i++){
+    const e = catalogData[i];
+    const v = raDecToVec3(e.ra, e.dec, SKY_RADIUS);
+    positions[i*3]   = v.x;
+    positions[i*3+1] = v.y;
+    positions[i*3+2] = v.z;
+    const c = TYPE_COLORS[e.type] || TYPE_COLORS.BBH;
+    colors[i*3]   = c[0];
+    colors[i*3+1] = c[1];
+    colors[i*3+2] = c[2];
+    sizes[i] = Math.max(0.5, Math.min(1.8, (e.snr || 10) / 18));
+    dims[i] = 0;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
+  geo.setAttribute('dim',      new THREE.BufferAttribute(dims, 1));
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTex: { value: SKY_POINT_TEX } },
+    vertexShader: `
+      attribute float size;
+      attribute vec3 color;
+      attribute float dim;
+      varying vec3 vC;
+      varying float vDim;
+      void main(){
+        vC = color;
+        vDim = dim;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        float d = max(-mv.z, 0.1);
+        gl_PointSize = clamp(size * (110.0 / d), 1.4, 18.0);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uTex;
+      varying vec3 vC;
+      varying float vDim;
+      void main(){
+        vec4 t = texture2D(uTex, gl_PointCoord);
+        if (t.a < 0.05) discard;
+        float alphaScale = mix(0.85, 0.08, vDim);
+        gl_FragColor = vec4(vC * 1.1, t.a * alphaScale);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  catalogPoints = new THREE.Points(geo, mat);
+  catalogPoints.frustumCulled = false;
+  skyGroup.add(catalogPoints);
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * SKY VIEW ↔ DETAIL VIEW  — the catalog browser substate of Events
+ * ════════════════════════════════════════════════════════════════ */
+buildSky();   // EVENTS is now defined
+loadCatalog();   // async — Points cloud appears when fetched
+let eventsView = 'detail';   // 'sky' or 'detail'
+const skyTooltip = document.getElementById('sky-tooltip');
+const stName     = document.getElementById('st-name');
+const stMeta     = document.getElementById('st-meta');
+const stStory    = document.getElementById('st-story');
+const backToSky  = document.getElementById('back-to-sky');
+
+// Saved camera position for detail view so we can restore after a fly-to
+const DETAIL_CAM_POS = new THREE.Vector3(0, 4, 12);
+
+function setEventsView(v){
+  eventsView = v;
+  document.body.classList.toggle('sky',    v === 'sky');
+  document.body.classList.toggle('detail', v === 'detail');
+  // Once the user has seen the sky, the intro overlay's job is done.
+  // It would otherwise reappear when transitioning sky → detail.
+  const intro = document.getElementById('intro-overlay');
+  if (intro && v === 'sky') intro.style.display = 'none';
+  if (v === 'sky'){
+    skyGroup.visible = true;
+    binaryGroup.visible = false;
+    testMassPoints.visible = false;
+    shellGroup.visible = false;
+    kilonovaSprite.visible = false;
+    // Camera near origin, looking out — user is "at LIGO"
+    controls.target.set(0, 0, 0);
+    controls.minDistance = 0.6;
+    controls.maxDistance = 6;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.15;
+    camera.position.set(0.8, 0.4, 1.2);
+  } else {
+    skyGroup.visible = false;
+    binaryGroup.visible = true;
+    testMassPoints.visible = true;
+    shellGroup.visible = true;
+    kilonovaSprite.visible = true;
+    bh1.visible = true; bh2.visible = true;
+    bh1Glow.visible = true; bh2Glow.visible = true;
+    controls.minDistance = 2;
+    controls.maxDistance = 40;
+    controls.autoRotate = false;
+    if (!flytoSuppressCamera){
+      camera.position.copy(DETAIL_CAM_POS);
+      controls.target.set(0, 0, 0);
+    }
+  }
+  hideSkyTooltip();
+}
+
+function hideSkyTooltip(){
+  skyTooltip.classList.remove('visible');
+  if (hoveredEventId){
+    const s = skySprites.get(hoveredEventId);
+    if (s) s.scale.setScalar(s.userData.baseSize);
+    hoveredEventId = null;
+  }
+}
+function showSkyTooltip(ev, screenX, screenY){
+  stName.textContent  = ev.name;
+  const parts = [`${ev.m1.toFixed(1)} + ${ev.m2.toFixed(1)} M☉`];
+  if (ev.distance) parts.push(`${ev.distance} Mpc`);
+  if (ev.date) parts.push(ev.date);
+  if (ev.run) parts.push(ev.run);
+  if (ev.type) parts.push(ev.type);
+  stMeta.textContent  = parts.join(' · ');
+  stStory.textContent = ev.significance ||
+    `${ev.type || 'Merger'} detected at SNR ${(ev.snr || 0).toFixed(1)}. One of 391 confirmed events in the LIGO–Virgo–KAGRA catalog.`;
+  const W = window.innerWidth;
+  const left = screenX + 320 > W ? (screenX - 320) : (screenX + 18);
+  skyTooltip.style.left = left + 'px';
+  skyTooltip.style.top  = (screenY - 20) + 'px';
+  skyTooltip.classList.add('visible');
+}
+
+// Resolve a hovered id ("GW170817" or "_c_42") to an event-data object
+function resolveHoverData(id){
+  if (id == null) return null;
+  if (id.startsWith && id.startsWith('_c_')){
+    const idx = parseInt(id.substring(3));
+    return catalogData[idx];
+  }
+  return EVENTS[id];
+}
+
+// Synthesize a transient EVENTS entry from a catalog row, so loadEvent works.
+// Use the real event name as the id, so the URL is deep-linkable.
+function loadCatalogEvent(idx){
+  const e = catalogData[idx];
+  const id = e.name;
+  if (!EVENTS[id]){
+    EVENTS[id] = {
+      id, name: e.name, type: e.type,
+      m1: e.m1, m2: e.m2,
+      distance: e.distance, date: e.date,
+      detectors: e.catalog,
+      fStart: Math.max(20, 35 * Math.pow(66 / (e.m1 + e.m2), 0.4)),
+      fPeak:  Math.max(40, 250 * Math.pow(66 / (e.m1 + e.m2), 0.6)),
+      ra: e.ra, dec: e.dec,
+      significance: `One of 391 confirmed events. ${e.type} merger at SNR ${(e.snr || 0).toFixed(1)}, from ${e.catalog}.`,
+      theme: { glow: rgbArrToHex(TYPE_COLORS[e.type] || TYPE_COLORS.BBH) },
+      // voice falls back to computeYoursVoice() for non-featured events
+    };
+  }
+  loadEvent(id);
+}
+
+function rgbArrToHex(arr){
+  const r = Math.round(arr[0] * 255);
+  const g = Math.round(arr[1] * 255);
+  const b = Math.round(arr[2] * 255);
+  return (r << 16) | (g << 8) | b;
+}
+
+backToSky.addEventListener('click', () => {
+  setEventsView('sky');
+  scheduleURLUpdate();
+});
+
+/* ════════════════════════════════════════════════════════════════
+ * FILTER CHIPS — type + observing run
+ * Empty set = "all visible". Any chip active in a row enables AND
+ * across rows, OR within a row.
+ * ════════════════════════════════════════════════════════════════ */
+const filters = {
+  types: new Set(),   // empty = all types match
+  runs:  new Set(),
+};
+
+function eventMatchesFilters(typeOf, runOf){
+  if (filters.types.size > 0 && !filters.types.has(typeOf)) return false;
+  if (filters.runs.size > 0  && (runOf == null || !filters.runs.has(runOf))) return false;
+  return true;
+}
+
+function applyFilters(){
+  // Featured sprites
+  for (const [id, sprite] of skySprites.entries()){
+    const ev = EVENTS[id];
+    const match = eventMatchesFilters(ev.type, ev.run);
+    sprite.material.opacity = match ? 0.85 : 0.10;
+  }
+  // Catalog points
+  if (catalogPoints){
+    const dimAttr = catalogPoints.geometry.attributes.dim;
+    if (dimAttr){
+      const N = catalogData.length;
+      for (let i = 0; i < N; i++){
+        const e = catalogData[i];
+        const match = eventMatchesFilters(e.type, e.run);
+        dimAttr.array[i] = match ? 0 : 1;
+      }
+      dimAttr.needsUpdate = true;
+    }
+  }
+}
+
+document.querySelectorAll('#sky-filters .chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.type;
+    const r = btn.dataset.run;
+    if (t){
+      if (filters.types.has(t)) filters.types.delete(t);
+      else                      filters.types.add(t);
+    } else if (r){
+      if (filters.runs.has(r))  filters.runs.delete(r);
+      else                      filters.runs.add(r);
+    }
+    btn.classList.toggle('active');
+    applyFilters();
+  });
+});
+
+// Re-apply when the catalog finishes loading after page init
+const _origBuildCatalogCloud = buildCatalogCloud;
+buildCatalogCloud = function(){
+  _origBuildCatalogCloud();
+  applyFilters();
+};
+
+/* ════════════════════════════════════════════════════════════════
+ * CAMERA FLY-TO — ported from Exoplanet Universe's CAM.flyto pattern.
+ * Cubic ease-in-out interpolation of position + target. Two phases:
+ *   1) zoom from sky-cam toward the event direction (the "approach")
+ *   2) arrive at DETAIL_CAM_POS looking at origin (the "merger view")
+ * OrbitControls is disabled during transit and re-enabled on completion.
+ * ════════════════════════════════════════════════════════════════ */
+const FLYTO = {
+  active: false,
+  t0: 0, dur: 800,
+  startPos: new THREE.Vector3(),
+  endPos: new THREE.Vector3(),
+  startTarget: new THREE.Vector3(),
+  endTarget: new THREE.Vector3(),
+  onComplete: null,
+};
+
+function flyToBegin(endPos, endTarget, duration, onComplete){
+  FLYTO.active = true;
+  FLYTO.t0 = performance.now();
+  FLYTO.dur = duration;
+  FLYTO.startPos.copy(camera.position);
+  FLYTO.endPos.copy(endPos);
+  FLYTO.startTarget.copy(controls.target);
+  FLYTO.endTarget.copy(endTarget);
+  FLYTO.onComplete = onComplete || null;
+  controls.enabled = false;
+  controls.autoRotate = false;
+}
+
+function flyToUpdate(){
+  if (!FLYTO.active) return;
+  const elapsed = performance.now() - FLYTO.t0;
+  let t = Math.min(elapsed / FLYTO.dur, 1);
+  // Cubic ease-in-out
+  t = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+  camera.position.lerpVectors(FLYTO.startPos, FLYTO.endPos, t);
+  controls.target.lerpVectors(FLYTO.startTarget, FLYTO.endTarget, t);
+  if (elapsed >= FLYTO.dur){
+    FLYTO.active = false;
+    controls.enabled = true;
+    const cb = FLYTO.onComplete;
+    FLYTO.onComplete = null;
+    if (cb) cb();
+  }
+}
+
+// Two-phase fly: zoom toward the event direction, then transition to detail-view camera.
+function flyToEventThenDetail(ra, dec, loadFn){
+  const eventVec = raDecToVec3(ra, dec, SKY_RADIUS);
+  // Phase 1 endpoint: 8 units in the event direction, looking AT the event
+  const approachPos = eventVec.clone().setLength(8);
+  flyToBegin(approachPos, eventVec.clone(), 750, () => {
+    // Phase 2: load event, switch the scene to detail, fly camera to detail position
+    loadFn();
+    // setEventsView('detail') normally snaps camera; we suppress that during fly-to
+    flytoSuppressCamera = true;
+    setEventsView('detail');
+    flytoSuppressCamera = false;
+    // Fly from current (event direction, radius 8) to detail position (0, 4, 12)
+    flyToBegin(DETAIL_CAM_POS.clone(), new THREE.Vector3(0, 0, 0), 900);
+  });
+}
+let flytoSuppressCamera = false;
+
+/* Hover + click on sky sprites — raycasting */
+const skyRaycaster = new THREE.Raycaster();
+const skyMouse = new THREE.Vector2();
+let hoveredEventId = null;
+
+function onPointerMove(e){
+  if (appMode !== 'events' || eventsView !== 'sky') return;
+  skyMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  skyMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  skyRaycaster.setFromCamera(skyMouse, camera);
+  // Threshold in world units. Points sit at radius 50; we want a generous
+  // angular tolerance so small dots are easy to hit.
+  skyRaycaster.params.Points = { threshold: 2.5 };
+
+  // Featured sprites take priority — bigger, richer, more deserving of hits
+  let newId = null;
+  const spriteHits = skyRaycaster.intersectObjects(Array.from(skySprites.values()), false);
+  if (spriteHits.length > 0){
+    newId = spriteHits[0].object.userData.eventId;
+  } else if (catalogPoints){
+    const pointHits = skyRaycaster.intersectObject(catalogPoints, false);
+    if (pointHits.length > 0){
+      newId = `_c_${pointHits[0].index}`;
+    }
+  }
+
+  if (newId !== hoveredEventId){
+    if (hoveredEventId && hoveredEventId.startsWith && !hoveredEventId.startsWith('_c_')){
+      const s = skySprites.get(hoveredEventId);
+      if (s) s.scale.setScalar(s.userData.baseSize);
+    }
+    if (newId){
+      if (!newId.startsWith('_c_')){
+        const s = skySprites.get(newId);
+        if (s) s.scale.setScalar(s.userData.baseSize * 1.7);
+      }
+      const data = resolveHoverData(newId);
+      if (data) showSkyTooltip(data, e.clientX, e.clientY);
+      document.body.style.cursor = 'pointer';
+    } else {
+      hideSkyTooltip();
+      document.body.style.cursor = '';
+    }
+    hoveredEventId = newId;
+  } else if (newId){
+    // Same hovered — just reposition tooltip
+    const W = window.innerWidth;
+    const left = e.clientX + 320 > W ? (e.clientX - 320) : (e.clientX + 18);
+    skyTooltip.style.left = left + 'px';
+    skyTooltip.style.top  = (e.clientY - 20) + 'px';
+  }
+}
+
+function onPointerClick(e){
+  if (appMode !== 'events' || eventsView !== 'sky') return;
+  if (!hoveredEventId) return;
+  const id = hoveredEventId;
+  hideSkyTooltip();
+  document.body.style.cursor = '';
+  if (id.startsWith('_c_')){
+    const idx = parseInt(id.substring(3));
+    flyToEventThenDetail(catalogData[idx].ra, catalogData[idx].dec, () => loadCatalogEvent(idx));
+  } else {
+    const ev = EVENTS[id];
+    flyToEventThenDetail(ev.ra, ev.dec, () => loadEvent(id));
+  }
+}
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('click', onPointerClick);
+
+// Hook into setAppMode so switching back to events restores last view
+const _origSetAppMode = setAppMode;
+setAppMode = function(m){
+  _origSetAppMode(m);
+  if (m === 'events'){
+    setEventsView(eventsView);
+  } else if (m === 'listen'){
+    // make sure sky is off in listen
+    skyGroup.visible = false;
+    controls.autoRotate = false;
+  }
+};
+
+// Override writeURL to include eventsView
+const _origWriteURL = writeURL;
+writeURL = function(){
+  const params = new URLSearchParams();
+  if (appMode === 'listen'){
+    params.set('mode', 'listen');
+  } else if (eventsView === 'sky'){
+    // Sky view: no event in URL
+  } else {
+    if (physics.currentEvent === 'YOURS'){
+      params.set('m1', physics.m1.toFixed(1));
+      params.set('m2', physics.m2.toFixed(1));
+    } else {
+      params.set('event', physics.currentEvent);
+    }
+    const tiltDeg = Math.round(physics.axisTilt * 180 / Math.PI);
+    if (tiltDeg > 0) params.set('tilt', tiltDeg);
+  }
+  const url = params.toString() ? (window.location.pathname + '?' + params.toString())
+                                : window.location.pathname;
+  history.replaceState(null, '', url);
+};
+
+// Honour ?mode=listen on initial load — and default to sky view when no event
+if (new URLSearchParams(window.location.search).get('mode') === 'listen'){
+  setAppMode('listen');
+} else {
+  const params = new URLSearchParams(window.location.search);
+  const eventParam = params.get('event');
+  if (!eventParam && !params.get('m1')){
+    setEventsView('sky');
+    // Cancel the URL update scheduled by readURL's default loadEvent, then
+    // immediately write the clean sky-view URL via the new writeURL.
+    if (urlUpdateTimer) clearTimeout(urlUpdateTimer);
+    writeURL();
+  } else if (eventParam && !EVENTS[eventParam]){
+    // Unknown event — likely a catalog event. Defer until catalog loads.
+    pendingCatalogEventId = eventParam;
+    setEventsView('sky');
+    if (urlUpdateTimer) clearTimeout(urlUpdateTimer);
+  } else {
+    setEventsView('detail');
+  }
+}
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space'){
+    e.preventDefault();
+    playBtn.click();
+  } else if (e.code === 'KeyR'){
+    resetBtn.click();
+  } else if (e.code === 'KeyA'){
+    audioBtn.click();
+  }
+});
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ════════════════════════════════════════════════════════════════
+ * IN-SCENE ANNOTATIONS — labels that track 3D world positions
+ * ════════════════════════════════════════════════════════════════ */
+function axisDir(){
+  // Orbital axis direction (a unit vector), tilted by physics.axisTilt around Z
+  const t = physics.axisTilt;
+  return new THREE.Vector3(Math.sin(t), Math.cos(t), 0);
+}
+function equatorialDir(){
+  // A direction in the equatorial plane (perpendicular to the axis)
+  const t = physics.axisTilt;
+  return new THREE.Vector3(Math.cos(t), -Math.sin(t), 0);
+}
+
+const annotations = [
+  {
+    id: 'binary',
+    label: 'Binary',
+    title: 'The two black holes',
+    body: `<p>Two real black holes, <strong>35.6</strong> and <strong>30.6</strong> times the mass of the Sun. They orbit each other and lose energy by radiating gravitational waves. Losing energy makes the orbit shrink. Smaller orbit means faster motion. Faster motion makes <em>more</em> waves and loses energy faster still — a runaway death spiral that ends with the two black holes fusing into one.</p>
+<p>The size of each sphere is proportional to its Schwarzschild radius (how big its event horizon is). For GW150914 they're nearly equal mass, so you see two similar dark spheres.</p>
+<p>For the bigger sliders try GW190521 — the heaviest merger ever detected, 85 + 66 solar masses.</p>`,
+    worldPos: () => new THREE.Vector3(0, 1.5, 0),
+  },
+  {
+    id: 'test-masses',
+    label: 'Test masses',
+    title: 'The test mass field',
+    body: `<p>This glowing sphere of points isn't physically there in the real GW150914 event. It's a teaching tool — imagine a swarm of particles floating in otherwise empty space around the binary.</p>
+<p>When the wave passes through them, watch carefully: they don't breathe in and out from the source. They <strong>shear sideways</strong>, perpendicular to the direction the wave is travelling. Space stretches along one transverse axis while squeezing along the perpendicular one, then reverses. The shells aren't moving through space; they are <em>moving space</em>.</p>
+<p>Notice the pattern: the shearing is <em>strongest along the orbital axis</em> (top and bottom of the sphere) and <em>weakest in the equatorial belt</em>. That's the quadrupolar radiation pattern — the fingerprint of gravitational waves.</p>
+<p>If you ever wondered what a gravitational wave actually <em>does</em>, you're looking at it.</p>`,
+    worldPos: () => {
+      const r = 6.3;
+      const axis = axisDir();
+      const eq = equatorialDir();
+      const dir = axis.clone().multiplyScalar(0.35)
+        .add(eq.clone().multiplyScalar(0.55))
+        .add(new THREE.Vector3(0,0,1).multiplyScalar(0.55))
+        .normalize().multiplyScalar(r);
+      return dir;
+    },
+  },
+  {
+    id: 'wave-shells',
+    label: 'Wave shells',
+    title: 'Gravitational wave shells',
+    body: `<p>The expanding translucent shells are the gravitational wave itself, propagating outward at the speed of light. Each shell is a snapshot of the wave at one moment in time.</p>
+<p>These aren't physical objects — they're regions where spacetime is currently being stretched and squeezed. The shells aren't moving <em>through</em> space; they <em>are</em> moving space.</p>
+<p>The shells carry energy away from the binary. That's literally <em>why</em> the orbit decays — the energy of the orbit is being shed into space as ripples.</p>
+<p>3 solar masses of matter became these waves in 0.2 seconds during GW150914. For that fifth of a second the merger was, briefly, more luminous in gravitational waves than the entire observable universe was in light.</p>`,
+    worldPos: () => new THREE.Vector3(15, 5, 6),
+  },
+  {
+    id: 'axis',
+    label: 'Orbital axis',
+    title: 'The orbital axis',
+    body: `<p>The two black holes orbit each other in a flat plane. The line perpendicular to that plane is the orbital axis.</p>
+<p>Gravitational radiation is <strong>strongest</strong> along this axis and <strong>weakest</strong> in the orbital plane. You can see this in the wave shells — the lobes at top and bottom are bright, the equatorial belt is dim.</p>
+<p>Try this: slide "Orbital axis tilt" in the parameter panel. Watch the entire radiation pattern rotate with the axis. The bright lobes always point along it.</p>
+<p>This anisotropy is real physics. It's why LIGO needs multiple detectors around the world — depending on where on Earth a detector is relative to a merger, the same wave can look strong or faint.</p>`,
+    worldPos: () => axisDir().multiplyScalar(11.5),
+  },
+  {
+    id: 'equator',
+    label: 'Equatorial plane',
+    title: 'The equatorial plane',
+    body: `<p>The orbital plane of the binary — the flat disc the two black holes are orbiting in.</p>
+<p>Gravitational radiation is <strong>weakest</strong> in this direction. If LIGO had been positioned in this plane relative to GW150914, the detected signal would have been much fainter than what was actually measured.</p>
+<p>Why is the radiation weakest here? Because the binary is a <em>quadrupole</em> — its mass distribution looks the same as itself when rotated by 180°. The waves it radiates carry this symmetry, and the math falls out so that the equatorial plane gets the dimmest signal.</p>
+<p>Tilt the axis with the slider and watch how this entire weak region rotates with it.</p>`,
+    worldPos: () => equatorialDir().multiplyScalar(13),
+  },
+];
+
+// Build DOM elements for each annotation
+annotations.forEach(anno => {
+  const el = document.createElement('div');
+  el.className = 'anno-anchor';
+  el.dataset.id = anno.id;
+  const label = document.createElement('span');
+  label.className = 'anno-label';
+  label.textContent = anno.label;
+  label.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openDetail(anno.id);
+  });
+  el.appendChild(label);
+  document.body.appendChild(el);
+  anno.el = el;
+});
+
+const _tmpV = new THREE.Vector3();
+function updateAnnotations(){
+  if (!annotationsVisible){
+    for (const a of annotations){ a.el.classList.add('hidden'); }
+    return;
+  }
+  for (const a of annotations){
+    a.el.classList.remove('hidden');
+    _tmpV.copy(a.worldPos());
+    _tmpV.project(camera);
+    // Hide if behind camera or outside viewport margins
+    if (_tmpV.z > 1 || _tmpV.z < -1){
+      a.el.style.display = 'none';
+      continue;
+    }
+    a.el.style.display = '';
+    const x = (_tmpV.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-_tmpV.y * 0.5 + 0.5) * window.innerHeight;
+    a.el.style.left = x + 'px';
+    a.el.style.top  = y + 'px';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * DETAIL PANEL — opens when an annotation is clicked
+ * ════════════════════════════════════════════════════════════════ */
+const detailPanel    = document.getElementById('detail-panel');
+const detailTitle    = document.getElementById('detail-title');
+const detailBody     = document.getElementById('detail-body');
+const detailEyebrow  = document.getElementById('detail-eyebrow');
+const detailCounter  = document.getElementById('detail-counter');
+const detailPrev     = document.getElementById('detail-prev');
+const detailNext     = document.getElementById('detail-next');
+const detailClose    = document.getElementById('detail-close');
+
+let currentDetailIdx = -1;
+
+function openDetail(id){
+  const idx = annotations.findIndex(a => a.id === id);
+  if (idx < 0) return;
+  currentDetailIdx = idx;
+  const a = annotations[idx];
+  detailEyebrow.textContent = `${idx+1} of ${annotations.length}`;
+  detailTitle.textContent = a.title;
+  detailBody.innerHTML = a.body;
+  detailCounter.textContent = `${idx+1} / ${annotations.length}`;
+  detailPrev.disabled = (idx === 0);
+  detailNext.disabled = (idx === annotations.length - 1);
+  detailPanel.classList.add('open');
+  // Dim other annotations
+  annotations.forEach((b, i) => {
+    b.el.classList.toggle('dimmed', i !== idx);
+  });
+}
+
+function closeDetail(){
+  detailPanel.classList.remove('open');
+  currentDetailIdx = -1;
+  annotations.forEach(b => b.el.classList.remove('dimmed'));
+}
+
+detailClose.onclick = closeDetail;
+detailPrev.onclick  = () => { if (currentDetailIdx > 0) openDetail(annotations[currentDetailIdx - 1].id); };
+detailNext.onclick  = () => { if (currentDetailIdx < annotations.length - 1) openDetail(annotations[currentDetailIdx + 1].id); };
+
+// Close on outside click
+document.addEventListener('click', (e) => {
+  if (detailPanel.classList.contains('open')
+      && !detailPanel.contains(e.target)
+      && !e.target.classList.contains('anno-label')) {
+    closeDetail();
+  }
+});
+
+// Keyboard: Escape closes detail, Left/Right navigate
+window.addEventListener('keydown', (e) => {
+  if (detailPanel.classList.contains('open')){
+    if (e.key === 'Escape') closeDetail();
+    else if (e.key === 'ArrowLeft' && currentDetailIdx > 0)
+      openDetail(annotations[currentDetailIdx - 1].id);
+    else if (e.key === 'ArrowRight' && currentDetailIdx < annotations.length - 1)
+      openDetail(annotations[currentDetailIdx + 1].id);
+  }
+});
+
+/* ════════════════════════════════════════════════════════════════
+ * LABELS TOGGLE
+ * ════════════════════════════════════════════════════════════════ */
+let annotationsVisible = true;
+const labelsToggle = document.getElementById('labels-toggle');
+labelsToggle.onclick = () => {
+  annotationsVisible = !annotationsVisible;
+  labelsToggle.classList.toggle('on', annotationsVisible);
+  labelsToggle.textContent = annotationsVisible ? 'Labels on' : 'Labels off';
+  if (!annotationsVisible) closeDetail();
+};
+
+/* ════════════════════════════════════════════════════════════════
+ * LEARN / TOUR BUTTON — starts annotation tour from the beginning
+ * ════════════════════════════════════════════════════════════════ */
+document.getElementById('learn-btn').onclick = () => {
+  if (!annotationsVisible){
+    annotationsVisible = true;
+    labelsToggle.classList.add('on');
+    labelsToggle.textContent = 'Labels on';
+  }
+  openDetail(annotations[0].id);
+};
+
+/* ════════════════════════════════════════════════════════════════
+ * PHASE NARRATION — floats up when phase changes
+ * ════════════════════════════════════════════════════════════════ */
+let lastPhaseLabel = '';
+const phaseNarrationEl = document.getElementById('phase-narration');
+let phaseFadeTimeout = null;
+
+function currentPhaseLabel(t){
+  if (t < physics.tMerger * 0.6) return 'inspiral-early';
+  if (t < physics.tMerger * 0.92) return 'inspiral-late';
+  if (t < physics.tMerger * 1.02) return 'merger';
+  return 'ringdown';
+}
+const PHASE_TEXTS = {
+  'inspiral-early': 'Inspiral begins — orbit slowly decaying',
+  'inspiral-late':  'The chirp — frequency screaming up',
+  'merger':         'Merger — horizons fusing',
+  'ringdown':       'Ringdown — the new black hole settles',
+};
+
+function checkPhaseChange(t){
+  const label = currentPhaseLabel(t);
+  if (label === lastPhaseLabel) return;
+  lastPhaseLabel = label;
+  phaseNarrationEl.textContent = PHASE_TEXTS[label] || '';
+  phaseNarrationEl.classList.add('visible');
+  clearTimeout(phaseFadeTimeout);
+  phaseFadeTimeout = setTimeout(() => {
+    phaseNarrationEl.classList.remove('visible');
+  }, 2800);
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * INTRO OVERLAY
+ * ════════════════════════════════════════════════════════════════ */
+const introOverlay = document.getElementById('intro-overlay');
+document.getElementById('intro-begin').onclick = () => {
+  introOverlay.classList.add('gone');
+  setTimeout(() => introOverlay.style.display = 'none', 800);
+};
+
+/* Patch the animate() loop to update annotations and narration each frame.
+ * We do this by wrapping the existing renderer.render call.
+ * Easiest: just add a per-frame hook here. */
+const _origRender = renderer.render.bind(renderer);
+renderer.render = function(scene, camera){
+  updateAnnotations();
+  checkPhaseChange(physics.simTime);
+  _origRender(scene, camera);
+};
+
+/* ─────────── Init ─────────── */
+setMassesAndScale();
+animate();
+</script>
+</body>
+</html>

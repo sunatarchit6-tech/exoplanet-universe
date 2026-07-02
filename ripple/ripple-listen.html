@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ripple · Listen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#000;color:#c0c8d4;
+    font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;}
+  canvas{display:block;width:100%;height:100%}
+
+  /* ───── Title ───── */
+  #title{
+    position:fixed;left:24px;top:22px;z-index:5;pointer-events:none;
+  }
+  #title .name{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+    font-size:22px;color:#dde4f0;line-height:1;
+  }
+  #title .desc{
+    font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+    color:#5a6878;margin-top:6px;
+  }
+
+  /* ───── Drop zone (visible until audio plays) ───── */
+  #drop-zone{
+    position:fixed;inset:0;z-index:20;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(6,7,13,.4);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    transition:opacity .8s,visibility .8s;
+  }
+  #drop-zone.gone{opacity:0;visibility:hidden;}
+  #drop-zone.dragging{background:rgba(255,178,122,.06);}
+  .drop-card{
+    text-align:center;max-width:520px;padding:60px 40px;
+    border:1px dashed rgba(255,255,255,.18);
+    border-radius:24px;
+    background:rgba(10,14,28,.5);
+    backdrop-filter:blur(20px) saturate(1.2);
+  }
+  .drop-eyebrow{
+    font-size:10px;letter-spacing:.32em;color:#5a6878;text-transform:uppercase;
+    margin-bottom:16px;
+  }
+  .drop-headline{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;
+    font-size:42px;line-height:1.05;letter-spacing:-.01em;color:#e8ecf4;
+    margin-bottom:22px;
+  }
+  .drop-headline em{color:#ffb27a;font-style:italic;}
+  .drop-sub{
+    font-family:'Cormorant Garamond',serif;font-size:17px;color:#9aa3b8;
+    line-height:1.5;margin-bottom:32px;
+  }
+  .drop-row{
+    display:flex;gap:14px;justify-content:center;align-items:center;
+    margin-bottom:18px;
+  }
+  .drop-btn{
+    padding:14px 24px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18);
+    color:#e8ecf4;border-radius:10px;cursor:pointer;
+    transition:all .2s;
+  }
+  .drop-btn:hover{
+    background:rgba(255,178,122,.12);
+    border-color:rgba(255,178,122,.5);
+    color:#ffb27a;
+  }
+  .drop-btn.primary{
+    background:rgba(255,178,122,.1);
+    border-color:rgba(255,178,122,.5);color:#ffb27a;
+  }
+  .drop-btn.primary:hover{background:rgba(255,178,122,.18);}
+  .drop-hint{
+    font-size:9px;letter-spacing:.2em;color:#5a6878;text-transform:uppercase;
+    margin-top:8px;
+  }
+  #drop-zone input[type=file]{display:none;}
+
+  /* ───── Playing status bar ───── */
+  #now-playing{
+    position:fixed;left:24px;bottom:24px;z-index:6;
+    display:flex;align-items:center;gap:18px;
+    padding:14px 18px;
+    background:rgba(10,14,28,.55);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;
+    backdrop-filter:blur(20px) saturate(1.2);
+    opacity:0;transition:opacity .4s;
+    pointer-events:none;
+  }
+  #now-playing.visible{opacity:1;pointer-events:auto;}
+  .np-eyebrow{
+    font-size:8px;letter-spacing:.28em;color:#5a6878;text-transform:uppercase;
+  }
+  .np-title{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:16px;color:#dde4f0;max-width:280px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .np-btn{
+    width:32px;height:32px;border-radius:50%;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    color:#c0c8d4;cursor:pointer;font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .15s;
+  }
+  .np-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+
+  /* ───── Strain readout (top right) ───── */
+  #strain-readout{
+    position:fixed;right:24px;top:22px;z-index:5;pointer-events:none;
+    text-align:right;
+    opacity:0;transition:opacity .4s;
+  }
+  #strain-readout.visible{opacity:1;}
+  #strain-readout .row{
+    font-family:'JetBrains Mono',monospace;font-size:10px;
+    color:#a8c0d0;letter-spacing:.06em;margin-bottom:4px;
+  }
+  #strain-readout .row .label{color:#5a6878;letter-spacing:.18em;text-transform:uppercase;font-size:8px;margin-right:8px;}
+
+  /* ───── Mode toggle (top right, under readout) ───── */
+  #mode-toggle{
+    position:fixed;right:24px;top:90px;z-index:6;
+    display:flex;flex-direction:column;gap:6px;
+    opacity:0;transition:opacity .4s;pointer-events:none;
+  }
+  #mode-toggle.visible{opacity:1;pointer-events:auto;}
+  #mode-toggle .mode-label{
+    font-size:8px;letter-spacing:.28em;color:#5a6878;text-transform:uppercase;
+    text-align:right;margin-bottom:2px;
+  }
+  #mode-toggle button{
+    padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:9px;
+    letter-spacing:.18em;text-transform:uppercase;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+    color:#9aa3b8;border-radius:6px;cursor:pointer;
+    transition:all .15s;text-align:right;min-width:160px;
+  }
+  #mode-toggle button:hover{background:rgba(255,255,255,.08);color:#dde4f0;}
+  #mode-toggle button.active{
+    background:rgba(255,178,122,.12);border-color:rgba(255,178,122,.4);
+    color:#ffb27a;
+  }
+  #mode-toggle .mode-help{
+    font-size:8px;color:#48505c;letter-spacing:.1em;text-align:right;
+    margin-top:4px;max-width:200px;line-height:1.4;font-style:italic;
+    font-family:'Cormorant Garamond',serif;font-size:11px;
+  }
+
+  /* ───── Hint ───── */
+  #bottom-hint{
+    position:fixed;right:24px;bottom:24px;z-index:5;pointer-events:none;
+    font-size:8px;letter-spacing:.22em;color:#5a6878;text-transform:uppercase;
+  }
+  #bottom-hint kbd{
+    background:rgba(255,255,255,.04);
+    padding:2px 5px;border-radius:3px;border:1px solid rgba(255,255,255,.08);
+    font-family:'JetBrains Mono',monospace;font-size:7.5px;
+  }
+</style>
+</head>
+<body>
+
+<div id="title">
+  <div class="name">Ripple · Listen</div>
+  <div class="desc">Music as spacetime strain</div>
+</div>
+
+<!-- ─────────── DROP ZONE ─────────── -->
+<div id="drop-zone">
+  <div class="drop-card">
+    <div class="drop-eyebrow">An experiment</div>
+    <h1 class="drop-headline">Watch your music<br/>through <em>Einstein's eyes</em>.</h1>
+    <p class="drop-sub">The same field of test masses that ripples to a real gravitational wave will ripple to any signal you feed it. Drop a song. Use your microphone. Play something. Watch spacetime respond.</p>
+    <div class="drop-row">
+      <button class="drop-btn primary" id="choose-file">Choose a song</button>
+      <button class="drop-btn" id="share-tab">Share a tab</button>
+      <button class="drop-btn" id="use-mic">Use microphone</button>
+    </div>
+    <div class="drop-hint">or drop an audio file anywhere on this page</div>
+    <div class="drop-hint" style="margin-top:6px;color:#48505c;">Share a tab → choose your YouTube / Spotify tab → tick "Share tab audio"</div>
+    <input type="file" id="file-input" accept="audio/*">
+  </div>
+</div>
+
+<!-- ─────────── NOW PLAYING ─────────── -->
+<div id="now-playing">
+  <div>
+    <div class="np-eyebrow">Listening</div>
+    <div class="np-title" id="np-title">—</div>
+  </div>
+  <button class="np-btn" id="np-toggle" title="Play / pause">⏸</button>
+  <button class="np-btn" id="np-stop" title="Stop">✕</button>
+</div>
+
+<!-- ─────────── STRAIN READOUT ─────────── -->
+<div id="strain-readout">
+  <div class="row"><span class="label">strain</span><span id="r-amp">0.00</span></div>
+  <div class="row"><span class="label">freq</span><span id="r-freq">0.0</span></div>
+  <div class="row"><span class="label">bass</span><span id="r-bass">0.00</span></div>
+</div>
+
+<!-- ─────────── MODE TOGGLE ─────────── -->
+<div id="mode-toggle">
+  <div class="mode-label">interpretation</div>
+  <button id="mode-spectral" class="active">Spectral · creative</button>
+  <button id="mode-strain">Waveform · honest</button>
+  <div class="mode-help" id="mode-help">RMS, centroid, bass &amp; treble drive synthetic binary parameters. Real quadrupole pattern.</div>
+</div>
+
+<!-- ─────────── BOTTOM HINT ─────────── -->
+<div id="bottom-hint">
+  <kbd>Drag</kbd> orbit · <kbd>Scroll</kbd> zoom · <kbd>Esc</kbd> stop
+</div>
+
+<!-- ─────────── Three.js ─────────── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════
+ * SCENE — bare: starfield + test mass sphere + central glow
+ * ════════════════════════════════════════════════════════════════ */
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000000);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 4, 12);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.rotateSpeed = 0.6;
+controls.zoomSpeed = 0.8;
+controls.minDistance = 3;
+controls.maxDistance = 40;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.25;
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── Starfield (large sphere of points) ──
+{
+  const N = 2400;
+  const positions = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++){
+    const r = 80 + Math.random() * 20;
+    const θ = Math.acos(2 * Math.random() - 1);
+    const φ = Math.random() * Math.PI * 2;
+    positions[i*3]   = r * Math.sin(θ) * Math.cos(φ);
+    positions[i*3+1] = r * Math.cos(θ);
+    positions[i*3+2] = r * Math.sin(θ) * Math.sin(φ);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const m = new THREE.PointsMaterial({
+    color: 0xffffff, size: 0.5,
+    transparent: true, opacity: 0.7, depthWrite: false,
+  });
+  scene.add(new THREE.Points(g, m));
+}
+
+// ── Central glow sprite ──
+function makeGlowTexture(){
+  const size = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  g.addColorStop(0.00, 'rgba(255, 230, 200, 1.0)');
+  g.addColorStop(0.18, 'rgba(255, 180, 120, 0.6)');
+  g.addColorStop(0.45, 'rgba(255, 120, 80, 0.2)');
+  g.addColorStop(1.00, 'rgba(255, 80, 40, 0.0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: makeGlowTexture(),
+  color: 0xffb27a,
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+}));
+glow.scale.setScalar(2.5);
+scene.add(glow);
+
+/* ════════════════════════════════════════════════════════════════
+ * TEST MASS FIELD — shader from Ripple (transverse displacement,
+ * quadrupole pattern). Driven by audio-derived uniforms.
+ * ════════════════════════════════════════════════════════════════ */
+const testMassShader = {
+  uniforms: {
+    time:        { value: 0 },
+    gwPhase:     { value: 0 },
+    gwFreq:      { value: 1.0 },
+    amplitude:   { value: 0 },
+    sphereRadius:{ value: 6.0 },
+    axisTilt:    { value: 0 },
+    bassPulse:   { value: 0 },
+    trebleMix:   { value: 0 },
+    // Mode 0 = spectral (synthesised binary), 1 = waveform (plane wave from infinity)
+    mode:        { value: 0 },
+    // Used in mode 1: instantaneous strain values from the audio waveform
+    hPlusGlobal:  { value: 0 },
+    hCrossGlobal: { value: 0 },
+  },
+  vertexShader: /* glsl */`
+    uniform float time;
+    uniform float gwPhase;
+    uniform float gwFreq;
+    uniform float amplitude;
+    uniform float sphereRadius;
+    uniform float axisTilt;
+    uniform float bassPulse;
+    uniform float trebleMix;
+    uniform int   mode;
+    uniform float hPlusGlobal;
+    uniform float hCrossGlobal;
+
+    varying float vIntensity;
+
+    void main(){
+      vec3 dir = normalize(position);
+      vec3 axis = vec3(sin(axisTilt), cos(axisTilt), 0.0);
+
+      float cosTheta = dot(dir, axis);
+      float sinTheta = sqrt(max(0.0, 1.0 - cosTheta*cosTheta));
+
+      vec3 e1 = normalize(vec3(axis.y, -axis.x, 0.0));
+      if (length(e1) < 1e-4) e1 = vec3(1.0, 0.0, 0.0);
+      vec3 e2 = cross(axis, e1);
+      float cx = dot(dir, e1);
+      float cy = dot(dir, e2);
+      float phi = atan(cy, cx);
+
+      float hPlus, hCross;
+
+      if (mode == 0){
+        // SPECTRAL MODE — synthesised binary quadrupole driven by song features.
+        // Strain pattern has angular structure: peaks on the orbital axis,
+        // spin-2 azimuthal dependence. This is what a real binary's radiation
+        // would look like if its parameters varied with the song.
+        float rRet = sphereRadius;
+        float gwPhaseAtR = gwPhase - 2.0 * gwFreq * rRet;
+        float plusPattern  = (1.0 + cosTheta*cosTheta) * 0.5;
+        float crossPattern = cosTheta;
+        hPlus  = amplitude * plusPattern  * cos(gwPhaseAtR - 2.0 * phi)
+               + bassPulse * plusPattern * cos(gwPhaseAtR * 0.5 - 2.0 * phi) * 0.5;
+        hCross = amplitude * crossPattern * sin(gwPhaseAtR - 2.0 * phi)
+               + trebleMix * crossPattern * sin(gwPhaseAtR * 2.0 - 4.0 * phi) * 0.4;
+      } else {
+        // WAVEFORM MODE — plane wave from infinity. The audio waveform IS the
+        // strain h+(t), h×(t). No orbital axis dependence — the whole sphere
+        // shears uniformly in its local transverse plane. This is what every
+        // free-falling test mass would do if this song were the strain of a
+        // passing gravitational wave from somewhere far away.
+        hPlus  = hPlusGlobal;
+        hCross = hCrossGlobal;
+      }
+
+      vec3 eTheta = (sinTheta < 1e-3)
+        ? e1
+        : normalize(axis - cosTheta * dir);
+      vec3 ePhi = cross(dir, eTheta);
+
+      float cPhi = cos(phi);
+      float sPhi = sin(phi);
+      float dTheta = hPlus * cPhi + hCross * sPhi;
+      float dPhi   = -hPlus * sPhi + hCross * cPhi;
+
+      float transverseScale = 1.6;
+      vec3 displaced = position + transverseScale * (dTheta * eTheta + dPhi * ePhi);
+
+      vIntensity = sqrt(hPlus*hPlus + hCross*hCross);
+
+      gl_PointSize = 2.5 + vIntensity * 5.0;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */`
+    varying float vIntensity;
+    void main(){
+      vec2 uv = gl_PointCoord - vec2(0.5);
+      float d = length(uv);
+      if (d > 0.5) discard;
+      float alpha = (1.0 - d*2.0) * (0.4 + 0.6*vIntensity);
+      vec3 cold = vec3(0.35, 0.55, 0.85);
+      vec3 hot  = vec3(1.0, 0.75, 0.45);
+      vec3 col = mix(cold, hot, smoothstep(0.0, 1.0, vIntensity));
+      gl_FragColor = vec4(col, alpha);
+    }
+  `,
+};
+
+const testMassGeo = (() => {
+  const positions = [];
+  const NLat = 36, NLon = 72;
+  const R = 6.0;
+  for (let i = 1; i < NLat; i++){
+    const θ = (i / NLat) * Math.PI;
+    for (let j = 0; j < NLon; j++){
+      const φ = (j / NLon) * 2 * Math.PI;
+      positions.push(
+        R * Math.sin(θ) * Math.cos(φ),
+        R * Math.cos(θ),
+        R * Math.sin(θ) * Math.sin(φ),
+      );
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  return g;
+})();
+
+const testMassMat = new THREE.ShaderMaterial({
+  uniforms: testMassShader.uniforms,
+  vertexShader: testMassShader.vertexShader,
+  fragmentShader: testMassShader.fragmentShader,
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+scene.add(new THREE.Points(testMassGeo, testMassMat));
+
+/* ════════════════════════════════════════════════════════════════
+ * AUDIO INPUT — file drop, file picker, microphone
+ * ════════════════════════════════════════════════════════════════ */
+let audioCtx = null;
+let analyser = null;
+let freqData = null;
+let timeData = null;
+let audioEl = null;         // for file playback
+let micStream = null;       // for mic
+let currentSource = null;   // MediaElementSourceNode or MediaStreamSourceNode
+let isPlaying = false;
+let currentTitle = '';
+
+function ensureCtx(){
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  analyser.smoothingTimeConstant = 0.75;
+  freqData = new Uint8Array(analyser.frequencyBinCount);
+  timeData = new Uint8Array(analyser.frequencyBinCount);
+}
+
+function disconnectCurrent(){
+  if (currentSource){
+    try { currentSource.disconnect(); } catch(_){}
+    currentSource = null;
+  }
+  if (audioEl){
+    try { audioEl.pause(); } catch(_){}
+    audioEl = null;
+  }
+  if (micStream){
+    try { micStream.getTracks().forEach(t => t.stop()); } catch(_){}
+    micStream = null;
+  }
+  isPlaying = false;
+}
+
+function loadFile(file){
+  ensureCtx();
+  disconnectCurrent();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const url = URL.createObjectURL(file);
+  audioEl = new Audio();
+  audioEl.src = url;
+  audioEl.crossOrigin = 'anonymous';
+  audioEl.loop = true;
+  audioEl.play().catch(err => console.warn('play failed', err));
+
+  currentSource = audioCtx.createMediaElementSource(audioEl);
+  currentSource.connect(analyser);
+  analyser.connect(audioCtx.destination);
+
+  currentTitle = file.name.replace(/\.[^.]+$/, '');
+  isPlaying = true;
+  enterListeningMode();
+}
+
+async function useMic(){
+  ensureCtx();
+  disconnectCurrent();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    currentSource = audioCtx.createMediaStreamSource(micStream);
+    currentSource.connect(analyser);
+    // Do NOT connect mic to destination (avoid feedback)
+    currentTitle = 'Microphone';
+    isPlaying = true;
+    enterListeningMode();
+  } catch(err){
+    alert('Microphone access denied or unavailable.');
+  }
+}
+
+async function useTabShare(){
+  if (!navigator.mediaDevices.getDisplayMedia){
+    alert('Tab sharing with audio is not supported in this browser. Try Chrome or Edge.');
+    return;
+  }
+  ensureCtx();
+  disconnectCurrent();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try {
+    // The browser prompts for a tab/window/screen to share. We need audio.
+    // The video track is required to prompt, but we don't use it.
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { width: 1, height: 1, frameRate: 1 },
+      audio: true,
+    });
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length === 0){
+      alert('No audio track was shared. When the picker appears, tick "Share tab audio" at the bottom.');
+      stream.getTracks().forEach(t => t.stop());
+      return;
+    }
+    // Stop the video track immediately — we don't need it.
+    stream.getVideoTracks().forEach(t => t.stop());
+    // Keep the audio-only stream
+    const audioOnlyStream = new MediaStream(audioTracks);
+    micStream = audioOnlyStream;
+    currentSource = audioCtx.createMediaStreamSource(audioOnlyStream);
+    currentSource.connect(analyser);
+    // Tab audio CAN be safely connected to destination — it's coming from
+    // another tab, no feedback risk (the other tab is playing it already).
+    // We do NOT connect, so this page doesn't double the sound.
+    currentTitle = 'Shared tab';
+    isPlaying = true;
+    enterListeningMode();
+
+    // Stop when user clicks "Stop sharing" in the browser
+    audioTracks[0].addEventListener('ended', stopAll);
+  } catch(err){
+    if (err.name !== 'NotAllowedError'){
+      console.warn(err);
+      alert('Tab share failed: ' + err.message);
+    }
+  }
+}
+
+function stopAll(){
+  disconnectCurrent();
+  exitListeningMode();
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * UI
+ * ════════════════════════════════════════════════════════════════ */
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const chooseBtn  = document.getElementById('choose-file');
+const micBtn     = document.getElementById('use-mic');
+const nowPlaying = document.getElementById('now-playing');
+const npTitle    = document.getElementById('np-title');
+const npToggle   = document.getElementById('np-toggle');
+const npStop     = document.getElementById('np-stop');
+const readout    = document.getElementById('strain-readout');
+const rAmp       = document.getElementById('r-amp');
+const rFreq      = document.getElementById('r-freq');
+const rBass      = document.getElementById('r-bass');
+
+const modeToggle = document.getElementById('mode-toggle');
+const modeSpectralBtn = document.getElementById('mode-spectral');
+const modeStrainBtn = document.getElementById('mode-strain');
+const modeHelp = document.getElementById('mode-help');
+
+let interpretationMode = 'spectral';  // 'spectral' or 'strain'
+
+function setMode(m){
+  interpretationMode = m;
+  modeSpectralBtn.classList.toggle('active', m === 'spectral');
+  modeStrainBtn.classList.toggle('active', m === 'strain');
+  testMassShader.uniforms.mode.value = (m === 'strain' ? 1 : 0);
+  modeHelp.textContent = (m === 'strain')
+    ? 'Audio waveform IS the strain h+(t), h×(t). Uniform shear, no fake binary. Subtler — but physically literal.'
+    : 'RMS, centroid, bass & treble drive a synthesised binary. Real quadrupole pattern, fake source signal.';
+}
+modeSpectralBtn.addEventListener('click', () => setMode('spectral'));
+modeStrainBtn.addEventListener('click', () => setMode('strain'));
+
+function enterListeningMode(){
+  dropZone.classList.add('gone');
+  nowPlaying.classList.add('visible');
+  readout.classList.add('visible');
+  modeToggle.classList.add('visible');
+  npTitle.textContent = currentTitle;
+  npToggle.textContent = '⏸';
+}
+function exitListeningMode(){
+  dropZone.classList.remove('gone');
+  nowPlaying.classList.remove('visible');
+  readout.classList.remove('visible');
+  modeToggle.classList.remove('visible');
+}
+
+chooseBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) loadFile(fileInput.files[0]);
+});
+micBtn.addEventListener('click', useMic);
+document.getElementById('share-tab').addEventListener('click', useTabShare);
+
+npToggle.addEventListener('click', () => {
+  if (audioEl){
+    if (audioEl.paused){ audioEl.play(); npToggle.textContent = '⏸'; isPlaying = true; }
+    else { audioEl.pause(); npToggle.textContent = '▸'; isPlaying = false; }
+  }
+});
+npStop.addEventListener('click', stopAll);
+
+window.addEventListener('keydown', e => {
+  if (e.code === 'Escape') stopAll();
+});
+
+// Drag-and-drop on the whole body
+['dragenter','dragover'].forEach(ev => {
+  document.body.addEventListener(ev, e => {
+    e.preventDefault();
+    dropZone.classList.add('dragging');
+  });
+});
+['dragleave','drop'].forEach(ev => {
+  document.body.addEventListener(ev, e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragging');
+  });
+});
+document.body.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('audio/')) loadFile(f);
+});
+
+/* ════════════════════════════════════════════════════════════════
+ * ANIMATION — analyse audio, drive shader uniforms, render
+ * ════════════════════════════════════════════════════════════════ */
+const clock = new THREE.Clock();
+let ampSmooth = 0;
+let freqSmooth = 1.0;
+let bassSmooth = 0;
+let trebleSmooth = 0;
+let glowSmooth = 0;
+let lastReadoutTick = 0;
+let hPlusSmooth = 0;
+let hCrossSmooth = 0;
+
+function analyseAudio(){
+  if (!analyser || !isPlaying) return { rms: 0, centroid: 0, bass: 0, treble: 0 };
+  analyser.getByteFrequencyData(freqData);
+
+  const N = freqData.length;
+
+  // RMS over full spectrum
+  let sumSq = 0;
+  for (let i = 0; i < N; i++) sumSq += freqData[i] * freqData[i];
+  const rms = Math.sqrt(sumSq / N) / 255;
+
+  // Spectral centroid — amplitude-weighted bin index
+  let wSum = 0, aSum = 0;
+  for (let i = 0; i < N; i++){
+    wSum += i * freqData[i];
+    aSum += freqData[i];
+  }
+  const centroid = aSum > 0 ? wSum / aSum : 0;  // bin index (0..N-1)
+
+  // Bass = bins 0..15 (~0..330 Hz at 44.1kHz / 2048 fft)
+  let bSum = 0;
+  for (let i = 0; i < 16; i++) bSum += freqData[i];
+  const bass = bSum / (16 * 255);
+
+  // Treble = bins 200..N-1 (~4kHz..22kHz)
+  let tSum = 0, tN = 0;
+  for (let i = 200; i < N; i++){ tSum += freqData[i]; tN++; }
+  const treble = tN > 0 ? (tSum / (tN * 255)) : 0;
+
+  return { rms, centroid, bass, treble };
+}
+
+// Read the audio's instantaneous waveform — for waveform mode we feed this
+// directly as the strain h+(t), with a few-sample lag as h×(t) to fake
+// a polarisation quadrature. Audio frequencies are too fast to watch raw
+// (a 440 Hz violin would oscillate the field 440× per second), so we take
+// just the latest sample and lean on the renderer's smoothing.
+function analyseWaveform(){
+  if (!analyser || !isPlaying) return { hPlus: 0, hCross: 0 };
+  analyser.getByteTimeDomainData(timeData);
+  const N = timeData.length;
+  // Most recent samples; byte 128 = silence, range becomes [-1, +1]
+  const hPlusRaw  = (timeData[N - 1]  - 128) / 128;
+  const hCrossRaw = (timeData[N - 16] - 128) / 128;
+  return { hPlus: hPlusRaw, hCross: hCrossRaw };
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, clock.getDelta());
+  const tNow = clock.elapsedTime;
+
+  if (isPlaying){
+    const a = analyseAudio();
+
+    // Always compute bass for the central glow — it's just lighting, not the
+    // physics of the test-mass field.
+    glowSmooth = lerp(glowSmooth, a.bass, 0.20);
+    glow.scale.setScalar(2.2 + glowSmooth * 1.8);
+    glow.material.opacity = 0.5 + glowSmooth * 0.5;
+    testMassShader.uniforms.time.value = tNow;
+
+    if (interpretationMode === 'spectral'){
+      // Target strain values
+      const ampTarget    = Math.min(2.2, a.rms * 3.2);
+      const freqTarget   = 0.6 + a.centroid * 0.012;   // scale centroid bin → scene freq
+      const bassTarget   = a.bass * 1.6;
+      const trebleTarget = a.treble * 1.4;
+
+      ampSmooth    = lerp(ampSmooth,    ampTarget,    0.18);
+      freqSmooth   = lerp(freqSmooth,   freqTarget,   0.10);
+      bassSmooth   = lerp(bassSmooth,   bassTarget,   0.25);
+      trebleSmooth = lerp(trebleSmooth, trebleTarget, 0.22);
+
+      testMassShader.uniforms.amplitude.value = ampSmooth;
+      testMassShader.uniforms.gwFreq.value    = freqSmooth;
+      testMassShader.uniforms.gwPhase.value  += freqSmooth * dt * 2.0;
+      testMassShader.uniforms.bassPulse.value = bassSmooth;
+      testMassShader.uniforms.trebleMix.value = trebleSmooth;
+
+      if (tNow - lastReadoutTick > 0.1){
+        rAmp.textContent  = ampSmooth.toFixed(2);
+        rFreq.textContent = freqSmooth.toFixed(2);
+        rBass.textContent = bassSmooth.toFixed(2);
+        lastReadoutTick = tNow;
+      }
+    } else {
+      // Waveform mode: feed audio samples directly as h+(t), h×(t).
+      // Smoothed lightly so we get visible motion rather than 60 Hz flicker.
+      const w = analyseWaveform();
+      hPlusSmooth  = lerp(hPlusSmooth,  w.hPlus  * 1.4, 0.45);
+      hCrossSmooth = lerp(hCrossSmooth, w.hCross * 1.4, 0.45);
+      testMassShader.uniforms.hPlusGlobal.value  = hPlusSmooth;
+      testMassShader.uniforms.hCrossGlobal.value = hCrossSmooth;
+
+      if (tNow - lastReadoutTick > 0.1){
+        rAmp.textContent  = Math.sqrt(hPlusSmooth*hPlusSmooth + hCrossSmooth*hCrossSmooth).toFixed(2);
+        rFreq.textContent = hPlusSmooth.toFixed(2);
+        rBass.textContent = hCrossSmooth.toFixed(2);
+        lastReadoutTick = tNow;
+      }
+    }
+  } else {
+    // Idle drift — a slow breath so the field isn't dead
+    const breath = 0.10 + 0.04 * Math.sin(tNow * 0.4);
+    ampSmooth = lerp(ampSmooth, breath, 0.05);
+    freqSmooth = lerp(freqSmooth, 0.7, 0.03);
+    testMassShader.uniforms.amplitude.value = ampSmooth;
+    testMassShader.uniforms.gwFreq.value    = freqSmooth;
+    testMassShader.uniforms.gwPhase.value  += freqSmooth * dt * 2.0;
+    testMassShader.uniforms.bassPulse.value = 0;
+    testMassShader.uniforms.trebleMix.value = 0;
+    glow.scale.setScalar(2.0 + breath * 2);
+    glow.material.opacity = 0.4 + breath;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+function lerp(a, b, t){ return a + (b - a) * t; }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schwarzschild — L0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#000;color:#c0c8d4;font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased}
+canvas{display:block;width:100%;height:100%}
+
+#title{
+  position:fixed;left:24px;top:22px;z-index:5;pointer-events:none;
+}
+#title .name{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:24px;color:#dde4f0;line-height:1;
+}
+#title .desc{
+  font-size:8px;letter-spacing:.24em;text-transform:uppercase;
+  color:#5a6878;margin-top:7px;
+}
+
+#status{
+  position:fixed;right:24px;top:22px;z-index:5;pointer-events:none;text-align:right;
+}
+#status .label{
+  font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+  color:#5a6878;margin-bottom:5px;
+}
+#status .v{
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:#dde4f0;letter-spacing:.04em;
+  margin-bottom:2px;
+}
+#status .v .unit{color:#5a6878;font-size:9px;margin-left:2px;}
+
+#hint{
+  position:fixed;left:24px;bottom:20px;z-index:5;pointer-events:none;
+  font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:#4a5868;line-height:1.7;
+}
+#hint kbd{
+  font-family:'JetBrains Mono',monospace;
+  background:rgba(180,200,230,.08);
+  border:1px solid rgba(180,200,230,.12);
+  padding:1px 5px;border-radius:3px;font-size:8px;
+  color:#a0b0c4;letter-spacing:.05em;
+}
+
+#fps{
+  position:fixed;right:24px;bottom:20px;z-index:5;pointer-events:none;
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:#4a5868;letter-spacing:.1em;
+}
+
+/* Edge-hover trigger + slide-in panel */
+#edge-trigger{position:fixed;right:0;top:0;width:22px;height:100%;z-index:5;}
+#params{
+  position:fixed;right:-260px;top:50%;transform:translateY(-50%);z-index:10;
+  width:240px;padding:22px;
+  background:rgba(8,10,18,.7);
+  border:1px solid rgba(180,200,230,.12);
+  border-radius:14px 0 0 14px;
+  backdrop-filter:blur(24px) saturate(1.2);
+  -webkit-backdrop-filter:blur(24px) saturate(1.2);
+  transition:right .3s cubic-bezier(.2,.8,.3,1);
+  box-shadow:-8px 0 32px rgba(0,0,0,.4);
+}
+#edge-trigger:hover ~ #params, #params:hover { right:0; }
+
+#params h3{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:16px;color:#dde4f0;margin-bottom:4px;
+}
+#params .sub{
+  font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+  color:#5a6878;margin-bottom:18px;
+}
+.sliderRow{margin-bottom:14px;}
+.sliderRow .label{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:5px;font-size:10px;letter-spacing:.04em;color:#a0b0c4;
+}
+.sliderRow .label .v{
+  font-family:'JetBrains Mono',monospace;color:#dde4f0;font-size:10px;
+}
+.sliderRow input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:2px;
+  background:rgba(180,200,230,.15);border-radius:1px;outline:none;cursor:pointer;
+}
+.sliderRow input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+  background:#a8c0e0;cursor:pointer;border:2px solid #080a12;
+}
+
+.section-divider{
+  margin:18px 0 10px;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:#5a6878;
+}
+.btnRow{display:flex;gap:8px;}
+.btn{
+  flex:1;padding:8px 4px;
+  background:rgba(180,200,230,.04);
+  border:1px solid rgba(180,200,230,.12);
+  border-radius:6px;color:#c0c8d4;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  transition:all .2s;
+}
+.btn:hover{background:rgba(180,200,230,.1);border-color:rgba(180,200,230,.3);color:#dde4f0;}
+
+#edge-hint{
+  position:fixed;right:6px;top:50%;transform:translateY(-50%);z-index:6;
+  font-size:14px;color:rgba(180,200,230,.25);pointer-events:none;
+  animation:edgePulse 3s ease-in-out infinite;
+}
+@keyframes edgePulse{
+  0%,100%{opacity:.25;transform:translate(0,-50%);}
+  50%{opacity:.5;transform:translate(-3px,-50%);}
+}
+</style>
+</head>
+<body>
+
+<div id="title">
+  <div class="name">Schwarzschild</div>
+  <div class="desc">L0 · null geodesics in a browser</div>
+</div>
+
+<div id="status">
+  <div class="label">Photon sphere</div>
+  <div class="v" id="psphere">r = 3.00<span class="unit">M</span></div>
+  <div class="label" style="margin-top:8px">Shadow radius</div>
+  <div class="v" id="shadow">b = 5.20<span class="unit">M</span></div>
+</div>
+
+<div id="hint">
+  <kbd>Drag</kbd> orbit · <kbd>Scroll</kbd> zoom
+</div>
+
+<div id="fps">— fps</div>
+
+<div id="edge-trigger"></div>
+<div id="edge-hint">⟨</div>
+<aside id="params">
+  <h3>Renderer</h3>
+  <div class="sub">L0 · proof</div>
+
+  <div class="sliderRow">
+    <div class="label"><span>Black hole mass M</span><span class="v"><span id="mv">1.00</span></span></div>
+    <input type="range" id="m" min="0.2" max="3" step="0.05" value="1.0">
+  </div>
+  <div class="sliderRow">
+    <div class="label"><span>Render quality</span><span class="v"><span id="qv">0.7</span></span></div>
+    <input type="range" id="q" min="0.3" max="1.0" step="0.05" value="0.7">
+  </div>
+  <div class="sliderRow">
+    <div class="label"><span>Integration steps</span><span class="v"><span id="sv">250</span></span></div>
+    <input type="range" id="s" min="80" max="600" step="10" value="250">
+  </div>
+
+  <div class="section-divider">View</div>
+  <div class="btnRow">
+    <button class="btn" id="closeup">Close</button>
+    <button class="btn" id="far">Far</button>
+  </div>
+</aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+ * SCHWARZSCHILD BLACK HOLE — L0
+ *
+ * Per-pixel null-geodesic integration in the Schwarzschild metric.
+ *
+ * For each pixel we:
+ *   1. Construct the camera ray.
+ *   2. Determine the plane containing camera, BH center, and ray.
+ *   3. Integrate the orbit equation
+ *         d²u/dφ² + u = 3 M u²,  u = 1/r
+ *      using RK4 with fixed step size.
+ *   4. Terminate on horizon (r < 2M) → shadow,
+ *      or escape (r > r_max) → sample starfield in the ray's
+ *      final asymptotic direction.
+ *   5. Track minimum r approached; pixels that grazed the photon
+ *      sphere (r ≈ 3M) get the photon ring brightening.
+ *
+ * Critical impact parameter for Schwarzschild: b_c = 3√3 M ≈ 5.196 M.
+ * Photon sphere radius: r_ph = 3 M.
+ * Event horizon: r_+ = 2 M.
+ * ════════════════════════════════════════════════════════════════ */
+
+/* ─── Scene setup ─── */
+const scene = new THREE.Scene();
+const sceneCam = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.01, 100);
+sceneCam.position.set(0, 3, 14);
+sceneCam.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+let qScale = 0.7;
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5) * qScale);
+  sceneCam.aspect = w/h; sceneCam.updateProjectionMatrix();
+  uniforms.resolution.value.set(renderer.domElement.width, renderer.domElement.height);
+}
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(sceneCam, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2.5;
+controls.maxDistance = 60;
+controls.target.set(0, 0, 0);
+
+/* ─── Full-screen quad with the BH shader ─── */
+const uniforms = {
+  camPos:      { value: new THREE.Vector3() },
+  camForward:  { value: new THREE.Vector3() },
+  camRight:    { value: new THREE.Vector3() },
+  camUp:       { value: new THREE.Vector3() },
+  resolution:  { value: new THREE.Vector2() },
+  fov:         { value: sceneCam.fov * Math.PI / 180 },
+  M:           { value: 1.0 },
+  maxSteps:    { value: 250 },
+  time:        { value: 0 },
+};
+
+const bhShader = new THREE.ShaderMaterial({
+  uniforms,
+  vertexShader: /* glsl */`
+    void main(){
+      gl_Position = vec4(position.xy, 0.0, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */`
+    precision highp float;
+
+    uniform vec3 camPos;
+    uniform vec3 camForward;
+    uniform vec3 camRight;
+    uniform vec3 camUp;
+    uniform vec2 resolution;
+    uniform float fov;
+    uniform float M;
+    uniform int   maxSteps;
+    uniform float time;
+
+    /* ─── procedural starfield ─── */
+    float hash21(vec2 p){
+      p = fract(p * vec2(123.34, 456.21));
+      p += dot(p, p + 45.32);
+      return fract(p.x * p.y);
+    }
+    vec3 starField(vec3 dir){
+      // direction → equirectangular (θ, φ)
+      float theta = acos(clamp(dir.y, -1.0, 1.0));     // [0, π]
+      float phi   = atan(dir.z, dir.x);                 // [-π, π]
+
+      vec3 col = vec3(0.0);
+
+      // Three layers of stars at different scales/densities
+      for (int i = 0; i < 3; i++){
+        float scale = 60.0 * pow(1.8, float(i));
+        float aspect = scale / (scale * 2.0);
+        vec2 uv = vec2((phi + 3.14159) * scale / 6.2832,
+                       theta * scale / 3.14159);
+        vec2 cell = floor(uv);
+        vec2 local = fract(uv) - 0.5;
+        float h = hash21(cell + float(i) * 17.3);
+        float threshold = 0.985 - float(i) * 0.003;
+        if (h > threshold){
+          float intensity = (h - threshold) / (1.0 - threshold);
+          float d = length(local);
+          float star = exp(-d * 18.0) * intensity * (1.0 + float(i) * 0.4);
+          // star color: bluish-white to warm
+          float ct = fract(h * 7.91);
+          vec3 starCol = mix(vec3(0.75,0.82,1.0), vec3(1.0,0.92,0.78), ct);
+          col += starCol * star;
+        }
+      }
+
+      // Faint Milky Way band — equatorial in this scene
+      float bandDist = abs(theta - 1.5708);
+      float band = exp(-pow(bandDist * 3.0, 2.0));
+      col += vec3(0.55, 0.45, 0.35) * band * 0.045;
+
+      // Subtle nebular wash from low-freq noise
+      vec2 nuv = vec2(phi * 1.5, theta * 1.5);
+      float n = hash21(floor(nuv * 8.0));
+      col += vec3(0.05, 0.04, 0.07) * smoothstep(0.7, 1.0, n);
+
+      return col;
+    }
+
+    /* ─── orbit equation derivatives ─── */
+    // d²u/dφ² = 3 M u² - u
+    float accel(float u){ return 3.0 * M * u * u - u; }
+
+    void main(){
+      // ─── pixel → camera ray ───
+      vec2 px = gl_FragCoord.xy / resolution.xy;
+      vec2 ndc = px * 2.0 - 1.0;
+      float aspect = resolution.x / resolution.y;
+      float tanH = tan(fov * 0.5);
+      vec3 rayDir = normalize(camForward
+                              + camRight * ndc.x * tanH * aspect
+                              + camUp    * ndc.y * tanH);
+
+      float r0 = length(camPos);
+      vec3 planeRad = camPos / r0;          // unit vector BH→camera
+      float rdx = dot(rayDir, planeRad);    // radial component of ray
+      vec3 tangentPart = rayDir - rdx * planeRad;
+      float rdy = length(tangentPart);
+
+      // ─── degenerate: purely radial ray ───
+      if (rdy < 1e-5){
+        if (rdx > 0.0) {
+          gl_FragColor = vec4(starField(rayDir), 1.0);
+        } else {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+        return;
+      }
+
+      vec3 tangentDir = tangentPart / rdy;
+
+      // ─── initial conditions for u(φ) ───
+      // u = 1/r, φ = 0 at camera, increasing in tangentDir direction
+      float u    = 1.0 / r0;
+      float dudp = -(rdx / rdy) * u;   // du/dφ at start
+
+      float dphi = 0.025;              // step size in φ (rad)
+      float r_min = r0;                // track min r for photon ring
+      float phi = 0.0;
+      bool captured = false;
+      bool escaped  = false;
+      float u_end = u, dudp_end = dudp, phi_end = 0.0;
+
+      // ─── integration loop ───
+      for (int i = 0; i < 600; i++){
+        if (i >= maxSteps) break;
+
+        // RK4 step on (u, du/dφ)
+        float k1u = dudp;
+        float k1d = accel(u);
+        float u2  = u + 0.5 * dphi * k1u;
+        float d2  = dudp + 0.5 * dphi * k1d;
+        float k2u = d2;
+        float k2d = accel(u2);
+        float u3  = u + 0.5 * dphi * k2u;
+        float d3  = dudp + 0.5 * dphi * k2d;
+        float k3u = d3;
+        float k3d = accel(u3);
+        float u4  = u + dphi * k3u;
+        float d4  = dudp + dphi * k3d;
+        float k4u = d4;
+        float k4d = accel(u4);
+
+        u    += dphi * (k1u + 2.0*k2u + 2.0*k3u + k4u) / 6.0;
+        dudp += dphi * (k1d + 2.0*k2d + 2.0*k3d + k4d) / 6.0;
+        phi  += dphi;
+
+        // numerical safety
+        if (u != u) { captured = true; break; }
+        if (u <= 0.0) u = 1e-6;
+        float r = 1.0 / u;
+        r_min = min(r_min, r);
+
+        // termination tests
+        if (r < 2.05 * M) { captured = true; phi_end = phi; u_end = u; dudp_end = dudp; break; }
+        if (r > 60.0)     { escaped  = true; phi_end = phi; u_end = u; dudp_end = dudp; break; }
+      }
+
+      // ─── colour ───
+      vec3 col = vec3(0.0);
+
+      if (escaped){
+        // Reconstruct asymptotic direction in 3D
+        float A = -dudp_end / (u_end * u_end);
+        float B = 1.0 / u_end;
+        vec3 radhat = cos(phi_end) * planeRad + sin(phi_end) * tangentDir;
+        vec3 phihat = -sin(phi_end) * planeRad + cos(phi_end) * tangentDir;
+        vec3 finalDir = normalize(A * radhat + B * phihat);
+        col = starField(finalDir);
+      } else if (captured){
+        col = vec3(0.0);
+      } else {
+        // ran out of steps — treat as captured (likely an orbiting ray)
+        col = vec3(0.0);
+      }
+
+      // ─── photon ring: rays that grazed r ≈ 3 M get warm brightening ───
+      // The closer r_min was to 3 M (without falling in), the more orbits
+      // the ray made — exponential brightness boost.
+      float rPh = 3.0 * M;
+      // Normalised "how close to the photon sphere"
+      // We only care about rays that came close from outside.
+      float closeness = exp(- (r_min - rPh) * (r_min - rPh) * 2.5);
+      // Less brightening for captured rays — they fell in
+      if (captured) closeness *= 0.55;
+      vec3 ringCol = vec3(1.0, 0.82, 0.55);
+      col += ringCol * closeness * 0.9;
+
+      // Mild tonemap
+      col = col / (col + vec3(0.85));
+      col = pow(col, vec3(0.92));
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+});
+
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bhShader);
+scene.add(quad);
+const screenCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+/* ─── UI ─── */
+const mSlider = document.getElementById('m');
+const qSlider = document.getElementById('q');
+const sSlider = document.getElementById('s');
+const mv = document.getElementById('mv');
+const qv = document.getElementById('qv');
+const sv = document.getElementById('sv');
+const psphereEl = document.getElementById('psphere');
+const shadowEl  = document.getElementById('shadow');
+
+function syncStatus(){
+  const M = uniforms.M.value;
+  psphereEl.innerHTML = `r = ${(3*M).toFixed(2)}<span class="unit">M</span>`;
+  shadowEl.innerHTML  = `b = ${(3*Math.sqrt(3)*M).toFixed(2)}<span class="unit">M</span>`;
+}
+
+mSlider.oninput = () => {
+  const v = parseFloat(mSlider.value);
+  uniforms.M.value = v;
+  mv.textContent = v.toFixed(2);
+  syncStatus();
+};
+qSlider.oninput = () => {
+  qScale = parseFloat(qSlider.value);
+  qv.textContent = qScale.toFixed(2);
+  resize();
+};
+sSlider.oninput = () => {
+  uniforms.maxSteps.value = parseInt(sSlider.value);
+  sv.textContent = sSlider.value;
+};
+document.getElementById('closeup').onclick = () => {
+  // animate camera in to ~5M
+  animateCam(sceneCam.position, new THREE.Vector3(0, 1.2, 5));
+};
+document.getElementById('far').onclick = () => {
+  animateCam(sceneCam.position, new THREE.Vector3(0, 4, 24));
+};
+
+function animateCam(from, to){
+  const start = from.clone(), end = to.clone();
+  const t0 = performance.now();
+  const dur = 1100;
+  function step(){
+    const t = Math.min(1, (performance.now() - t0) / dur);
+    const e = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;  // ease-in-out cubic
+    sceneCam.position.lerpVectors(start, end, e);
+    sceneCam.lookAt(0, 0, 0);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  step();
+}
+
+/* ─── FPS counter ─── */
+const fpsEl = document.getElementById('fps');
+let frameCount = 0, fpsTime = performance.now();
+function tickFPS(){
+  frameCount++;
+  const now = performance.now();
+  if (now - fpsTime > 500){
+    const fps = 1000 * frameCount / (now - fpsTime);
+    fpsEl.textContent = `${fps.toFixed(0)} fps · ${renderer.domElement.width}×${renderer.domElement.height}`;
+    frameCount = 0; fpsTime = now;
+  }
+}
+
+/* ─── animate ─── */
+const _f = new THREE.Vector3();
+const _r = new THREE.Vector3();
+const _u = new THREE.Vector3();
+const _up = new THREE.Vector3(0,1,0);
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+
+  // Camera basis vectors for the shader
+  sceneCam.getWorldDirection(_f);
+  _r.crossVectors(_f, _up).normalize();
+  _u.crossVectors(_r, _f).normalize();
+
+  uniforms.camPos.value.copy(sceneCam.position);
+  uniforms.camForward.value.copy(_f);
+  uniforms.camRight.value.copy(_r);
+  uniforms.camUp.value.copy(_u);
+  uniforms.time.value = performance.now() * 0.001;
+
+  renderer.render(scene, screenCam);
+  tickFPS();
+}
+
+window.addEventListener('resize', resize);
+resize();
+syncStatus();
+animate();
+</script>
+</body>
+</html>

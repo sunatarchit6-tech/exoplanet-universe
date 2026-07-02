@@ -334,8 +334,8 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
   #fly-hud{bottom:90px}
 
   /* Music player — above reset on left side */
-  #music-toggle{position:fixed;bottom:calc(var(--control-height) + 52px);left:var(--ui-pad);top:auto;right:auto;width:36px;height:36px;font-size:16px}
-  #music-player{position:fixed;bottom:calc(var(--control-height) + 52px);left:calc(var(--ui-pad) + 44px);top:auto;right:var(--ui-pad);width:auto}
+  #music-toggle{position:fixed;bottom:calc(var(--control-height) + 52px);left:var(--ui-pad);top:auto;right:auto;width:44px;height:44px;font-size:18px}
+  #music-player{position:fixed;bottom:calc(var(--control-height) + 52px);left:calc(var(--ui-pad) + 52px);top:auto;right:var(--ui-pad);width:auto}
 }
 
 /* ── LARGE DESKTOP (1441px+) ─────────────────────────────── */
@@ -1714,7 +1714,7 @@ function tempColor(t){
   return new THREE.Color(0.85,0.07,0.02);
 }
 // ── EARTH TEXTURE ────────────────────────────────────────────────────────────
-const EARTH_DATA_URI="earth_texture.jpg";
+const EARTH_DATA_URI="textures/scene/earth_texture.jpg";
 
 
 // ── PLANET TEXTURE — 10 distinct visual types ────────────────────────────────
@@ -2073,7 +2073,7 @@ scene.add(earthGroup);
 const sunGroup=new THREE.Group();
 sunGroup.position.set(6, 0.5, 3.5);
 
-const sunTex=new THREE.TextureLoader().load('sun_texture.jpg');
+const sunTex=new THREE.TextureLoader().load('textures/scene/sun_texture.jpg');
 const sunCore=new THREE.Mesh(
   new THREE.SphereGeometry(1.5,64,64),
   new THREE.MeshBasicMaterial({map:sunTex})
@@ -2087,7 +2087,7 @@ sunGroup.add(sunLight);
 scene.add(sunGroup);
 
 // ── MOON — small body orbiting Earth with NASA LRO texture ───────────────────
-const moonTex=new THREE.TextureLoader().load('moon_texture.jpg');
+const moonTex=new THREE.TextureLoader().load('textures/scene/moon_texture.jpg');
 const moonMesh=new THREE.Mesh(
   new THREE.SphereGeometry(0.2,32,32),
   new THREE.MeshBasicMaterial({map:moonTex})
@@ -4657,7 +4657,7 @@ function animate(ts){
 }
 
 // ── LOAD FULL NASA DATASET ────────────────────────────────────────────────────
-fetch('nasa_data.json').then(r=>r.json()).then(data=>{
+fetch('data/nasa_data.json').then(r=>r.json()).then(data=>{
   NASA_DATA=data;
   data.forEach((p,i)=>NASA_BY_NAME[p.n]=i);
   console.log('NASA data loaded:',NASA_DATA.length,'confirmed exoplanets');
@@ -4953,7 +4953,8 @@ toggleBtn.addEventListener('click',()=>{
 });
 
 // YouTube IFrame API callback
-window.onYouTubeIframeAPIReady=function(){
+function initYTPlayer(){
+  if(ytPlayer)return;
   ytPlayer=new YT.Player('yt-player-host',{
     height:'0',
     width:'0',
@@ -4966,7 +4967,7 @@ window.onYouTubeIframeAPIReady=function(){
       modestbranding:1,
       rel:0,
       iv_load_policy:3,
-      origin:window.location.origin
+      playsinline:1
     },
     events:{
       onReady:function(){
@@ -4999,21 +5000,21 @@ window.onYouTubeIframeAPIReady=function(){
       }
     }
   });
-};
+}
+// Race-proof registration: YT may fire onYouTubeIframeAPIReady before this
+// IIFE assigns the handler. If YT is already loaded, call init directly.
+window.onYouTubeIframeAPIReady=initYTPlayer;
+if(window.YT&&window.YT.Player)initYTPlayer();
 
 // Play / Pause
-let _firstPlay=true;
 playBtn.addEventListener('click',()=>{
   if(!ytReady)return;
   const state=ytPlayer.getPlayerState();
   if(state===YT.PlayerState.PLAYING){
     ytPlayer.pauseVideo();
-  }else if(_firstPlay){
-    // First play: loadVideoById triggers immediate fetch+autoplay (faster than playVideo on a cued video)
-    _firstPlay=false;
-    ytPlayer.loadVideoById(playlist[trackIdx].id);
-    updateTrackDisplay();
   }else{
+    // playVideo() preserves the synchronous user-gesture chain that iOS
+    // requires for inline audio playback.
     ytPlayer.playVideo();
   }
 });
@@ -5050,6 +5051,8 @@ function seekFromEvent(e){
 }
 
 barWrap.addEventListener('mousedown',(e)=>{
+  // Guard against synthetic mouse events fired after touchend on mobile
+  if(isSeeking)return;
   isSeeking=true;
   const t=seekFromEvent(e);
   function onMove(ev){seekFromEvent(ev);}
@@ -5075,6 +5078,7 @@ barWrap.addEventListener('touchmove',(e)=>{
   const touch=e.touches[0];
   seekFromEvent(touch);
 },{passive:true});
+barWrap.addEventListener('touchcancel',()=>{isSeeking=false;});
 barWrap.addEventListener('touchend',(e)=>{
   if(!isSeeking)return;
   isSeeking=false;

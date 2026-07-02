@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inspiral — Music from the Universe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06070d;
+    --bg2:#0a0d18;
+    --ink:#e8ecf4;
+    --ink-dim:#9aa3b8;
+    --ink-mute:#5b6378;
+    --glass:rgba(10,14,28,.45);
+    --glass-line:rgba(255,255,255,.06);
+    --accent:#ffb27a;
+    --accent-2:#7ec8ff;
+    --accent-3:#c89bff;
+    --rule:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond',serif;font-weight:300;}
+  body{
+    background:
+      radial-gradient(ellipse at 25% 12%, rgba(255,178,122,0.10), transparent 55%),
+      radial-gradient(ellipse at 80% 70%, rgba(126,200,255,0.10), transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(200,155,255,0.06), transparent 60%),
+      var(--bg);
+    min-height:100vh;
+    line-height:1.45;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;font-weight:400;}
+
+  /* ───── Header ───── */
+  header{
+    padding:48px 56px 12px;
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--rule);
+  }
+  .wordmark{font-size:34px;letter-spacing:.15em;font-weight:400;}
+  .wordmark em{font-style:italic;color:var(--accent);font-weight:500;}
+  .tag{font-size:12px;letter-spacing:.25em;color:var(--ink-mute);text-transform:uppercase;}
+
+  /* ───── Hero ───── */
+  .hero{padding:80px 56px 100px;border-bottom:1px solid var(--rule);}
+  .hero h1{
+    font-size:96px;line-height:.95;margin:0 0 28px;font-weight:300;
+    letter-spacing:-.02em;max-width:1100px;
+  }
+  .hero h1 em{font-style:italic;color:var(--accent);}
+  .hero p{font-size:22px;color:var(--ink-dim);max-width:680px;margin:0;line-height:1.5;}
+
+  /* ───── The Instrument (mock) ───── */
+  .instrument{
+    padding:60px 56px 80px;
+    border-bottom:1px solid var(--rule);
+  }
+  .section-label{
+    font-size:11px;letter-spacing:.32em;color:var(--ink-mute);
+    text-transform:uppercase;margin-bottom:32px;
+  }
+  .section-label::before{content:'— ';color:var(--accent);}
+  .stage{
+    display:grid;grid-template-columns:1.3fr 1fr;gap:36px;
+    margin-top:24px;
+  }
+
+  /* ───── Sample bank (LIGO chirps) ───── */
+  .panel{
+    background:var(--glass);
+    border:1px solid var(--glass-line);
+    border-radius:18px;
+    padding:28px 30px;
+    backdrop-filter:blur(20px) saturate(1.2);
+    -webkit-backdrop-filter:blur(20px) saturate(1.2);
+  }
+  .panel-title{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--rule);
+  }
+  .panel-title h3{font-size:22px;margin:0;font-weight:500;letter-spacing:.02em;}
+  .panel-title .sub{font-size:11px;letter-spacing:.2em;color:var(--ink-mute);text-transform:uppercase;}
+
+  .chirp-row{
+    display:grid;grid-template-columns:14px 90px 1fr 70px 50px;
+    align-items:center;gap:14px;padding:14px 0;
+    border-bottom:1px solid rgba(255,255,255,.04);
+    cursor:pointer;transition:background .2s;
+  }
+  .chirp-row:hover{background:rgba(255,255,255,.02);}
+  .chirp-row:last-child{border-bottom:none;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+  .dot.b{background:var(--accent-2);box-shadow:0 0 10px var(--accent-2);}
+  .dot.c{background:var(--accent-3);box-shadow:0 0 10px var(--accent-3);}
+  .dot.d{background:#7fffa0;box-shadow:0 0 10px #7fffa0;}
+  .chirp-name{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink);}
+  .chirp-wave{
+    height:30px;
+    background:
+      linear-gradient(90deg,
+        rgba(255,178,122,0) 0%,
+        rgba(255,178,122,.0) 20%,
+        rgba(255,178,122,.45) 65%,
+        rgba(255,178,122,.85) 88%,
+        rgba(255,178,122,.0) 100%);
+    -webkit-mask:radial-gradient(ellipse at 78% 50%, #000 60%, transparent 80%);
+            mask:radial-gradient(ellipse at 78% 50%, #000 60%, transparent 80%);
+    border-radius:4px;
+    position:relative;
+  }
+  .chirp-wave::before{
+    content:'';position:absolute;inset:0;
+    background:repeating-linear-gradient(
+      90deg, rgba(255,255,255,.18) 0 1px, transparent 1px 4px);
+    opacity:.6;
+    -webkit-mask:radial-gradient(ellipse at 80% 50%, #000 50%, transparent 75%);
+            mask:radial-gradient(ellipse at 80% 50%, #000 50%, transparent 75%);
+  }
+  .chirp-wave.bns{
+    background:
+      linear-gradient(90deg,
+        rgba(126,200,255,.4) 0%,
+        rgba(126,200,255,.45) 40%,
+        rgba(126,200,255,.6) 70%,
+        rgba(126,200,255,.85) 95%,
+        rgba(126,200,255,.0) 100%);
+    -webkit-mask:radial-gradient(ellipse at 85% 50%, #000 70%, transparent 90%);
+            mask:radial-gradient(ellipse at 85% 50%, #000 70%, transparent 90%);
+  }
+  .chirp-wave.imbh{
+    background:
+      linear-gradient(90deg,
+        rgba(200,155,255,0) 30%,
+        rgba(200,155,255,.5) 70%,
+        rgba(200,155,255,.9) 92%,
+        rgba(200,155,255,0) 100%);
+    -webkit-mask:radial-gradient(ellipse at 80% 50%, #000 55%, transparent 75%);
+            mask:radial-gradient(ellipse at 80% 50%, #000 55%, transparent 75%);
+  }
+  .chirp-mass{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-dim);text-align:right;}
+  .chirp-btn{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);
+    text-align:right;letter-spacing:.1em;
+  }
+
+  /* ───── Synth panel ───── */
+  .synth-readout{
+    text-align:center;padding:30px 0 36px;border-bottom:1px solid var(--rule);
+    margin-bottom:26px;
+  }
+  .synth-readout .freq{font-size:64px;font-weight:300;letter-spacing:-.01em;}
+  .synth-readout .freq em{font-style:italic;color:var(--accent);}
+  .synth-readout .hz{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--ink-mute);letter-spacing:.2em;}
+  .synth-readout .live{
+    display:inline-block;margin-top:14px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--accent);
+    text-transform:uppercase;
+  }
+  .synth-readout .live::before{
+    content:'●';margin-right:8px;
+    animation:blink 1.4s infinite;
+  }
+  @keyframes blink{50%{opacity:.3}}
+
+  .slider-row{margin-bottom:18px;}
+  .slider-label{
+    display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;
+    color:var(--ink-mute);text-transform:uppercase;margin-bottom:8px;
+  }
+  .slider-label span:last-child{color:var(--ink);}
+  .slider-track{
+    height:3px;background:rgba(255,255,255,.08);border-radius:2px;position:relative;
+  }
+  .slider-fill{
+    position:absolute;left:0;top:0;height:100%;border-radius:2px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  }
+  .slider-thumb{
+    position:absolute;top:50%;width:14px;height:14px;background:var(--ink);
+    border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(232,236,244,.1);
+  }
+
+  /* ───── Sequencer ───── */
+  .sequencer{padding:60px 56px 80px;border-bottom:1px solid var(--rule);}
+  .seq-grid{
+    margin-top:32px;
+    background:var(--glass);
+    border:1px solid var(--glass-line);
+    border-radius:18px;padding:28px 30px;
+    backdrop-filter:blur(20px) saturate(1.2);
+    -webkit-backdrop-filter:blur(20px) saturate(1.2);
+  }
+  .track-row{
+    display:grid;grid-template-columns:140px 1fr;
+    gap:18px;align-items:center;
+    padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
+  }
+  .track-row:last-child{border-bottom:none;}
+  .track-name{
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;
+    color:var(--ink-dim);text-transform:uppercase;
+  }
+  .track-cells{display:grid;grid-template-columns:repeat(16,1fr);gap:6px;}
+  .cell{
+    height:32px;background:rgba(255,255,255,.03);border-radius:4px;
+    border:1px solid rgba(255,255,255,.04);position:relative;
+  }
+  .cell.active{
+    background:rgba(255,178,122,.22);border-color:rgba(255,178,122,.55);
+  }
+  .cell.active::after{
+    content:'';position:absolute;left:18%;right:8%;top:50%;height:1px;
+    background:rgba(255,178,122,.85);
+    transform:translateY(-50%);
+    box-shadow:0 0 6px rgba(255,178,122,.6);
+  }
+  .cell.active.b{background:rgba(126,200,255,.22);border-color:rgba(126,200,255,.55);}
+  .cell.active.b::after{background:rgba(126,200,255,.85);box-shadow:0 0 6px rgba(126,200,255,.6);}
+  .cell.active.c{background:rgba(200,155,255,.22);border-color:rgba(200,155,255,.55);}
+  .cell.active.c::after{background:rgba(200,155,255,.85);box-shadow:0 0 6px rgba(200,155,255,.6);}
+  .cell.active.d{background:rgba(127,255,160,.22);border-color:rgba(127,255,160,.55);}
+  .cell.active.d::after{background:rgba(127,255,160,.85);box-shadow:0 0 6px rgba(127,255,160,.6);}
+
+  .playhead{margin-top:18px;display:flex;gap:24px;align-items:center;}
+  .play-btn{
+    width:54px;height:54px;border-radius:50%;
+    background:linear-gradient(180deg,var(--accent),#cc8a52);
+    border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 24px rgba(255,178,122,.35);
+  }
+  .play-btn::after{
+    content:'';width:0;height:0;
+    border-left:14px solid #1a1110;border-top:9px solid transparent;border-bottom:9px solid transparent;
+    margin-left:4px;
+  }
+  .tempo{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-dim);letter-spacing:.2em;}
+  .tempo strong{color:var(--ink);font-weight:500;}
+
+  /* ───── Sky catalog ───── */
+  .sky{padding:60px 56px 80px;border-bottom:1px solid var(--rule);}
+  .sky-canvas{
+    margin-top:32px;
+    height:360px;
+    background:
+      radial-gradient(ellipse at 30% 40%, rgba(255,178,122,.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(126,200,255,.04) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+    border:1px solid var(--glass-line);
+    border-radius:18px;
+    position:relative;overflow:hidden;
+  }
+  .star{position:absolute;background:#fff;border-radius:50%;}
+  .event{
+    position:absolute;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,178,122,.95) 0%, rgba(255,178,122,.15) 60%, transparent 100%);
+    cursor:pointer;
+  }
+  .event.b{background:radial-gradient(circle, rgba(126,200,255,.95) 0%, rgba(126,200,255,.15) 60%, transparent 100%);}
+  .event.c{background:radial-gradient(circle, rgba(200,155,255,.95) 0%, rgba(200,155,255,.15) 60%, transparent 100%);}
+  .event.d{background:radial-gradient(circle, rgba(127,255,160,.95) 0%, rgba(127,255,160,.15) 60%, transparent 100%);}
+
+  .sky-meta{
+    position:absolute;bottom:24px;left:28px;right:28px;
+    display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--ink-mute);letter-spacing:.18em;text-transform:uppercase;
+  }
+
+  /* ───── Collaboration ───── */
+  .collab{padding:60px 56px 80px;border-bottom:1px solid var(--rule);}
+  .collab-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:32px;}
+  .composition-card{
+    background:var(--glass);border:1px solid var(--glass-line);
+    border-radius:18px;padding:24px;backdrop-filter:blur(20px) saturate(1.2);
+  }
+  .composition-card h4{margin:0 0 6px;font-size:24px;font-weight:400;}
+  .composition-card .by{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-mute);text-transform:uppercase;}
+  .mini-wave{
+    margin:20px 0;height:50px;
+    background:
+      linear-gradient(90deg,
+        rgba(255,178,122,0) 5%,
+        rgba(255,178,122,.4) 35%,
+        rgba(126,200,255,.4) 60%,
+        rgba(200,155,255,.6) 88%,
+        rgba(200,155,255,0) 100%);
+    -webkit-mask:radial-gradient(ellipse at center, #000 60%, transparent 90%);
+            mask:radial-gradient(ellipse at center, #000 60%, transparent 90%);
+    border-radius:4px;
+  }
+  .stats{display:flex;gap:18px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);letter-spacing:.15em;text-transform:uppercase;}
+  .stats span{color:var(--ink-dim);}
+
+  /* ───── Footer note ───── */
+  footer{padding:48px 56px 80px;}
+  footer p{max-width:720px;font-size:16px;color:var(--ink-dim);}
+  footer .data{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);letter-spacing:.2em;text-transform:uppercase;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">in<em>·</em>spiral</div>
+  <div class="tag">A studio for the universe's music</div>
+</header>
+
+<!-- ───── Hero ───── -->
+<section class="hero">
+  <h1>You can <em>hear</em> two black holes<br/>colliding a billion years ago.</h1>
+  <p>LIGO recorded 312 of them. Each one is a unique song — a chirp that rises and falls in a fraction of a second. This is the instrument that lets you play, mix, and compose with them.</p>
+</section>
+
+<!-- ───── The Instrument ───── -->
+<section class="instrument">
+  <div class="section-label">The instrument</div>
+  <div class="stage">
+
+    <!-- Sample bank -->
+    <div class="panel">
+      <div class="panel-title">
+        <h3>Sample bank</h3>
+        <span class="sub">312 real LIGO chirps</span>
+      </div>
+
+      <div class="chirp-row"><span class="dot"></span><span class="chirp-name">GW150914</span><div class="chirp-wave"></div><span class="chirp-mass">36 + 29 M☉</span><span class="chirp-btn">PLAY ▸</span></div>
+      <div class="chirp-row"><span class="dot c"></span><span class="chirp-name">GW190521</span><div class="chirp-wave imbh"></div><span class="chirp-mass">85 + 66 M☉</span><span class="chirp-btn">PLAY ▸</span></div>
+      <div class="chirp-row"><span class="dot b"></span><span class="chirp-name">GW170817</span><div class="chirp-wave bns"></div><span class="chirp-mass">1.46 + 1.27 M☉</span><span class="chirp-btn">PLAY ▸</span></div>
+      <div class="chirp-row"><span class="dot"></span><span class="chirp-name">GW151226</span><div class="chirp-wave"></div><span class="chirp-mass">14 + 7.5 M☉</span><span class="chirp-btn">PLAY ▸</span></div>
+      <div class="chirp-row"><span class="dot d"></span><span class="chirp-name">GW200115</span><div class="chirp-wave bns"></div><span class="chirp-mass">5.7 + 1.5 M☉</span><span class="chirp-btn">PLAY ▸</span></div>
+      <div class="chirp-row"><span class="dot c"></span><span class="chirp-name">GW241230</span><div class="chirp-wave imbh"></div><span class="chirp-mass">68 + 49 M☉</span><span class="chirp-btn">PLAY ▸</span></div>
+      <div class="chirp-row"><span class="dot"></span><span class="chirp-name">GW250114</span><div class="chirp-wave"></div><span class="chirp-mass">34 + 32 M☉</span><span class="chirp-btn">PLAY ▸</span></div>
+      <div class="chirp-row"><span class="dot"></span><span class="chirp-name" style="color:var(--ink-mute);">... 305 more</span><div class="chirp-wave" style="opacity:.3"></div><span class="chirp-mass" style="color:var(--ink-mute);">filter ▸</span><span class="chirp-btn"></span></div>
+    </div>
+
+    <!-- Synth -->
+    <div class="panel">
+      <div class="panel-title">
+        <h3>Live synth</h3>
+        <span class="sub">Compose your own</span>
+      </div>
+      <div class="synth-readout">
+        <div class="freq"><em>142</em><span style="font-size:24px;color:var(--ink-mute);"> Hz</span></div>
+        <div class="hz">RISING · 2.4 s TO MERGER</div>
+        <div class="live">listening</div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Mass A</span><span>36.0 M☉</span></div>
+        <div class="slider-track"><div class="slider-fill" style="width:42%"></div><div class="slider-thumb" style="left:42%"></div></div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Mass B</span><span>29.0 M☉</span></div>
+        <div class="slider-track"><div class="slider-fill" style="width:34%"></div><div class="slider-thumb" style="left:34%"></div></div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Spin</span><span>0.32</span></div>
+        <div class="slider-track"><div class="slider-fill" style="width:32%"></div><div class="slider-thumb" style="left:32%"></div></div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Distance · redshift</span><span>410 Mpc</span></div>
+        <div class="slider-track"><div class="slider-fill" style="width:24%"></div><div class="slider-thumb" style="left:24%"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Sequencer ───── -->
+<section class="sequencer">
+  <div class="section-label">The studio</div>
+  <h2 style="font-size:42px;margin:0;font-weight:300;letter-spacing:-.01em;">Layer chirps into songs.</h2>
+  <p style="font-size:18px;color:var(--ink-dim);max-width:620px;margin:12px 0 0;">Sequence 16 steps. Drop a black hole chirp on the bass line. A neutron star on the lead. Use spin to bend pitch, distance to bend volume. The grid is the score; the universe is your instrument.</p>
+
+  <div class="seq-grid">
+    <div class="track-row">
+      <div class="track-name">▸ GW150914 · BBH</div>
+      <div class="track-cells">
+        <div class="cell active"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell active"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell active"></div><div class="cell"></div><div class="cell"></div><div class="cell active"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+    </div>
+    <div class="track-row">
+      <div class="track-name">▸ GW170817 · BNS</div>
+      <div class="track-cells">
+        <div class="cell"></div><div class="cell"></div><div class="cell active b"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell active b"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell active b"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell active b"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+    </div>
+    <div class="track-row">
+      <div class="track-name">▸ GW190521 · IMBH</div>
+      <div class="track-cells">
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell active c"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell active c"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+    </div>
+    <div class="track-row">
+      <div class="track-name">▸ Synth · custom</div>
+      <div class="track-cells">
+        <div class="cell active d"></div><div class="cell"></div><div class="cell active d"></div><div class="cell"></div>
+        <div class="cell active d"></div><div class="cell"></div><div class="cell active d"></div><div class="cell"></div>
+        <div class="cell active d"></div><div class="cell"></div><div class="cell active d"></div><div class="cell"></div>
+        <div class="cell active d"></div><div class="cell"></div><div class="cell active d"></div><div class="cell"></div>
+      </div>
+    </div>
+
+    <div class="playhead">
+      <button class="play-btn" aria-label="Play"></button>
+      <div class="tempo">TEMPO <strong>92 BPM</strong></div>
+      <div class="tempo">LOOP <strong>16 STEPS</strong></div>
+      <div class="tempo" style="margin-left:auto;">EXPORT ▸ <strong>SHARE</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Sky catalog ───── -->
+<section class="sky">
+  <div class="section-label">The catalog · 312 events</div>
+  <h2 style="font-size:42px;margin:0;font-weight:300;letter-spacing:-.01em;">Browse by sky position.</h2>
+  <p style="font-size:18px;color:var(--ink-dim);max-width:620px;margin:12px 0 0;">Each glowing point is a real merger LIGO heard. Colour is the type: amber for black hole pairs, blue for neutron stars, violet for the heaviest collisions ever recorded. Drag the camera. Click anything. It plays.</p>
+
+  <div class="sky-canvas" id="sky">
+    <div class="sky-meta">
+      <span>RA 18h 24m · DEC −34°</span>
+      <span>HOVERED · GW150914 · 36 + 29 M☉ · 410 Mpc</span>
+      <span>O5 · 312 events</span>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Collaboration ───── -->
+<section class="collab">
+  <div class="section-label">Compositions · community</div>
+  <h2 style="font-size:42px;margin:0;font-weight:300;letter-spacing:-.01em;">Music people have made from the universe.</h2>
+  <p style="font-size:18px;color:var(--ink-dim);max-width:680px;margin:12px 0 0;">Every composition is a permalink — the sequence, the synth parameters, the chirps. Remix anyone's piece. Add layers. Send it back to the universe.</p>
+
+  <div class="collab-grid">
+    <div class="composition-card">
+      <h4>For Hulse and Taylor</h4>
+      <div class="by">RIYA · BANGALORE · 4.2K PLAYS</div>
+      <div class="mini-wave"></div>
+      <div class="stats"><span>5 CHIRPS</span><span>62 BPM</span><span>3:14</span></div>
+    </div>
+    <div class="composition-card">
+      <h4>Quiet After O4</h4>
+      <div class="by">ALEX · LISBON · 1.8K PLAYS</div>
+      <div class="mini-wave" style="background:linear-gradient(90deg,rgba(126,200,255,.2),rgba(200,155,255,.5),rgba(126,200,255,.2));-webkit-mask:radial-gradient(ellipse at center,#000 70%,transparent 95%);"></div>
+      <div class="stats"><span>9 CHIRPS</span><span>74 BPM</span><span>2:40</span></div>
+    </div>
+    <div class="composition-card">
+      <h4>Heaviest Things</h4>
+      <div class="by">PHYSICS 401 · UTOKYO · 980 PLAYS</div>
+      <div class="mini-wave" style="background:linear-gradient(90deg,rgba(200,155,255,0),rgba(200,155,255,.7) 60%,rgba(200,155,255,0));-webkit-mask:radial-gradient(ellipse at center,#000 60%,transparent 90%);"></div>
+      <div class="stats"><span>3 CHIRPS</span><span>108 BPM</span><span>1:58</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Footer ───── -->
+<footer>
+  <p style="font-size:24px;color:var(--ink);font-weight:300;font-style:italic;max-width:760px;">The universe has been making music since before the Earth existed. We finally have ears.</p>
+  <div class="data">DATA · LIGO–VIRGO–KAGRA · GWTC-5.0 · GWOSC.ORG · O5 OBSERVING RUN · 312 CONFIRMED EVENTS · 2026-06</div>
+</footer>
+
+<script>
+  // sprinkle some stars in the sky panel
+  const sky = document.getElementById('sky');
+  if (sky){
+    const W = 1; const H = 1;
+    for (let i=0;i<140;i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random()*1.6 + .3;
+      s.style.width = size+'px';
+      s.style.height = size+'px';
+      s.style.left = (Math.random()*100)+'%';
+      s.style.top = (Math.random()*92)+'%';
+      s.style.opacity = (Math.random()*.7+.3).toFixed(2);
+      sky.appendChild(s);
+    }
+    // events — placed roughly by class
+    const events = [
+      {x:18, y:25, size:18, type:''},      // GW150914
+      {x:24, y:60, size:14, type:''},
+      {x:38, y:18, size:22, type:'c'},     // IMBH
+      {x:42, y:72, size:12, type:'b'},     // BNS
+      {x:55, y:32, size:16, type:''},
+      {x:62, y:55, size:13, type:''},
+      {x:48, y:48, size:10, type:'b'},
+      {x:72, y:40, size:17, type:'c'},
+      {x:78, y:68, size:11, type:''},
+      {x:84, y:22, size:14, type:''},
+      {x:90, y:50, size:9, type:'d'},
+      {x:30, y:80, size:11, type:''},
+      {x:14, y:75, size:13, type:'c'},
+      {x:66, y:18, size:10, type:''},
+      {x:50, y:82, size:15, type:''},
+      {x:8, y:42, size:12, type:''},
+      {x:94, y:35, size:10, type:'b'},
+      {x:35, y:40, size:14, type:''},
+      {x:58, y:14, size:11, type:''},
+      {x:74, y:88, size:9, type:'d'},
+    ];
+    for (const e of events){
+      const d = document.createElement('div');
+      d.className = 'event ' + e.type;
+      d.style.width = e.size+'px';
+      d.style.height = e.size+'px';
+      d.style.left = `calc(${e.x}% - ${e.size/2}px)`;
+      d.style.top = `calc(${e.y}% - ${e.size/2}px)`;
+      sky.appendChild(d);
+    }
+  }
+</script>
+
+</body>
+</html>

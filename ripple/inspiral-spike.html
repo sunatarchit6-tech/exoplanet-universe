@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inspiral · audio spike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06070d;
+    --ink:#e8ecf4;
+    --ink-dim:#9aa3b8;
+    --ink-mute:#5b6378;
+    --rule:rgba(255,255,255,.08);
+    --t1:#ffb27a;   /* heavy / bass */
+    --t2:#7ec8ff;   /* canonical / lead */
+    --t3:#c89bff;   /* light / shimmer */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:400;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 20% 12%, rgba(255,178,122,.06), transparent 55%),
+      radial-gradient(ellipse at 80% 80%, rgba(126,200,255,.06), transparent 55%),
+      var(--bg);
+    padding:48px 56px;
+  }
+  .serif{font-family:'Cormorant Garamond',serif;}
+
+  /* ───── Header ───── */
+  header{margin-bottom:36px;}
+  .wordmark{
+    font-family:'Cormorant Garamond',serif;font-size:32px;letter-spacing:.12em;font-weight:400;
+  }
+  .wordmark em{font-style:italic;color:var(--t1);font-weight:500;}
+  .tagline{font-size:11px;letter-spacing:.3em;color:var(--ink-mute);text-transform:uppercase;margin-top:6px;}
+  .question{
+    margin-top:24px;font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ink-dim);
+    max-width:680px;line-height:1.4;
+  }
+
+  /* ───── Master ───── */
+  .master{
+    display:flex;align-items:center;gap:24px;
+    margin:32px 0 24px;padding:18px 24px;
+    background:rgba(255,255,255,.02);
+    border:1px solid var(--rule);
+    border-radius:14px;
+  }
+  .play-btn{
+    width:54px;height:54px;border-radius:50%;
+    background:linear-gradient(180deg,var(--t1),#cc8a52);
+    border:none;cursor:pointer;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 24px rgba(255,178,122,.35);
+    transition:transform .2s;
+  }
+  .play-btn:hover{transform:scale(1.05);}
+  .play-btn::after{
+    content:'';width:0;height:0;
+    border-left:14px solid #1a1110;border-top:9px solid transparent;border-bottom:9px solid transparent;
+    margin-left:4px;
+  }
+  .play-btn.playing::after{
+    border:none;width:11px;height:13px;
+    background:linear-gradient(90deg,#1a1110 35%,transparent 35% 65%,#1a1110 65%);
+    margin-left:0;
+  }
+  .ctrl{display:flex;align-items:center;gap:10px;}
+  .ctrl-label{font-size:9px;letter-spacing:.22em;color:var(--ink-mute);text-transform:uppercase;}
+  .ctrl input[type=range]{
+    -webkit-appearance:none;appearance:none;width:140px;height:2px;
+    background:rgba(180,200,230,.15);border-radius:1px;outline:none;cursor:pointer;
+  }
+  .ctrl input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--ink);cursor:pointer;border:2px solid var(--bg);
+  }
+  .ctrl .v{font-size:11px;color:var(--ink);min-width:36px;display:inline-block;}
+
+  /* ───── Tracks ───── */
+  .tracks{display:flex;flex-direction:column;gap:14px;}
+  .track{
+    background:rgba(255,255,255,.02);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:18px 20px;
+  }
+  .track-head{
+    display:flex;align-items:center;gap:18px;margin-bottom:14px;
+  }
+  .track-name{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-size:20px;
+    min-width:120px;
+  }
+  .track.t1 .track-name{color:var(--t1);}
+  .track.t2 .track-name{color:var(--t2);}
+  .track.t3 .track-name{color:var(--t3);}
+
+  .track .ctrl{flex-shrink:0;}
+  .track .ctrl input[type=range]{width:110px;}
+  .mute-btn{
+    padding:6px 12px;font-family:'JetBrains Mono',monospace;font-size:9px;
+    letter-spacing:.15em;text-transform:uppercase;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--rule);
+    color:var(--ink-dim);border-radius:6px;cursor:pointer;
+    transition:all .2s;
+  }
+  .mute-btn:hover{background:rgba(255,255,255,.08);color:var(--ink);}
+  .mute-btn.muted{background:rgba(255,255,255,.0);color:var(--ink-mute);opacity:.5;}
+
+  /* ───── Step grid ───── */
+  .steps{
+    display:grid;grid-template-columns:repeat(16,1fr);gap:5px;
+  }
+  .step{
+    height:36px;background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:5px;cursor:pointer;
+    transition:background .15s,border-color .15s,transform .15s;
+    position:relative;
+  }
+  .step:hover{background:rgba(255,255,255,.06);}
+  .step.on{
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.18);
+  }
+  .step.on::after{
+    content:'';position:absolute;left:14%;right:6%;top:50%;height:2px;
+    transform:translateY(-50%);
+    border-radius:1px;box-shadow:0 0 5px currentColor;
+  }
+  .track.t1 .step.on::after{background:var(--t1);color:var(--t1);}
+  .track.t2 .step.on::after{background:var(--t2);color:var(--t2);}
+  .track.t3 .step.on::after{background:var(--t3);color:var(--t3);}
+  .step.current{
+    background:rgba(255,255,255,.18) !important;
+    transform:scale(1.05);
+  }
+  /* Mark beats 1/5/9/13 visually */
+  .step:nth-child(4n+1){border-left:1px solid rgba(255,255,255,.15);}
+
+  /* ───── Footer note ───── */
+  footer{
+    margin-top:48px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;
+    color:var(--ink-dim);max-width:720px;line-height:1.5;
+  }
+  footer span{color:var(--ink);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">in<em>·</em>spiral <span style="font-size:13px;letter-spacing:.25em;color:var(--ink-mute);margin-left:14px;">spike</span></div>
+  <div class="tagline">does the universe groove · audio-only test</div>
+  <div class="question">The only question this test answers: when you layer three chirps from different binary masses on a slow loop, does it sound like something you'd send to a friend, or does it sound like a fax machine?</div>
+</header>
+
+<!-- ───── Master controls ───── -->
+<div class="master">
+  <button class="play-btn" id="play"></button>
+  <div class="ctrl">
+    <span class="ctrl-label">BPM</span>
+    <input type="range" id="bpm" min="40" max="140" step="1" value="72">
+    <span class="v" id="bpmV">72</span>
+  </div>
+  <div class="ctrl">
+    <span class="ctrl-label">Volume</span>
+    <input type="range" id="vol" min="0" max="100" step="1" value="65">
+    <span class="v" id="volV">65</span>
+  </div>
+  <div class="ctrl" style="margin-left:auto;">
+    <span class="ctrl-label">Step</span>
+    <span class="v serif" style="font-size:18px;font-style:italic;color:var(--t1);" id="stepDisplay">—</span>
+  </div>
+</div>
+
+<!-- ───── Tracks ───── -->
+<div class="tracks" id="tracks"></div>
+
+<footer>
+  Three tracks. Each is a real gravitational-wave chirp synthesised from masses you set. Track A is heavy and bass-y (think GW190521 territory). Track B is canonical (GW150914). Track C is light and high (small BBH, almost BNS). Toggle the boxes to set rhythms. Press <span>play</span>.
+  <br><br>
+  If after a few minutes of fiddling this sounds <em>actually pleasant</em> — even genuinely musical — we have a product. If it sounds like rising sweeps stacking with no groove, we don't, and we ship Ripple instead.
+</footer>
+
+<script>
+'use strict';
+
+/* ────────────────────────────────────────────────────────────────
+ * ChirpSynth — synthesise a single chirp from binary masses.
+ * Reuses the per-event voice formula from Ripple:
+ *   heavier total mass → lower start/peak/ringdown frequency
+ *                       → larger thud
+ *                       → longer chirp duration scaling
+ * ──────────────────────────────────────────────────────────────── */
+class ChirpSynth {
+  constructor(ctx, destNode){
+    this.ctx = ctx;
+    this.dest = destNode;
+  }
+
+  // Compute voice parameters from masses.
+  voice(m1, m2){
+    const M = Math.max(2, m1 + m2);
+    return {
+      fStart:    Math.max(20, 35 * Math.pow(66 / M, 0.4)),
+      fPeak:     Math.max(40, 250 * Math.pow(66 / M, 0.6)),
+      fRing:     Math.max(40, 240 * Math.pow(66 / M, 0.6)),
+      ringDecay: Math.max(0.18, Math.min(1.2, 0.35 + M / 200)),
+      thudFreq:  Math.max(28, 55 * Math.sqrt(66 / M)),
+      thudLevel: 0.45,
+      noiseBurstLevel: 0.18,
+      subMix:    Math.max(0.18, Math.min(0.55, 0.22 + M / 200)),
+      // Total chirp duration in seconds — heavier = shorter
+      duration:  Math.max(0.35, Math.min(1.3, 0.45 + 60/M)),
+    };
+  }
+
+  trigger(t, m1, m2, vol){
+    if (vol <= 0.001) return;
+    const ctx = this.ctx;
+    const dest = this.dest;
+    const v = this.voice(m1, m2);
+    const D = v.duration;
+    const mergerT = t + D * 0.78;
+    const ringEnd = mergerT + v.ringDecay * 3;
+
+    // ── Main chirp ──
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(v.fStart, t);
+    osc.frequency.exponentialRampToValueAtTime(v.fPeak, mergerT);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * 0.18, t + D * 0.40);
+    g.gain.exponentialRampToValueAtTime(vol * 0.55, mergerT);
+    g.gain.exponentialRampToValueAtTime(0.0001, mergerT + 0.05);
+    osc.connect(g).connect(dest);
+    osc.start(t);
+    osc.stop(mergerT + 0.08);
+
+    // ── Sub-octave for weight ──
+    const sub = ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(v.fStart * 0.5, t);
+    sub.frequency.exponentialRampToValueAtTime(v.fPeak * 0.5, mergerT);
+    const sg = ctx.createGain();
+    sg.gain.setValueAtTime(0.0001, t);
+    sg.gain.exponentialRampToValueAtTime(vol * 0.55 * v.subMix, mergerT);
+    sg.gain.exponentialRampToValueAtTime(0.0001, mergerT + 0.05);
+    sub.connect(sg).connect(dest);
+    sub.start(t);
+    sub.stop(mergerT + 0.08);
+
+    // ── Merger thud ──
+    const thud = ctx.createOscillator();
+    thud.type = 'sine';
+    thud.frequency.value = v.thudFreq;
+    const tg = ctx.createGain();
+    tg.gain.setValueAtTime(vol * v.thudLevel, mergerT);
+    tg.gain.exponentialRampToValueAtTime(0.0001, mergerT + 0.18);
+    thud.connect(tg).connect(dest);
+    thud.start(mergerT);
+    thud.stop(mergerT + 0.22);
+
+    // ── Noise burst at merger ──
+    const burstLen = Math.floor(ctx.sampleRate * 0.07);
+    const buf = ctx.createBuffer(1, burstLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < burstLen; i++){
+      const env = Math.exp(-i / burstLen * 5);
+      data[i] = (Math.random() * 2 - 1) * env;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = v.fPeak * 0.9;
+    bp.Q.value = 1.4;
+    const ng = ctx.createGain();
+    ng.gain.value = vol * v.noiseBurstLevel;
+    noise.connect(bp).connect(ng).connect(dest);
+    noise.start(mergerT);
+    noise.stop(mergerT + 0.12);
+
+    // ── Ringdown bell ──
+    const ring = ctx.createOscillator();
+    ring.type = 'sine';
+    ring.frequency.value = v.fRing;
+    const rg = ctx.createGain();
+    rg.gain.setValueAtTime(0.0001, mergerT);
+    rg.gain.exponentialRampToValueAtTime(vol * 0.40, mergerT + 0.005);
+    rg.gain.exponentialRampToValueAtTime(0.0001, mergerT + v.ringDecay * 2.5);
+    ring.connect(rg).connect(dest);
+    ring.start(mergerT);
+    ring.stop(mergerT + v.ringDecay * 2.5 + 0.05);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────
+ * Tracks
+ * ──────────────────────────────────────────────────────────────── */
+const TRACKS = [
+  {
+    id: 't1', cls: 't1', name: 'Heavy',
+    m1: 60, m2: 50, volume: 0.45, muted: false,
+    pattern: [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+  },
+  {
+    id: 't2', cls: 't2', name: 'Canonical',
+    m1: 35, m2: 30, volume: 0.50, muted: false,
+    pattern: [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+  },
+  {
+    id: 't3', cls: 't3', name: 'Light',
+    m1: 10, m2: 8, volume: 0.42, muted: false,
+    pattern: [0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,0,1],
+  },
+];
+
+/* ────────────────────────────────────────────────────────────────
+ * Audio context + scheduler
+ * ──────────────────────────────────────────────────────────────── */
+let ctx = null;
+let masterGain = null;
+let synth = null;
+let playing = false;
+let nextNoteTime = 0;
+let currentStep = 0;
+const STEPS = 16;
+let bpm = 72;
+let masterVol = 0.65;
+let schedTimer = null;
+
+function ensureCtx(){
+  if (ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = ctx.createGain();
+  masterGain.gain.value = masterVol;
+  masterGain.connect(ctx.destination);
+  synth = new ChirpSynth(ctx, masterGain);
+}
+
+function stepDuration(){
+  // 16th note at current BPM
+  return (60 / bpm) / 4;
+}
+
+function scheduler(){
+  if (!ctx || !playing) return;
+  const lookahead = 0.12; // schedule notes up to 120ms ahead
+  while (nextNoteTime < ctx.currentTime + lookahead){
+    // Schedule each track for this step
+    for (const tr of TRACKS){
+      if (tr.muted) continue;
+      if (tr.pattern[currentStep]){
+        synth.trigger(nextNoteTime, tr.m1, tr.m2, tr.volume);
+      }
+    }
+    // Visual indicator (queue for the actual time)
+    const sNow = currentStep;
+    const delay = Math.max(0, (nextNoteTime - ctx.currentTime) * 1000);
+    setTimeout(() => updateStepIndicator(sNow), delay);
+
+    nextNoteTime += stepDuration();
+    currentStep = (currentStep + 1) % STEPS;
+  }
+}
+
+function play(){
+  ensureCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+  playing = true;
+  currentStep = 0;
+  nextNoteTime = ctx.currentTime + 0.06;
+  schedTimer = setInterval(scheduler, 25);
+  document.getElementById('play').classList.add('playing');
+}
+function stop(){
+  playing = false;
+  if (schedTimer){ clearInterval(schedTimer); schedTimer = null; }
+  document.getElementById('play').classList.remove('playing');
+  document.getElementById('stepDisplay').textContent = '—';
+  clearAllCurrent();
+}
+
+/* ────────────────────────────────────────────────────────────────
+ * UI
+ * ──────────────────────────────────────────────────────────────── */
+const tracksEl = document.getElementById('tracks');
+function renderTracks(){
+  tracksEl.innerHTML = '';
+  for (const tr of TRACKS){
+    const el = document.createElement('div');
+    el.className = `track ${tr.cls}`;
+    el.dataset.id = tr.id;
+    el.innerHTML = `
+      <div class="track-head">
+        <div class="track-name">${tr.name}</div>
+        <div class="ctrl">
+          <span class="ctrl-label">M₁</span>
+          <input type="range" min="1.5" max="100" step="0.5" value="${tr.m1}" data-param="m1">
+          <span class="v" data-display="m1">${tr.m1}</span>
+        </div>
+        <div class="ctrl">
+          <span class="ctrl-label">M₂</span>
+          <input type="range" min="1.5" max="100" step="0.5" value="${tr.m2}" data-param="m2">
+          <span class="v" data-display="m2">${tr.m2}</span>
+        </div>
+        <div class="ctrl">
+          <span class="ctrl-label">Vol</span>
+          <input type="range" min="0" max="100" step="1" value="${Math.round(tr.volume*100)}" data-param="vol">
+          <span class="v" data-display="vol">${Math.round(tr.volume*100)}</span>
+        </div>
+        <button class="mute-btn">Mute</button>
+      </div>
+      <div class="steps"></div>
+    `;
+    const stepsEl = el.querySelector('.steps');
+    for (let i = 0; i < STEPS; i++){
+      const s = document.createElement('div');
+      s.className = 'step' + (tr.pattern[i] ? ' on' : '');
+      s.dataset.step = i;
+      s.addEventListener('click', () => {
+        tr.pattern[i] = tr.pattern[i] ? 0 : 1;
+        s.classList.toggle('on');
+      });
+      stepsEl.appendChild(s);
+    }
+    // Slider events
+    el.querySelectorAll('input[type=range]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const param = inp.dataset.param;
+        const val = parseFloat(inp.value);
+        if (param === 'm1') tr.m1 = val;
+        else if (param === 'm2') tr.m2 = val;
+        else if (param === 'vol') tr.volume = val / 100;
+        el.querySelector(`[data-display="${param}"]`).textContent = (param === 'vol' ? Math.round(val) : val);
+      });
+    });
+    // Mute
+    el.querySelector('.mute-btn').addEventListener('click', (e) => {
+      tr.muted = !tr.muted;
+      e.target.classList.toggle('muted', tr.muted);
+    });
+    tracksEl.appendChild(el);
+  }
+}
+renderTracks();
+
+function updateStepIndicator(step){
+  clearAllCurrent();
+  document.querySelectorAll('.track').forEach(t => {
+    const steps = t.querySelectorAll('.step');
+    if (steps[step]) steps[step].classList.add('current');
+  });
+  document.getElementById('stepDisplay').textContent = (step + 1).toString().padStart(2, '0');
+}
+function clearAllCurrent(){
+  document.querySelectorAll('.step.current').forEach(s => s.classList.remove('current'));
+}
+
+document.getElementById('play').onclick = () => {
+  if (playing) stop(); else play();
+};
+document.getElementById('bpm').oninput = (e) => {
+  bpm = parseInt(e.target.value);
+  document.getElementById('bpmV').textContent = bpm;
+};
+document.getElementById('vol').oninput = (e) => {
+  masterVol = parseInt(e.target.value) / 100;
+  document.getElementById('volV').textContent = parseInt(e.target.value);
+  if (masterGain) masterGain.gain.setTargetAtTime(masterVol, ctx.currentTime, 0.02);
+};
+
+// Spacebar play/pause
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && e.target.tagName !== 'INPUT'){
+    e.preventDefault();
+    if (playing) stop(); else play();
+  }
+});
+</script>
+
+</body>
+</html>
