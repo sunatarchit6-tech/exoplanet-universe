@@ -17,6 +17,7 @@ Before any code change, verify:
 - [ ] **Interaction patterns:** Standard gestures are supported (Escape to dismiss, etc.).
 - [ ] **Asset pipeline:** Textures match geometry UV mapping. Visually verified at multiple angles.
 - [ ] **Comprehension:** A first-time user can understand what they see without explanation.
+- [ ] **No hardcoded panel offsets:** Never position a panel with a literal `top`/`bottom` that assumes a neighbour's height. Read the measured custom properties (`--title-h`, `--count-h`, `--filter-btn-h`, `--left-safe`, `--right-safe`) set by `layoutPanels()`, and add the element to its ResizeObserver list if it is content-sized.
 
 ---
 
@@ -73,12 +74,14 @@ Analysis of 28 bugs found during development. 67% trace to just 3 root causes. C
 | 7 | Missing interaction patterns | 4 | Expected gestures (Escape, momentum, feedback) not implemented |
 | 8 | Asset pipeline issues | 1 | Wrong texture format/mapping for geometry |
 | 9 | Scope gaps | 3 | Contextual features not in original scope |
+| 10 | Hardcoded layout offsets | 6 | Panels positioned at literal tops that assumed a content-sized neighbour's height. Fixed 2026-08-18 by measuring in `layoutPanels()` and deriving every offset in CSS. |
 
 ### Prevention
 
 1. **Time-based animation:** Every `+=` in `animate()` must use `dt`.
 2. **Input parity:** Map every action to mouse, touch, and keyboard before coding.
 3. **Camera invariants:** Camera params enforced by setters with bounds/wrapping every frame. Always include reset.
+4. **Derived layout:** Anything positioned relative to a content-sized element derives its offset from a measured custom property, never a literal pixel value. Verify with the responsive sweep across phone, tablet, laptop and 4K before shipping.
 
 ---
 

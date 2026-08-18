@@ -129,6 +129,14 @@ python3 -m http.server 8000
 # Open http://localhost:8000/tests/test_visual.html for manual visual checks
 ```
 
+Responsive layout audit, checking every UI element for overlap and viewport overflow
+across phone, tablet, laptop and 4K (18 viewports x 4 panel states):
+
+```bash
+npm install && npx playwright install chromium
+node scripts/test_responsive.mjs
+```
+
 ## Deployment
 
 Deployed on Vercel as a static site. See `vercel.json` for cache headers and redirect config. To deploy your own instance:

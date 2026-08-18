@@ -47,13 +47,27 @@
   --body-size:10px;
   --label-size:9px;
   --btn-size:10px;
+  /* Panel geometry, measured at runtime by layoutPanels() because #title-block and
+     #count-block are content-sized and grow when text wraps or the breakpoint changes.
+     The values here are only the pre-measurement fallback. */
+  --title-h:146px;
+  --filter-btn-h:29px;
+  --count-h:62px;
+  --title-line-h:28px;
+  --count-w:120px;
+  --stack-gap:10px;
+  /* How much the bottom-anchored furniture occupies on each side, measured from the
+     bottom of the viewport. The side panels use these so they can never grow into the
+     timeline bar, the legend, the toolbar or the reset button. */
+  --right-safe:190px;
+  --left-safe:340px;
 }
 html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'JetBrains Mono',monospace;color:#9aabc0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;touch-action:none;-webkit-overflow-scrolling:auto}
 canvas{position:absolute;top:0;left:0;display:block;touch-action:none}
 #ui{position:absolute;inset:0;pointer-events:none}
 
 /* Title */
-#title-block{position:absolute;top:var(--ui-pad-top);left:var(--ui-pad);max-width:290px;background:rgba(10,14,28,.45);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:16px 20px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+#title-block{position:absolute;top:var(--ui-pad-top);left:var(--ui-pad);max-width:min(290px, calc(100vw - var(--count-w) - var(--ui-pad) * 2 - var(--stack-gap) * 2));background:rgba(10,14,28,.45);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:16px 20px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
 #main-title{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2.2vw,28px);font-weight:300;letter-spacing:.06em;color:#dce4f0;line-height:1;margin:0}
 #sub{font-size:8px;letter-spacing:.12em;color:#556680;margin-top:6px;text-transform:uppercase;line-height:1.5}
 
@@ -64,7 +78,7 @@ canvas{position:absolute;top:0;left:0;display:block;touch-action:none}
 
 /* Filters panel */
 @keyframes glassIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-#filters{position:absolute;top:202px;left:var(--ui-pad);width:var(--filter-width);pointer-events:all;display:none;background:rgba(10,14,28,.75);backdrop-filter:blur(24px) saturate(1.2);-webkit-backdrop-filter:blur(24px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:16px 18px;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.03);z-index:20;animation:glassIn .25s ease}
+#filters{position:absolute;top:calc(var(--ui-pad-top) + var(--title-h) + var(--filter-btn-h) + var(--stack-gap) * 2);left:var(--ui-pad);width:var(--filter-width);pointer-events:all;display:none;background:rgba(10,14,28,.75);backdrop-filter:blur(24px) saturate(1.2);-webkit-backdrop-filter:blur(24px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:16px 18px;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.03);z-index:20;animation:glassIn .25s ease;max-height:max(120px, calc(100vh - var(--ui-pad-top) - var(--title-h) - var(--filter-btn-h) - var(--left-safe) - var(--stack-gap) * 3));overflow-y:auto}
 .f-section{margin-bottom:14px}
 .f-label{font-size:var(--label-size);letter-spacing:.2em;text-transform:uppercase;color:#7a90a8;margin-bottom:8px}
 .f-btns{display:flex;flex-wrap:wrap;gap:6px}
@@ -79,7 +93,7 @@ canvas{position:absolute;top:0;left:0;display:block;touch-action:none}
 .f-divider{height:1px;background:rgba(130,155,190,.06);margin-bottom:14px}
 
 /* Info panel */
-#info{position:absolute;top:110px;right:var(--ui-pad);width:var(--info-width);background:rgba(10,14,28,.5);border:1px solid rgba(130,155,190,.1);border-radius:var(--panel-radius);padding:18px;pointer-events:all;display:none;backdrop-filter:blur(24px) saturate(1.2);-webkit-backdrop-filter:blur(24px) saturate(1.2);max-height:calc(100vh - 200px);overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.03);animation:glassIn .3s ease}
+#info{position:absolute;top:calc(var(--ui-pad-top) + var(--count-h) + var(--stack-gap));right:var(--ui-pad);width:var(--info-width);background:rgba(10,14,28,.5);border:1px solid rgba(130,155,190,.1);border-radius:var(--panel-radius);padding:18px;pointer-events:all;display:none;backdrop-filter:blur(24px) saturate(1.2);-webkit-backdrop-filter:blur(24px) saturate(1.2);max-height:max(140px, calc(100vh - var(--ui-pad-top) - var(--count-h) - var(--right-safe) - var(--stack-gap) * 2));overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.03);animation:glassIn .3s ease}
 #info-name{font-family:'Cormorant Garamond',serif;font-size:20px;color:#dce4f0;margin-bottom:12px;line-height:1.2;padding-right:20px}
 .info-dl{margin:0;padding:0}
 .ir{display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px}
@@ -123,10 +137,15 @@ canvas{position:absolute;top:0;left:0;display:block;touch-action:none}
 .tbl{font-size:9px;color:#5a7090}
 
 /* Data date */
-#data-date{position:absolute;bottom:calc(var(--control-height) + 6px);right:var(--ui-pad);font-size:8px;color:#4a5a70;letter-spacing:.03em;pointer-events:none}
+/* The date and the credits link used to be positioned into the same corner
+   independently, data-date at right:var(--ui-pad) and credits-link at right:140px, so the
+   date overlapped the link at every viewport size once the date string outgrew the 140px
+   gap. One flex row instead: the corner has a single owner and the gap is a gap. */
+#bottom-meta{position:absolute;bottom:calc(var(--control-height) + 6px);right:var(--ui-pad);display:flex;align-items:baseline;gap:14px;max-width:calc(100vw - var(--ui-pad) * 2);z-index:10}
+#data-date{font-size:8px;color:#4a5a70;letter-spacing:.03em;pointer-events:none;white-space:nowrap}
 
 /* Credits */
-#credits-link{position:absolute;bottom:calc(var(--control-height) + 6px);right:140px;font-size:9px;z-index:10}
+#credits-link{font-size:9px;white-space:nowrap}
 #credits-toggle{color:#5a7090;text-decoration:none;cursor:pointer;background:none;border:none;font-family:inherit;font-size:9px;letter-spacing:.03em;padding:0;transition:color .2s}
 #credits-toggle:hover{color:#8a9db8}
 #credits-overlay{display:none;position:absolute;bottom:96px;right:24px;background:rgba(10,14,28,.75);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.12);border-radius:10px;padding:14px 18px;box-shadow:0 4px 20px rgba(0,0,0,.25);font-size:10px;color:#8a9db8;line-height:1.7;max-width:320px;z-index:100;pointer-events:all}
@@ -203,7 +222,7 @@ canvas{position:absolute;top:0;left:0;display:block;touch-action:none}
 #search-filter-toast.vis{opacity:1}
 
 /* Filter toggle button — hidden by default, shown on mobile */
-#filter-toggle{display:inline-flex;align-items:center;gap:6px;pointer-events:all;background:rgba(10,14,28,.45);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:10px;color:#8a9db8;font-family:'JetBrains Mono',monospace;font-size:10px;padding:7px 14px;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:all .25s;position:absolute;top:164px;left:var(--ui-pad);z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+#filter-toggle{display:inline-flex;align-items:center;gap:6px;pointer-events:all;background:rgba(10,14,28,.45);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(130,155,190,.1);border-radius:10px;color:#8a9db8;font-family:'JetBrains Mono',monospace;font-size:10px;padding:7px 14px;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:all .25s;position:absolute;top:calc(var(--ui-pad-top) + var(--title-h) + var(--stack-gap));left:var(--ui-pad);z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.15)}
 #filter-toggle:hover{color:#c0d0e4;border-color:rgba(130,155,190,.25);background:rgba(10,14,28,.6)}
 #filter-toggle[aria-expanded="true"]{border-color:rgba(130,155,190,.25);color:#c0d0e4}
 
@@ -268,10 +287,11 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
     --toolbar-btn:40px;
     --btn-size:11px;
     --label-size:10px;
+    --stack-gap:8px;
   }
 
   /* Title — minimal, no glass panel on mobile */
-  #title-block{right:auto;max-width:calc(100vw - 110px);padding:10px 14px;background:none;border:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+  #title-block{right:auto;max-width:calc(100vw - var(--count-w) - var(--ui-pad) * 2 - var(--stack-gap));padding:10px 14px;background:none;border:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
   #main-title{font-size:15px}
   #sub{display:none}
 
@@ -281,18 +301,18 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
   #count-l{font-size:7px}
 
   /* Search — full width, below title area */
-  #search-wrap{width:calc(100vw - 28px);margin-top:6px}
+  #search-wrap{width:calc(100vw - 28px);margin-top:max(6px, calc(var(--count-h) + var(--stack-gap) - 10px - var(--title-line-h)))}
   #search-box{height:38px}
   #search-input{font-size:14px;padding:8px 10px}
   #search-clear{font-size:20px;padding:6px;min-width:var(--btn-min);min-height:var(--btn-min)}
   #search-results{max-height:50vh;left:0;right:0}
 
-  /* Filter toggle — positioned below title block (title 12+10+15+6+38+10 ≈ 91px) */
-  #filter-toggle{display:inline-flex;top:96px;left:var(--ui-pad);min-height:var(--btn-min);min-width:var(--btn-min);font-size:9px;padding:6px 10px}
+  /* Filter toggle — top comes from the measured title height, same as desktop */
+  #filter-toggle{display:inline-flex;left:var(--ui-pad);min-height:var(--btn-min);min-width:var(--btn-min);font-size:9px;padding:6px 10px}
   #filter-toggle:active{background:rgba(130,155,190,.25)}
 
   /* Filters — hidden by default on mobile, below filter toggle */
-  #filters{display:none;top:132px;left:var(--ui-pad);z-index:20;background:rgba(10,14,28,.85);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:var(--ui-pad);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)}
+  #filters{display:none;left:var(--ui-pad);z-index:20;background:rgba(10,14,28,.85);border:1px solid rgba(130,155,190,.1);border-radius:14px;padding:var(--ui-pad);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)}
 
   /* Filter buttons — touch-sized */
   .fb{padding:8px 14px;font-size:var(--btn-size);min-height:var(--btn-min)}
@@ -378,9 +398,17 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
 @media(max-width:900px) and (orientation:landscape) and (max-height:500px){
   :root{--control-height:48px}
   /* Info panel as right side sheet, not bottom sheet */
-  #info{position:fixed!important;top:0!important;bottom:0!important;right:0!important;left:auto!important;width:280px!important;max-height:100vh!important;border-radius:0!important;padding-bottom:0!important}
+  #info{position:fixed!important;top:0!important;bottom:0!important;right:0!important;left:auto!important;width:280px!important;max-height:100vh!important;border-radius:0!important;padding-bottom:0!important;z-index:50!important}
+  /* Filter panel as a left side sheet, mirroring the info sheet on the right. At 390px
+     tall there is no room to stack it in the left column, so it scrolls between the
+     toggle and the timeline bar and sits above the reset and music buttons rather than
+     colliding with them. */
+  #filters{position:fixed!important;left:0!important;right:auto!important;
+    top:calc(var(--ui-pad-top) + var(--title-h) + var(--filter-btn-h) + var(--stack-gap) * 2)!important;
+    bottom:calc(var(--control-height) + 4px)!important;max-height:none!important;
+    width:260px!important;border-radius:0 14px 14px 0!important;overflow-y:auto!important;z-index:50!important}
   /* Hide non-essential */
-  #legend,#dist-indicator,#data-date,#credits-link{display:none!important}
+  #legend,#dist-indicator,#data-date,#credits-link,#bottom-meta{display:none!important}
   /* Compact timeline */
   #yr-disp{font-size:14px;width:40px}
   #play-btn{width:36px;height:36px}
@@ -529,8 +557,10 @@ input:focus-visible{outline:2px solid rgba(90,140,200,.7);outline-offset:1px}
     <div class="lrow"><div class="ldot" style="background:#4477cc"></div><span class="ltxt">Earth</span></div>
   </div>
 
-  <div id="data-date">NASA Exoplanet Archive &middot; March 2026</div>
-  <div id="credits-link"><a href="#" id="credits-toggle">Credits &amp; Data</a></div>
+  <div id="bottom-meta">
+    <div id="credits-link"><a href="#" id="credits-toggle">Credits &amp; Data</a></div>
+    <div id="data-date">NASA Exoplanet Archive &middot; March 2026</div>
+  </div>
   <div id="credits-overlay">
     <strong>Data:</strong> NASA Exoplanet Archive (Caltech/IPAC), March 2026<br>
     <strong>Textures:</strong> NASA/JPL-Caltech &middot; Solar System Scope (CC BY 4.0)<br>
@@ -1567,7 +1597,14 @@ document.getElementById('filter-toggle').addEventListener('click', function() {
   const f = document.getElementById('filters');
   const isHidden = getComputedStyle(f).display === 'none';
   f.style.display = isHidden ? 'block' : 'none';
-  this.setAttribute('aria-expanded', f.style.display !== 'none');
+  const open = f.style.display !== 'none';
+  this.setAttribute('aria-expanded', open);
+  // #dist-indicator is an ambient readout pinned 300px up the same edge, and on a 768px
+  // laptop it leaves the panel about 100px of room. It yields while the panel is open:
+  // hiding it first means layoutPanels stops counting it against the height budget.
+  const di = document.getElementById('dist-indicator');
+  if (di) di.style.display = open ? 'none' : '';
+  if (typeof layoutPanels === 'function') layoutPanels();
 });
 
 // ── PLANET DATA ───────────────────────────────────────────────────────────────
@@ -4028,6 +4065,16 @@ function generateFact(d,ext){
 }
 
 function showInfo(d){
+  // On phones #info is a full-width bottom sheet and #filters is a full-width panel, so
+  // both open at once means the sheet buries the panel. Desktop lays them out side by
+  // side and is unaffected.
+  if(window.innerWidth<=600){
+    const f=document.getElementById('filters'), ft=document.getElementById('filter-toggle');
+    if(f&&getComputedStyle(f).display!=='none'){
+      f.style.display='none';
+      if(ft) ft.setAttribute('aria-expanded','false');
+    }
+  }
   document.getElementById('info-name').textContent=d.name;
   const{label,col}=planetTypeLabel(d.temp||0,d.radius||1,d.hz);
   const it=document.getElementById('info-type');
@@ -4168,6 +4215,62 @@ playBtn.addEventListener('click',()=>{
 });
 yrSl.addEventListener('mousedown',()=>{if(playing){playing=false;playIcon.textContent='\u25B6';playBtn.setAttribute('aria-label','Play timeline');}});
 yrSl.addEventListener('input',e=>{curYr=parseFloat(e.target.value);lastMS=0;for(const m of MS)if(m.year<=curYr)lastMS=m.year;});
+
+// ── PANEL GEOMETRY ─────────────────────────────────────────────────────────
+// Several panels are content-sized: #title-block grows when the hint line wraps,
+// #count-block grows with the digit count and the breakpoint. Their neighbours used to
+// sit at hardcoded tops tuned for one case (filter toggle at 164px, info at 110px) and
+// overlapped as soon as the content grew. Measure the movable parts, publish them as
+// custom properties, and let the CSS do the arithmetic.
+//
+// --right-safe / --left-safe are how far up from the bottom edge the fixed furniture
+// reaches on each side. The two side panels subtract them, so neither can ever grow into
+// the timeline bar, the legend, the toolbar, the reset button or the distance readout.
+function layoutPanels(){
+  const r=document.documentElement.style;
+  const set=(name,el,prop)=>{ if(el&&el[prop]) r.setProperty(name, el[prop]+'px'); };
+  const $=id=>document.getElementById(id);
+
+  set('--title-h', $('title-block'), 'offsetHeight');
+  set('--filter-btn-h', $('filter-toggle'), 'offsetHeight');
+  set('--title-line-h', $('main-title'), 'offsetHeight');
+  set('--count-h', $('count-block'), 'offsetHeight');
+  set('--count-w', $('count-block'), 'offsetWidth');
+
+  // Tallest reach of the bottom-anchored furniture on each side. #info and #filters are
+  // deliberately excluded: they are what this measurement is used to size.
+  const reach=ids=>ids.reduce((m,id)=>{
+    const e=$(id); if(!e) return m;
+    const cs=getComputedStyle(e);
+    if(cs.display==='none'||cs.visibility==='hidden') return m;
+    const b=e.getBoundingClientRect();
+    if(!b.height) return m;
+    return Math.max(m, window.innerHeight - b.top);
+  },0);
+  const right=reach(['controls','legend','toolbar-right','bottom-meta']);
+  const mp=$('music-player');
+  const left =reach(['controls','reset-btn','music-toggle','dist-indicator']
+    .concat(mp&&mp.classList.contains('open')?['music-player']:[]));
+  if(right>0) r.setProperty('--right-safe', Math.ceil(right)+'px');
+  if(left >0) r.setProperty('--left-safe',  Math.ceil(left)+'px');
+}
+if(window.ResizeObserver){
+  const ro=new ResizeObserver(layoutPanels);
+  // dist-indicator is empty at load and grows once a distance is shown, so it has to be
+  // observed or the left budget is measured too generously and the panel overruns it.
+  ['title-block','main-title','filter-toggle','count-block','legend','toolbar-right','bottom-meta',
+   'reset-btn','music-toggle','controls','dist-indicator','music-player'].forEach(id=>{
+    const e=document.getElementById(id); if(e) ro.observe(e);
+  });
+}
+window.addEventListener('resize', layoutPanels);
+// The music player opens by class, which no ResizeObserver sees, so re-measure after its
+// transition settles.
+document.addEventListener('click', e=>{
+  if(e.target.closest&&e.target.closest('#music-toggle')) setTimeout(layoutPanels, 360);
+}, true);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutPanels);
+layoutPanels();
 
 // ── RESIZE ─────────────────────────────────────────────────────────────────
 window.addEventListener('resize',()=>{
